@@ -1,32 +1,33 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
 	<Transactions>
-    <Transaction>1899.12.30 00:00:00.000.092,D:\Delphi\Android\Wi-Fi\Unit2.fmx=D:\Delphi\Android\Wi-Fi\uMapFrame.fmx</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.013,D:\Delphi\Android\Wi-Fi\Unit1.fmx=D:\Delphi\Android\Wi-Fi\uMainForm.fmx</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.454,D:\Delphi\Android\Wi-Fi\Unit1.fmx=C:\Users\Alex\Documents\Embarcadero\Studio\Projects\Unit1.fmx</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.013,D:\Delphi\Android\Wi-Fi\Unit1.pas=D:\Delphi\Android\Wi-Fi\uMainForm.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.454,D:\Delphi\Android\Wi-Fi\Unit1.pas=C:\Users\Alex\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.193,=D:\Delphi\Android\Wi-Fi\Unit2.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.841,D:\Delphi\Android\Wi-Fi\uBag.fmx=D:\Delphi\Android\Wi-Fi\uPercs.fmx</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.705,D:\Delphi\Android\Wi-Fi\uBag.fmx=D:\Delphi\Android\Wi-Fi\Unit2.fmx</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.033,=D:\Delphi\Android\Wi-Fi\Unit2.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.931,=D:\Delphi\Android\Wi-Fi\Unit2.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.092,D:\Delphi\Android\Wi-Fi\Unit2.pas=D:\Delphi\Android\Wi-Fi\uMapFrame.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.173,=C:\Users\Alex\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.756,=C:\Users\Alex\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.015,=C:\Users\Alex\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.705,D:\Delphi\Android\Wi-Fi\uBag.pas=D:\Delphi\Android\Wi-Fi\Unit2.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.841,D:\Delphi\Android\Wi-Fi\uBag.pas=D:\Delphi\Android\Wi-Fi\uPercs.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.515,D:\Delphi\Android\Wi-Fi\uGlobal.pas=D:\Delphi\Android\Wi-Fi\Unit2.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.907,D:\Delphi\Android\Wi-Fi\Unit1.fmx=D:\Delphi\Android\Wi-Fi\uDetectorFrame.fmx</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.013,D:\Delphi\Android\Wi-Fi\uMainForm.fmx=D:\Delphi\Android\Wi-Fi\Unit1.fmx</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.705,D:\Delphi\Android\Wi-Fi\Unit2.fmx=D:\Delphi\Android\Wi-Fi\uBag.fmx</Transaction>
     <Transaction>1899.12.30 00:00:00.000.719,=C:\Users\Alex\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.166,=C:\Users\Alex\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.841,D:\Delphi\Android\Wi-Fi\uPercs.fmx=D:\Delphi\Android\Wi-Fi\uBag.fmx</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.454,C:\Users\Alex\Documents\Embarcadero\Studio\Projects\Unit1.fmx=D:\Delphi\Android\Wi-Fi\Unit1.fmx</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.515,D:\Delphi\Android\Wi-Fi\Unit2.pas=D:\Delphi\Android\Wi-Fi\uGlobal.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.705,D:\Delphi\Android\Wi-Fi\Unit2.pas=D:\Delphi\Android\Wi-Fi\uBag.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.841,D:\Delphi\Android\Wi-Fi\uPercs.pas=D:\Delphi\Android\Wi-Fi\uBag.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.013,D:\Delphi\Android\Wi-Fi\uMainForm.pas=D:\Delphi\Android\Wi-Fi\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.931,=D:\Delphi\Android\Wi-Fi\Unit2.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.193,=D:\Delphi\Android\Wi-Fi\Unit2.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.033,=D:\Delphi\Android\Wi-Fi\Unit2.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.497,=C:\Users\Alex\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.038,D:\Delphi\Android\Wi-Fi\Project1.dproj=C:\Users\Alex\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
-    <Transaction>2025.12.09 15:19:40.200,=D:\Delphi\Android\Wi-Fi\Unit1.pas</Transaction>
-    <Transaction>2025.12.09 15:20:09.907,D:\Delphi\Android\Wi-Fi\uDetectorFrame.fmx=D:\Delphi\Android\Wi-Fi\Unit1.fmx</Transaction>
-    <Transaction>2025.12.09 15:20:09.907,D:\Delphi\Android\Wi-Fi\uDetectorFrame.pas=D:\Delphi\Android\Wi-Fi\Unit1.pas</Transaction>
-    <Transaction>2025.12.09 17:48:01.343,=D:\Delphi\Android\Wi-Fi\Unit1.pas</Transaction>
-    <Transaction>2025.12.09 17:48:24.721,D:\Delphi\Android\Wi-Fi\uScanerWiFi.pas=D:\Delphi\Android\Wi-Fi\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.721,D:\Delphi\Android\Wi-Fi\Unit1.pas=D:\Delphi\Android\Wi-Fi\uScanerWiFi.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.907,D:\Delphi\Android\Wi-Fi\Unit1.pas=D:\Delphi\Android\Wi-Fi\uDetectorFrame.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.092,D:\Delphi\Android\Wi-Fi\uMapFrame.pas=D:\Delphi\Android\Wi-Fi\Unit2.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.038,C:\Users\Alex\Documents\Embarcadero\Studio\Projects\Project1.dproj=D:\Delphi\Android\Wi-Fi\Project1.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.343,=D:\Delphi\Android\Wi-Fi\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.200,=D:\Delphi\Android\Wi-Fi\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.092,D:\Delphi\Android\Wi-Fi\uMapFrame.fmx=D:\Delphi\Android\Wi-Fi\Unit2.fmx</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.015,=C:\Users\Alex\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.454,C:\Users\Alex\Documents\Embarcadero\Studio\Projects\Unit1.pas=D:\Delphi\Android\Wi-Fi\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.756,=C:\Users\Alex\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.692,=D:\Delphi\Android\Wi-Fi\Resources\font\lcd.ttf</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.166,=C:\Users\Alex\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.173,=C:\Users\Alex\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
   </Transactions>
 	<ActiveMobileDevice>
 		<NoProfile Android64="" Android=""/>

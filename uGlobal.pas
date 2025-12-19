@@ -8,7 +8,8 @@ uses
   FireDAC.Stan.Async, FireDAC.DApt, FireDAC.UI.Intf, FireDAC.Stan.Def,
   FireDAC.Stan.Pool, FireDAC.Phys, FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef,
   FireDAC.Stan.ExprFuncs, FireDAC.Phys.SQLiteWrapper.Stat, FireDAC.FMXUI.Wait,
-  Data.DB, System.IOUtils, FireDAC.Comp.Client, FireDAC.Comp.DataSet, System.SysUtils;
+  Data.DB, System.IOUtils, FireDAC.Comp.Client, FireDAC.Comp.DataSet, System.SysUtils, System.Sensors, FMX.Objects,
+  Generics.Collections;
 
 const
   cCriticalColor = $32F92F2F;
@@ -16,6 +17,38 @@ const
   cFullColor = $6422FC1A;
 
 type
+  TMarkerType = (mtPoint, mtRad, mtAnomaly, mtBag, mtIssue);
+  TAnomalyType = (atElectro, atFire, atGravity, atRadiation, atChemical, atPSI);
+
+  TMarkerData = record
+    Marker: TImage;
+    Coords: TLocationCoord2D;
+    LabelText: string;
+    LabelDetail: string;
+    MarkerType: TMarkerType;
+  end;
+
+  TAnomalyData = record
+    Coords: TLocationCoord2D;
+    Radius: integer;
+    Power: integer;
+    AnomalyType: TAnomalyType;
+  end;
+
+  TArtefactData = record
+    Coords: TLocationCoord2D;
+    Level: integer;
+  end;
+
+  TIssueData = record
+    ID: integer;
+    Coords: TLocationCoord2D;
+    Name: string;
+    Detail: string;
+    Cost: integer;
+    PrevID: integer;
+  end;
+
   TWiFiNetwork = record
     SSID: string;
     BSSID: string;
@@ -50,10 +83,12 @@ type
     FPsiArmor: double;
     FChimisheArmor: double;
     FDetector: TDetector;
+    FUserId: integer;
     procedure SetHealth(const Value: double);
 
   public
     constructor Create;
+    property UserId: integer read FUserId write FUserId;
     property Health: double read FHealth write SetHealth;
     property ArmorHealth: double read FArmorHealth write FArmorHealth;
     property WeaponHealth: double read FWeaponHealth write FWeaponHealth;
@@ -70,9 +105,14 @@ type
 function GetUserAppPath: string;
 procedure GoToDetector;
 function ExeExec(Str: string; Typ: TExecType; var AQuery: TFDQuery): boolean;
+function CalculateFastDistance(const Lat1, Lon1, Lat2, Lon2: double): double;
+procedure FreeQueryAndConn(var AQuery: TFDQuery);
 
 var
   Person: TPerson;
+  FLocation: TLocationCoord2D;
+  FArtefactsList: TList<TArtefactData>;
+  FIssueList: TList<TIssueData>;
 
 implementation
 
@@ -100,7 +140,7 @@ end;
 function GetUserAppPath: string;
 begin
 {$IF Defined(ANDROID) or Defined(IOS)}
-  result := TPath.GetDocumentsPath;
+  result := System.IOUtils.TPath.GetDocumentsPath;
 {$ENDIF}
 {$IFDEF MSWINDOWS}
   result := ExtractFilePath(paramstr(0));
@@ -119,7 +159,7 @@ begin
   FDConn.Params.DriverID := 'SQLite';
   AQuery := TFDQuery.Create(nil);
   AQuery.Connection := FDConn;
-  FDConn.Params.Database := TPath.Combine(GetUserAppPath, 'base.db');
+  FDConn.Params.Database := System.IOUtils.TPath.Combine(GetUserAppPath, 'base.db');
   try
     FDConn.Connected := true;
   except
@@ -156,6 +196,26 @@ end;
 procedure GoToDetector;
 begin
   MainForm.btnToDetectorClick(nil);
+end;
+
+function CalculateFastDistance(const Lat1, Lon1, Lat2, Lon2: double): double;
+const
+  R = 6371000; // Радиус Земли в метрах
+  DegToRad = Pi / 180;
+var
+  X, Y: double;
+begin
+  // Приближенный расчет для небольших расстояний
+  X := (Lon2 - Lon1) * Cos(DegToRad * (Lat1 + Lat2) / 2);
+  Y := (Lat2 - Lat1);
+
+  result := R * Sqrt(X * X + Y * Y) * DegToRad;
+end;
+
+procedure FreeQueryAndConn(var AQuery: TFDQuery);
+begin
+  AQuery.Connection.Connected := false;
+  FreeAndNil(AQuery);
 end;
 
 end.

@@ -27,26 +27,19 @@ uses
 type
 
   TMainForm = class(TForm)
-    lblStatus: TLabel;
-    btnScan: TButton;
-    ListBox1: TListBox;
     Timer1: TTimer;
-    Label1: TLabel;
-    Button1: TButton;
-    Memo1: TMemo;
     TabControl: TTabControl;
-    TabItem1: TTabItem;
     TabMap: TTabItem;
     TabPercs: TTabItem;
     Image8: TImage;
     Image11: TImage;
     Image13: TImage;
     Image10: TImage;
-    Image1: TImage;
+    imgPersonHealth: TImage;
     HealthProgress: TRectangle;
     FDConn: TFDConnection;
     FDQuery: TFDQuery;
-    Layout4: TLayout;
+    layMenu: TLayout;
     GridPanelLayout1: TGridPanelLayout;
     imgBtnMap: TImage;
     ImgBtnPercs: TImage;
@@ -69,11 +62,11 @@ type
     procedure btnToPercsClick(Sender: TObject);
     procedure btnToBagClick(Sender: TObject);
     procedure btnToDetectorClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     FMapFrame: TMapFrame;
     FPercsFrame: TFramePercs;
     FDetectorFrame: TFrameDetector;
-    procedure RequestBatteryOptimizationDisable;
 
   public
     { Public declarations }
@@ -91,18 +84,52 @@ uses
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
-  RequestBatteryOptimizationDisable;
-
-  FNetworks := TList<TWiFiNetwork>.Create;
-  lblStatus.Text := 'Готов к сканированию Wi-Fi сетей';
 
 {$IF Defined(ANDROID) or Defined(IOS)}
-  ListBox1.ItemHeight := 80;
-  btnScan.Height := 50;
-  btnScan.TextSettings.Font.Size := 16;
-  lblStatus.Font.Size := 14;
   Self.FullScreen := true;
 {$ENDIF}
+end;
+
+procedure TMainForm.FormShow(Sender: TObject);
+var
+  vQuery: TFDQuery;
+  vArtefactData: TArtefactData;
+  vIssueList: TIssueData;
+begin
+  Person := TPerson.Create;
+  Person.UserId := 1; // Получить ID при логировании
+  FArtefactsList := TList<TArtefactData>.Create;
+  ExeExec('select * from arts;', exActive, vQuery);
+  vQuery.First;
+
+  while Not vQuery.Eof do
+  begin
+    vArtefactData.Coords.Latitude := vQuery.FieldByName('lat').AsFloat;
+    vArtefactData.Coords.Longitude := vQuery.FieldByName('lon').AsFloat;
+    vArtefactData.Level := vQuery.FieldByName('level').AsInteger;
+    FArtefactsList.Add(vArtefactData);
+    vQuery.Next;
+  end;
+
+  FIssueList:= TList<TIssueData>.Create;;
+  ExeExec('select i.* from user_issuies ui join issuies i on ui.issue_id = i.issue_id where ui.user_id = ' + Person.UserId.ToString + ';', exActive, vQuery);
+  vQuery.First;
+
+  while Not vQuery.Eof do
+  begin
+    vIssueList.Coords.Latitude := vQuery.FieldByName('lat').AsFloat;
+    vIssueList.Coords.Longitude := vQuery.FieldByName('lon').AsFloat;
+    vIssueList.ID := vQuery.FieldByName('issue_id').AsInteger;
+    vIssueList.PrevID := vQuery.FieldByName('prev_issue_id').AsInteger;
+    vIssueList.Cost := vQuery.FieldByName('cost').AsInteger;
+    vIssueList.Name := vQuery.FieldByName('name').AsString;
+    vIssueList.Detail := vQuery.FieldByName('detail').AsString;
+    FIssueList.Add(vIssueList);
+    vQuery.Next;
+  end;
+
+  FreeQueryAndConn(vQuery);
+
   FMapFrame := TMapFrame.Create(TabMap);
   FMapFrame.Parent := TabMap;
 
@@ -112,45 +139,19 @@ begin
   FDetectorFrame := TFrameDetector.Create(TabDetector);
   FDetectorFrame.Parent := TabDetector;
 
-  PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.ACCESS_COARSE_LOCATION'],
+  PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.ACCESS_COARSE_LOCATION',
+    'android.permission.CHANGE_WIFI_STATE'],
     procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
     begin
       if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
       begin
         FMapFrame.LocationSensor.Active := true;
-        FMapFrame.LocationSensorSecond.Active := true;
-        FMapFrame.LocationSensorThird.Active := true;
       end
       else
       begin
         // lblStatus.Text := 'Необходимы разрешения для сканирования Wi-Fi';
       end;
     end);
-end;
-
-procedure TMainForm.RequestBatteryOptimizationDisable;
-var
-  Intent: JIntent;
-  Uri: Jnet_Uri;
-begin
-  // Самый надежный способ - открыть настройки приложения
-  Intent := TJIntent.Create;
-
-  // Формируем URI для нашего пакета
-  Uri := TJnet_Uri.JavaClass.parse(
-    StringToJString('package:' +
-      JStringToString(TAndroidHelper.Context.getPackageName))
-  );
-
-  // ACTION_APPLICATION_DETAILS_SETTINGS открывает детальные настройки
-  Intent.setAction(
-    StringToJString('android.settings.APPLICATION_DETAILS_SETTINGS')
-  );
-
-  Intent.setData(Uri);
-  Intent.addCategory(StringToJString('android.intent.category.DEFAULT'));
-
-  TAndroidHelper.Activity.startActivity(Intent);
 end;
 
 procedure TMainForm.btnToBagClick(Sender: TObject);
@@ -176,11 +177,18 @@ begin
 end;
 
 procedure TMainForm.btnToPercsClick(Sender: TObject);
+var
+  I: Integer;
 begin
   TabControl.ActiveTab := TabPercs;
   recSelect.Parent := ImgBtnPercs;
-  FDetectorFrame.timerScannerArtefacts.Enabled := false;
-  FDetectorFrame.TimerSensor.Enabled := false;
+
+  for I := 0 to 2 do
+  begin
+    sleep(100);
+    FDetectorFrame.timerScannerArtefacts.Enabled := false;
+    FDetectorFrame.TimerSensor.Enabled := false;
+  end;
 end;
 
 end.

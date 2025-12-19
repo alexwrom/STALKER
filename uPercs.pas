@@ -185,7 +185,6 @@ end;
 constructor TFramePercs.Create(AObject: TFmxObject);
 begin
   inherited Create(AObject);
-  Person := TPerson.Create;
   FArtsList := TList<TPerc>.Create;
   ReloadPercs;
 end;
@@ -194,7 +193,7 @@ procedure TFramePercs.ReloadPercs;
 var
   vQuery: TFDQuery;
 begin
-  ExeExec('select user_id, health, armor_health, weapon_health, weapon_icon, detector_id, level, radius, chimishe, electro, fire, phisic, psi, radiation from user_info where user_id = 1;',
+  ExeExec('select health, armor_health, weapon_health, weapon_icon, detector_id, level, radius, chimishe, electro, fire, phisic, psi, radiation from user_info where user_id = ' + Person.UserId.ToString + ';',
     exActive, vQuery);
   Person.Health := vQuery.FieldByName('health').AsInteger;
   SetArmorHealth(vQuery.FieldByName('armor_health').AsInteger);
@@ -208,6 +207,7 @@ begin
   imgWeaponIcon.Bitmap.Assign(vQuery.FieldByName('weapon_icon'));
   SetDetector(vQuery.FieldByName('detector_id').AsInteger, vQuery.FieldByName('radius').AsInteger, vQuery.FieldByName('level').AsInteger);
 
+  FreeQueryAndConn(vQuery);
   ReloadArts;
 end;
 
@@ -219,7 +219,7 @@ var
   vSlot: integer;
 begin
   FArtsList.Clear;
-  ExeExec('select a.chimishe, a.electro, a.fire, a.phisic, a.psi, a.radiation, a.count_slots, a.icon from users u  join armors a on u.armor_id = a.armor_id where user_id = 1;', exActive, vQuery);
+  ExeExec('select * from armors_data where user_id = ' + Person.UserId.ToString + ';', exActive, vQuery);
   imgArmorIcon.Bitmap.Assign(vQuery.FieldByName('icon'));
   FArmorPerc.PhisicArmor := vQuery.FieldByName('phisic').AsInteger;
   FArmorPerc.RadiationArmor := vQuery.FieldByName('radiation').AsInteger;
@@ -238,7 +238,7 @@ begin
   for i := 1 to vQuery.FieldByName('count_slots').AsInteger do
     (FindComponent('imgGlass' + i.toString) as TImage).Bitmap.Assign(GlassList.Source[i - 1].MultiResBitmap[0].Bitmap);
 
-  ExeExec('select a.chimishe, a.electro, a.fire, a.phisic, a.psi, a.radiation, a.icon, ub.slot from arts a join user_belt ub on ub.art_id = a.art_id where user_id = 1 order by slot;',
+  ExeExec('select a.chimishe, a.electro, a.fire, a.phisic, a.psi, a.radiation, a.icon, ub.slot from arts a join user_belt ub on ub.art_id = a.art_id where user_id = ' + Person.UserId.ToString + ' order by slot;',
     exActive, vQuery);
 
   while not vQuery.Eof do
@@ -260,7 +260,7 @@ begin
     vQuery.Next;
   end;
 
-  vQuery.Free;
+  FreeQueryAndConn(vQuery);
 end;
 
 procedure TFramePercs.SetArmorHealth(Value: integer);

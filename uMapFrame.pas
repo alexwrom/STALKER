@@ -9,27 +9,10 @@ uses
   FMX.Edit, FMX.Ani, FMX.Gestures, FMX.VirtualKeyboard, FMX.Platform,
   System.Math, System.Sensors, System.Sensors.Components, System.Permissions,
   FMX.Effects, Generics.Collections, System.ImageList, FMX.ImgList,
-  System.Actions, FMX.ActnList;
+  System.Actions, FMX.ActnList, uGlobal, FMX.Memo.Types, FMX.ScrollBox, FMX.Memo,
+  FMX.Media, System.IOUtils;
 
 type
-  TMarkerType = (mtPoint, mtRad, mtAnomaly, mtBag, mtIssue);
-  TAnomalyType = (atElectro, atFire, atGravity, atRadiation, atChemical);
-
-  TMarkerData = record
-    Marker: TImage;
-    Coords: TLocationCoord2D;
-    LabelText: string;
-    LabelDetail: string;
-    MarkerType: TMarkerType;
-  end;
-
-  TAnomalyData = record
-    Coords: TLocationCoord2D;
-    Radius: integer;
-    Power: integer;
-    AnomalyType: TAnomalyType;
-  end;
-
   TMapFrame = class(TFrame)
     ScrollBox: TScrollBox;
     MapLayout: TLayout;
@@ -47,7 +30,7 @@ type
     OrientationMarker: TImage;
     btnMyLocation: TButton;
     lblZoom: TLabel;
-    Marker: TImage;
+    MarkersPanel: TImage;
     ImageList: TImageList;
     Layout1: TLayout;
     labMarkerCount: TLabel;
@@ -74,14 +57,11 @@ type
     InnerGlowEffect1: TInnerGlowEffect;
     InnerGlowEffect2: TInnerGlowEffect;
     InnerGlowEffect3: TInnerGlowEffect;
-    Label1: TLabel;
-    LocationSensorSecond: TLocationSensor;
-    LocationSensorThird: TLocationSensor;
+    MediaPlayerRad: TMediaPlayer;
+    MediaPlayerAnomaly: TMediaPlayer;
     procedure MapImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure btnZoomInClick(Sender: TObject);
     procedure btnZoomOutClick(Sender: TObject);
-    procedure btnResetZoomClick(Sender: TObject);
-    procedure FrameResized(Sender: TObject);
     procedure LocationSensorLocationChanged(Sender: TObject; const OldLocation, NewLocation: TLocationCoord2D);
     procedure btnMyLocationClick(Sender: TObject);
     procedure MapImageGesture(Sender: TObject; const EventInfo: TGestureEventInfo; var Handled: Boolean);
@@ -89,6 +69,7 @@ type
     procedure btnDelMarkerClick(Sender: TObject);
     procedure btnDeleteNoClick(Sender: TObject);
     procedure btnDeleteYesClick(Sender: TObject);
+    procedure TimerSensorTimer(Sender: TObject);
   private
     FMapLoaded: Boolean;
     FOriginalMapWidth: Double;
@@ -103,7 +84,6 @@ type
     FBottomRightLon: Double;
     FLastDistance: integer;
     FIsZooming: Boolean;
-    FLocation: TLocationCoord2D;
     FLongTap: TPointF;
     FCoords: TLocationCoord2D;
     FMarkerList: TList<TMarkerData>;
@@ -120,20 +100,14 @@ type
     procedure ZoomOut;
     procedure SetZoom(AScale: Double; ACenterX: Single = -1; ACenterY: Single = -1);
     procedure SetupAndroidSpecifics;
-    procedure HideVirtualKeyboard;
-    procedure AdjustControlsForMobile;
-    function GetAndroidScaleFactor: Single;
     function CalculateBearing(const StartPoint, EndPoint: TLocationCoord2D): Double;
     procedure SetMarker(AMarker: TImage; Lat, Lon: Double);
     procedure CreateMarker(AMarker: TMarkerData);
     procedure ResetLocationMarkers;
     procedure OnMarkerClick(Sender: TObject);
-    procedure CreateIssueTest;
+    procedure UpdateIssue;
     procedure OnMarkerIssueClick(Sender: TObject);
     function GetNumberMarker(AMarker: TImage): integer;
-    procedure CreateAnomalyTest;
-    function CalculateFastDistance(const Lat1, Lon1, Lat2, Lon2: Double): Double;
-    function GetPositionRelativeTo(SourceControl, TargetParent: TControl): TPointF;
     procedure ScrollToImageAdvanced(ScrollBox: TScrollBox; Image: TImage; Center: Boolean = True; Animate: Boolean = False);
     procedure ScanAnomalies;
   public
@@ -154,12 +128,11 @@ type
 implementation
 
 {$R *.fmx}
+{$IFDEF ANDROID}
 
 uses
-{$IFDEF ANDROID}
-  FMX.Platform.Android,
+  FMX.Platform.Android;
 {$ENDIF}
-  uGlobal;
 
 constructor TMapFrame.Create(AOwner: TComponent);
 begin
@@ -175,14 +148,12 @@ begin
   FZoomStep := 0.3; // Увеличиваем шаг для тач-интерфейса
 
   LocationMarker.Visible := False;
-  LocationMarker.BringToFront;
 
   // Настройка жестов
   ScrollBox.Touch.InteractiveGestures := [TInteractiveGesture.Zoom, TInteractiveGesture.Pan, TInteractiveGesture.DoubleTap];
   ScrollBox.Touch.GestureManager := GestureManager;
 
   UpdateZoomControls;
-  AdjustControlsForMobile;
 
   FMarkerList := TList<TMarkerData>.Create;
   FMarkerIssue := TList<TMarkerData>.Create;
@@ -190,50 +161,31 @@ begin
 
   LoadMapFromFile(''); // Переписать
 
-  // CreateIssueTest;   // Тестовая задача
-  CreateAnomalyTest
+  UpdateIssue;
+  ResetLocationMarkers;
+
+{$IFDEF ANDROID}
+  MediaPlayerRad.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'zvuk-radiacii.mp3');
+  MediaPlayerAnomaly.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'detector.mp3');
+{$ENDIF}
 end;
 
-procedure TMapFrame.CreateIssueTest;
+procedure TMapFrame.UpdateIssue;
 var
   AMarker: TMarkerData;
+  I: integer;
 begin
-  FCoords.Latitude := 52.153046;
-  FCoords.Longitude := 23.586531;
+  for I := 0 to FIssueList.Count - 1 do
+  begin
+    FCoords := FIssueList[I].Coords;
+    AMarker.Coords := FCoords;
+    AMarker.MarkerType := mtIssue;
 
-  AMarker.Coords := FCoords;
+    AMarker.LabelText := FIssueList[I].Name;
+    AMarker.LabelDetail := FIssueList[I].Detail;
 
-  AMarker.MarkerType := mtIssue;
-
-  AMarker.LabelText := 'Первая уловка';
-  AMarker.LabelDetail := 'Найти зацепки пропавшего сталкера';
-
-  CreateMarker(AMarker);
-end;
-
-procedure TMapFrame.CreateAnomalyTest;
-var
-  AAnomaly: TAnomalyData;
-begin
-  FCoords.Latitude := 52.153046;
-  FCoords.Longitude := 23.586531;
-
-  AAnomaly.Coords := FCoords;
-  AAnomaly.AnomalyType := atRadiation;
-  AAnomaly.Radius := 5;
-  AAnomaly.Power := 10;
-
-  FAnomalyList.Add(AAnomaly);
-
-  FCoords.Latitude := 52.153022;
-  FCoords.Longitude := 23.586815;
-
-  AAnomaly.Coords := FCoords;
-  AAnomaly.AnomalyType := atRadiation;
-  AAnomaly.Radius := 7;
-  AAnomaly.Power := 20;
-
-  FAnomalyList.Add(AAnomaly);
+    CreateMarker(AMarker);
+  end;
 end;
 
 destructor TMapFrame.Destroy;
@@ -249,9 +201,6 @@ begin
     // Настройка для лучшей производительности
     ScrollBox.EnableDragHighlight := False;
     MapImage.HitTest := True;
-
-    // Подписка на события ресайза
-    OnResized := FrameResized;
   end;
 end;
 
@@ -285,35 +234,7 @@ begin
   end;
 
   CreateMarker(AMarker);
-  Marker.Visible := False;
-end;
-
-procedure TMapFrame.AdjustControlsForMobile;
-var
-  ScaleFactor: Single;
-begin
-  if TOSVersion.Platform = pfAndroid then
-  begin
-    ScaleFactor := GetAndroidScaleFactor;
-
-    // Увеличиваем размер маркера
-    // LocationMarker.Width := 30 * ScaleFactor;
-    // LocationMarker.Height := 30 * ScaleFactor;
-  end;
-end;
-
-function TMapFrame.GetAndroidScaleFactor: Single;
-begin
-  if TOSVersion.Platform = pfAndroid then
-    Result := 1.5 // Базовая масштабируемость для Android
-  else
-    Result := 1.0;
-end;
-
-procedure TMapFrame.FrameResized(Sender: TObject);
-begin
-  // Адаптация интерфейса при изменении ориентации
-  AdjustControlsForMobile;
+  MarkersPanel.Visible := False;
 end;
 
 procedure TMapFrame.LoadMapFromFile(const AFileName: string);
@@ -349,25 +270,14 @@ end;
 
 procedure TMapFrame.LocationSensorLocationChanged(Sender: TObject; const OldLocation, NewLocation: TLocationCoord2D);
 begin
-  FLocation := NewLocation;
-  LocationMarker.Visible := True;
+  if NewLocation.Latitude <> 0 then
+  begin
+    FLocation := NewLocation;
+    LocationMarker.Visible := True;
 
-  SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
-  OrientationMarker.RotationAngle := 135 + CalculateBearing(OldLocation, FLocation);
-end;
-
-function TMapFrame.CalculateFastDistance(const Lat1, Lon1, Lat2, Lon2: Double): Double;
-const
-  R = 6371000; // Радиус Земли в метрах
-  DegToRad = Pi / 180;
-var
-  X, Y: Double;
-begin
-  // Приближенный расчет для небольших расстояний
-  X := (Lon2 - Lon1) * Cos(DegToRad * (Lat1 + Lat2) / 2);
-  Y := (Lat2 - Lat1);
-
-  Result := R * Sqrt(X * X + Y * Y) * DegToRad;
+    SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
+    OrientationMarker.RotationAngle := 135 + CalculateBearing(OldLocation, FLocation);
+  end;
 end;
 
 procedure TMapFrame.ScanAnomalies;
@@ -375,14 +285,28 @@ var
   I: integer;
   vDistance: Double;
 begin
-  Label1.Text := '';
 
   for I := 0 to FAnomalyList.Count - 1 do
   begin
     vDistance := CalculateFastDistance(FLocation.Latitude, FLocation.Longitude, FAnomalyList[I].Coords.Latitude, FAnomalyList[I].Coords.Longitude);
 
     if vDistance <= FAnomalyList[I].Radius then
+    begin
+      if FAnomalyList[I].AnomalyType = atRadiation then
+      begin
+        MediaPlayerRad.CurrentTime := 0;
+        MediaPlayerRad.Volume := vDistance / FAnomalyList[I].Radius * 100;
+        MediaPlayerRad.Play;
+      end
+      else
+      begin
+        MediaPlayerAnomaly.CurrentTime := 0;
+        MediaPlayerAnomaly.Volume := vDistance / FAnomalyList[I].Radius * 100;
+        MediaPlayerAnomaly.Play;
+      end;
+
       Person.Health := Person.Health - FAnomalyList[I].Power * (vDistance / FAnomalyList[I].Radius);
+    end;
   end;
 end;
 
@@ -429,6 +353,7 @@ begin
   LocationMarker.Position.X := Point.X - LocationMarker.Width / 2;
   LocationMarker.Position.Y := Point.Y - LocationMarker.Height / 2;
   LocationMarker.Visible := True;
+  LocationMarker.BringToFront;
 end;
 
 function TMapFrame.CoordinatesToPixels(Lat, Lon: Double): TPointF;
@@ -469,7 +394,6 @@ end;
 
 procedure TMapFrame.MapImageGesture(Sender: TObject; const EventInfo: TGestureEventInfo; var Handled: Boolean);
 begin
-  HideVirtualKeyboard;
   // if Button = TMouseButton.mbLeft then
   // begin
   // Получаем координаты по клику
@@ -480,8 +404,8 @@ begin
   btnAddMarkerAnomaly.Enabled := FMarkerList.Count < 10;
   labMarkerCount.Text := FMarkerList.Count.ToString + '/10';
   // Устанавливаем маркер
-  SetMarker(Marker, FCoords.Latitude, FCoords.Longitude);
-  Marker.BringToFront;
+  SetMarker(MarkersPanel, FCoords.Latitude, FCoords.Longitude);
+  MarkersPanel.BringToFront;
 end;
 
 procedure TMapFrame.SetMarker(AMarker: TImage; Lat, Lon: Double);
@@ -496,18 +420,14 @@ begin
 
   // Позиционируем маркер
   AMarker.Position.X := Point.X - AMarker.Width / 2;
-
-  if AMarker = Marker then
-    AMarker.Position.Y := Point.Y - AMarker.Height / 2
-  else
-    AMarker.Position.Y := Point.Y - AMarker.Height;
+  AMarker.Position.Y := Point.Y - AMarker.Height / 2;
 
   AMarker.Visible := True;
 end;
 
 procedure TMapFrame.MapImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
 begin
-  Marker.Visible := False;
+  MarkersPanel.Visible := False;
   LayDetailMarker.Visible := False;
   layDetailIssue.Visible := False;
   FLongTap.X := X;
@@ -515,18 +435,29 @@ begin
 end;
 
 procedure TMapFrame.btnZoomInClick(Sender: TObject);
+var
+  vOldViewportPositionX: Single;
+  vOldViewportPositionY: Single;
 begin
-  HideVirtualKeyboard;
+
+  vOldViewportPositionX := ScrollBox.ViewportPosition.X / FCurrentScale * (FCurrentScale + FZoomStep);
+  vOldViewportPositionY := ScrollBox.ViewportPosition.Y / FCurrentScale * (FCurrentScale + FZoomStep);
   ZoomIn;
-  ApplyZoom(ScrollBox.ViewportPosition.X + ScrollBox.Width / 2, ScrollBox.ViewportPosition.Y + ScrollBox.Height / 2);
+  ScrollBox.ViewportPosition := TPointF.Create(vOldViewportPositionX, vOldViewportPositionY);
+  // ApplyZoom(vOldViewportPositionX, vOldViewportPositionY);
   ResetLocationMarkers;
 end;
 
 procedure TMapFrame.btnZoomOutClick(Sender: TObject);
+var
+  vOldViewportPositionX: Single;
+  vOldViewportPositionY: Single;
 begin
-  HideVirtualKeyboard;
+  vOldViewportPositionX := ScrollBox.ViewportPosition.X / FCurrentScale * (FCurrentScale - FZoomStep);
+  vOldViewportPositionY := ScrollBox.ViewportPosition.Y / FCurrentScale * (FCurrentScale - FZoomStep);
   ZoomOut;
-  ApplyZoom(ScrollBox.ViewportPosition.X + ScrollBox.Width / 2, ScrollBox.ViewportPosition.Y + ScrollBox.Height / 2);
+  ScrollBox.ViewportPosition := TPointF.Create(vOldViewportPositionX, vOldViewportPositionY);
+  // ApplyZoom(vOldViewportPositionX, vOldViewportPositionY);
   ResetLocationMarkers;
 end;
 
@@ -543,26 +474,22 @@ var
   TargetX: Single;
   TargetY: Single;
 begin
-if not LocationMarker.Visible then
-    Exit;
+  if LocationMarker.Visible then
+  begin
+    ScrollBox.ViewportPosition := TPointF.Create(0, 0);
 
-  // Получаем позицию центра маркера относительно MapLayout
-  MarkerCenter := TPointF.Create(
-    LocationMarker.Position.X + LocationMarker.Width / 2,
-    LocationMarker.Position.Y + LocationMarker.Height / 2
-  );
+    // Получаем позицию центра маркера относительно MapLayout
+    MarkerCenter := (TPointF.Create((LocationMarker.LocalToAbsolute(TPointF.Zero).X + LocationMarker.Width / 2) * MapLayout.Scale.X,
+      (LocationMarker.LocalToAbsolute(TPointF.Zero).Y + LocationMarker.Height / 2)) * MapLayout.Scale.Y);
+    MarkerCenter := ScrollBox.AbsoluteToLocal(MarkerCenter);
 
-  // Вычисляем целевую позицию прокрутки для центрирования маркера
-  TargetX := MarkerCenter.X - ScrollBox.Width / 2;
-  TargetY := MarkerCenter.Y - ScrollBox.Height / 2;
+    // Вычисляем целевую позицию прокрутки для центрирования маркера
+    TargetX := MarkerCenter.X - ScrollBox.Width / 2;
+    TargetY := MarkerCenter.Y - ScrollBox.Height / 2;
 
-  // Ограничиваем позицию в пределах карты
-  TargetX := Max(0, Min(TargetX, MapLayout.Width - ScrollBox.Width));
-  TargetY := Max(0, Min(TargetY, MapLayout.Height - ScrollBox.Height));
-
-  // Устанавливаем позицию прокрутки
-  ScrollBox.ViewportPosition := TPointF.Create(TargetX, TargetY);
-
+    // Устанавливаем позицию прокрутки
+    ScrollBox.ViewportPosition := TPointF.Create(TargetX, TargetY);
+  end;
 end;
 
 procedure TMapFrame.OnMarkerClick(Sender: TObject);
@@ -653,11 +580,6 @@ begin
     end;
 end;
 
-function TMapFrame.GetPositionRelativeTo(SourceControl, TargetParent: TControl): TPointF;
-begin
-
-end;
-
 procedure TMapFrame.CreateMarker(AMarker: TMarkerData);
 begin
   AMarker.Marker := TImage.Create(MapLayout);
@@ -695,35 +617,17 @@ procedure TMapFrame.ResetLocationMarkers;
 var
   I: integer;
 begin
-  SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
-
-  if Marker.Visible then
-    SetMarker(Marker, FCoords.Latitude, FCoords.Longitude);
 
   for I := 0 to FMarkerList.Count - 1 do
     SetMarker(FMarkerList[I].Marker, FMarkerList[I].Coords.Latitude, FMarkerList[I].Coords.Longitude);
 
   for I := 0 to FMarkerIssue.Count - 1 do
     SetMarker(FMarkerIssue[I].Marker, FMarkerIssue[I].Coords.Latitude, FMarkerIssue[I].Coords.Longitude);
-end;
 
-procedure TMapFrame.btnResetZoomClick(Sender: TObject);
-begin
-  HideVirtualKeyboard;
-  SetZoom(1.0);
-end;
+  SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
 
-procedure TMapFrame.HideVirtualKeyboard;
-var
-  FService: IFMXVirtualKeyboardService;
-begin
-  if TOSVersion.Platform = pfAndroid then
-  begin
-    if TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, FService) then
-    begin
-      FService.HideVirtualKeyboard;
-    end;
-  end;
+  if MarkersPanel.Visible then
+    SetMarker(MarkersPanel, FCoords.Latitude, FCoords.Longitude);
 end;
 
 procedure TMapFrame.ZoomIn;
@@ -766,6 +670,11 @@ begin
   end;
 end;
 
+procedure TMapFrame.TimerSensorTimer(Sender: TObject);
+begin
+  ScanAnomalies;
+end;
+
 procedure TMapFrame.btnDeleteNoClick(Sender: TObject);
 begin
   gplDeleteYesNo.Visible := False;
@@ -789,13 +698,9 @@ var
 begin
   if (ACenterX >= 0) and (ACenterY >= 0) then
   begin
-    // Корректируем позицию прокрутки для сохранения точки в центре
-    ViewportX := ACenterX - ScrollBox.Width / 2;
-    ViewportY := ACenterY - ScrollBox.Height / 2;
-
     // Ограничиваем позицию прокрутки
-    ViewportX := Max(0, Min(ViewportX, MapLayout.Width - ScrollBox.Width));
-    ViewportY := Max(0, Min(ViewportY, MapLayout.Height - ScrollBox.Height));
+    ViewportX := Max(0, Min(ACenterX, MapLayout.Width - ScrollBox.Width));
+    ViewportY := Max(0, Min(ACenterY, MapLayout.Height - ScrollBox.Height));
 
     ScrollBox.ViewportPosition := PointF(ViewportX, ViewportY);
   end;
@@ -819,10 +724,10 @@ end;
 procedure TMapFrame.UpdateMapBounds;
 begin
   // Устанавливаем границы по умолчанию
-  FTopLeftLat := 52.154782;
-  FTopLeftLon := 23.581871;
-  FBottomRightLat := 52.151184;
-  FBottomRightLon := 23.597090;
+  FTopLeftLat := 52.093602;
+  FTopLeftLon := 23.697432;
+  FBottomRightLat := 52.085325;
+  FBottomRightLon := 23.721153;
 end;
 
 procedure TMapFrame.SetMapBounds(TopLeftLat, TopLeftLon, BottomRightLat, BottomRightLon: Double);

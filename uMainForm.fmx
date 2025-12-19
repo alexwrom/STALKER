@@ -1,7 +1,6 @@
 object MainForm: TMainForm
   Left = 0
   Top = 0
-  BorderStyle = Single
   Caption = 'Wi-Fi Scanner'
   ClientHeight = 480
   ClientWidth = 1052
@@ -9,6 +8,7 @@ object MainForm: TMainForm
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop, iPhone, iPad]
   OnCreate = FormCreate
+  OnShow = FormShow
   DesignerMasterStyle = 0
   object Timer1: TTimer
     Enabled = False
@@ -30,99 +30,12 @@ object MainForm: TMainForm
       990s
       468s
       990s
-      468s
-      990s
       468s)
-    object TabItem1: TTabItem
-      CustomIcon = <
-        item
-        end>
-      IsSelected = True
-      Size.Width = 8.000000000000000000
-      Size.Height = 8.000000000000000000
-      Size.PlatformDefault = False
-      StyleLookup = ''
-      TabOrder = 0
-      Text = 'TabItem1'
-      ExplicitSize.cx = 69.000000000000000000
-      ExplicitSize.cy = 26.000000000000000000
-      object btnScan: TButton
-        Align = Top
-        Size.Width = 990.000000000000000000
-        Size.Height = 30.000000000000000000
-        Size.PlatformDefault = False
-        TabOrder = 2
-        Text = #1053#1072#1095#1072#1090#1100
-      end
-      object Button1: TButton
-        Align = Bottom
-        Position.Y = 253.000000000000000000
-        Size.Width = 990.000000000000000000
-        Size.Height = 30.000000000000000000
-        Size.PlatformDefault = False
-        TabOrder = 1
-        Text = #1053#1072#1095#1072#1090#1100
-      end
-      object Label1: TLabel
-        Align = Bottom
-        Position.Y = 213.000000000000000000
-        Size.Width = 990.000000000000000000
-        Size.Height = 40.000000000000000000
-        Size.PlatformDefault = False
-        Text = 'Label1'
-        TabOrder = 7
-      end
-      object lblStatus: TLabel
-        Align = Top
-        Position.Y = 30.000000000000000000
-        Size.Width = 990.000000000000000000
-        Size.Height = 37.000000000000000000
-        Size.PlatformDefault = False
-        Text = #1056#1038#1057#8218#1056#176#1057#8218#1057#1107#1057#1027': '#1056#8220#1056#1109#1057#8218#1056#1109#1056#1030' '#1056#1108' '#1057#1027#1056#1108#1056#176#1056#1029#1056#1105#1057#1026#1056#1109#1056#1030#1056#176#1056#1029#1056#1105#1057#1035
-        TabOrder = 0
-      end
-      object ListBox1: TListBox
-        Align = Client
-        Size.Width = 990.000000000000000000
-        Size.Height = 146.000000000000000000
-        Size.PlatformDefault = False
-        TabOrder = 4
-        DisableFocusEffect = True
-        ItemHeight = 70.000000000000000000
-        DefaultItemStyles.ItemStyle = ''
-        DefaultItemStyles.GroupHeaderStyle = ''
-        DefaultItemStyles.GroupFooterStyle = ''
-        Viewport.Width = 986.000000000000000000
-        Viewport.Height = 142.000000000000000000
-      end
-      object Memo1: TMemo
-        Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
-        DataDetectorTypes = []
-        Align = Bottom
-        Position.Y = 283.000000000000000000
-        Size.Width = 990.000000000000000000
-        Size.Height = 185.000000000000000000
-        Size.PlatformDefault = False
-        TabOrder = 8
-        Viewport.Width = 990.000000000000000000
-        Viewport.Height = 185.000000000000000000
-      end
-      object ProgressBar1: TProgressBar
-        Align = Top
-        Orientation = Horizontal
-        Position.X = 152.000000000000000000
-        Position.Y = 48.000000000000000000
-        Size.Width = 632.000000000000000000
-        Size.Height = 30.000000000000000000
-        Size.PlatformDefault = False
-        Visible = False
-      end
-    end
     object TabMap: TTabItem
       CustomIcon = <
         item
         end>
-      IsSelected = False
+      IsSelected = True
       Size.Width = 8.000000000000000000
       Size.Height = 8.000000000000000000
       Size.PlatformDefault = False
@@ -157,6 +70,8 @@ object MainForm: TMainForm
       StyleLookup = ''
       TabOrder = 0
       Text = 'TabDetector'
+      ExplicitSize.cx = 8.000000000000000000
+      ExplicitSize.cy = 8.000000000000000000
     end
   end
   object Image8: TImage
@@ -1820,7 +1735,7 @@ object MainForm: TMainForm
     Size.PlatformDefault = False
     WrapMode = Stretch
   end
-  object Image1: TImage
+  object imgPersonHealth: TImage
     MultiResBitmap.Height = 23
     MultiResBitmap.Width = 222
     MultiResBitmap.LoadSize = 2
@@ -2012,8 +1927,8 @@ object MainForm: TMainForm
         FileName = 'D:\Delphi\Android\Wi-Fi\Resources\progress.png'
       end>
     Anchors = [akLeft, akBottom]
-    Position.X = 7.000000000000000000
-    Position.Y = 437.000000000000000000
+    Position.X = 6.000000000000000000
+    Position.Y = 438.000000000000000000
     Size.Width = 350.000000000000000000
     Size.Height = 38.000000000000000000
     Size.PlatformDefault = False
@@ -2022,14 +1937,14 @@ object MainForm: TMainForm
       Corners = [TopRight, BottomRight]
       Fill.Color = x6422FC1A
       Position.X = 5.000000000000000000
-      Position.Y = 6.000000000000000000
+      Position.Y = 7.000000000000000000
       Size.Width = 338.000000000000000000
       Size.Height = 23.000000000000000000
       Size.PlatformDefault = False
       Stroke.Kind = None
     end
   end
-  object Layout4: TLayout
+  object layMenu: TLayout
     Align = Right
     Position.X = 996.000000000000000000
     Position.Y = 6.000000000000000000
