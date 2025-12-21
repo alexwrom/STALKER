@@ -104,6 +104,8 @@ type
     labPhisicArmor: TLabel;
     labPsiArmor: TLabel;
     labRadiationArmor: TLabel;
+    imgPersonHealth: TImage;
+    HealthProgress: TRectangle;
     procedure btnInfoClick(Sender: TObject);
     procedure btnCloseInfoClick(Sender: TObject);
     procedure btnArmorInfoClick(Sender: TObject);
@@ -112,12 +114,12 @@ type
     { Private declarations }
     FArtsList: TList<TPerc>;
     FArmorPerc: TPerc;
+
+  public
     procedure ReloadArts;
     procedure ReloadPercs;
-  public
-
-    procedure SetArmorHealth(Value: integer);
-    procedure SetWeaponHealth(Value: integer);
+    procedure SetArmorHealth(Value: Double);
+    procedure SetWeaponHealth(Value: Double);
     procedure SetChimisheArmor(Value: integer);
     procedure SetElectroArmor(Value: integer);
     procedure SetFireArmor(Value: integer);
@@ -142,12 +144,12 @@ begin
   infoPhisic.Width := infoPhisic.Tag * FArmorPerc.PhisicArmor / 100;
   infoFire.Width := infoFire.Tag * FArmorPerc.FireArmor / 100;
 
-  infoLabRadiation.Text := IfThen(FArmorPerc.RadiationArmor = 0, '', FArmorPerc.RadiationArmor.ToString + ' %');
-    infoLabChimishe.Text := IfThen(FArmorPerc.ChimisheArmor = 0, '', FArmorPerc.ChimisheArmor.ToString + ' %');
-    infoLabElectro.Text := IfThen(FArmorPerc.ElectroArmor = 0, '', FArmorPerc.ElectroArmor.ToString + ' %');
-    infoLabPsi.Text := IfThen(FArmorPerc.PsiArmor = 0, '', FArmorPerc.PsiArmor.ToString + ' %');
-    infoLabPhisic.Text := IfThen(FArmorPerc.PhisicArmor = 0, '', FArmorPerc.PhisicArmor.ToString + ' %');
-    infoLabFire.Text := IfThen(FArmorPerc.FireArmor = 0, '', FArmorPerc.FireArmor.ToString + ' %');
+  infoLabradiation.Text := IfThen(FArmorPerc.RadiationArmor = 0, '', FArmorPerc.RadiationArmor.ToString + ' %');
+  infoLabChimishe.Text := IfThen(FArmorPerc.ChimisheArmor = 0, '', FArmorPerc.ChimisheArmor.ToString + ' %');
+  infoLabElectro.Text := IfThen(FArmorPerc.ElectroArmor = 0, '', FArmorPerc.ElectroArmor.ToString + ' %');
+  infoLabPsi.Text := IfThen(FArmorPerc.PsiArmor = 0, '', FArmorPerc.PsiArmor.ToString + ' %');
+  infoLabPhisic.Text := IfThen(FArmorPerc.PhisicArmor = 0, '', FArmorPerc.PhisicArmor.ToString + ' %');
+  infoLabFire.Text := IfThen(FArmorPerc.FireArmor = 0, '', FArmorPerc.FireArmor.ToString + ' %');
   layInfo.Visible := true;
 end;
 
@@ -167,7 +169,7 @@ begin
     infoPhisic.Width := infoPhisic.Tag * FArtsList[(Sender as TSpeedButton).Tag].PhisicArmor / 100;
     infoFire.Width := infoFire.Tag * FArtsList[(Sender as TSpeedButton).Tag].FireArmor / 100;
 
-    infoLabRadiation.Text := IfThen(FArtsList[(Sender as TSpeedButton).Tag].RadiationArmor = 0, '', FArtsList[(Sender as TSpeedButton).Tag].RadiationArmor.ToString + ' %');
+    infoLabradiation.Text := IfThen(FArtsList[(Sender as TSpeedButton).Tag].RadiationArmor = 0, '', FArtsList[(Sender as TSpeedButton).Tag].RadiationArmor.ToString + ' %');
     infoLabChimishe.Text := IfThen(FArtsList[(Sender as TSpeedButton).Tag].ChimisheArmor = 0, '', FArtsList[(Sender as TSpeedButton).Tag].ChimisheArmor.ToString + ' %');
     infoLabElectro.Text := IfThen(FArtsList[(Sender as TSpeedButton).Tag].ElectroArmor = 0, '', FArtsList[(Sender as TSpeedButton).Tag].ElectroArmor.ToString + ' %');
     infoLabPsi.Text := IfThen(FArtsList[(Sender as TSpeedButton).Tag].PsiArmor = 0, '', FArtsList[(Sender as TSpeedButton).Tag].PsiArmor.ToString + ' %');
@@ -193,11 +195,11 @@ procedure TFramePercs.ReloadPercs;
 var
   vQuery: TFDQuery;
 begin
-  ExeExec('select health, armor_health, weapon_health, weapon_icon, detector_id, level, radius, chimishe, electro, fire, phisic, psi, radiation from user_info where user_id = ' + Person.UserId.ToString + ';',
-    exActive, vQuery);
-  Person.Health := vQuery.FieldByName('health').AsInteger;
-  SetArmorHealth(vQuery.FieldByName('armor_health').AsInteger);
-  SetWeaponHealth(vQuery.FieldByName('weapon_health').AsInteger);
+  ExeExec('select health, armor_health, weapon_health, weapon_icon, detector_id, level, radius, chimishe, electro, fire, phisic, psi, radiation from user_info where user_id = ' +
+    Person.UserId.ToString + ';', exActive, vQuery);
+  Person.Health := vQuery.FieldByName('health').AsFloat;
+  SetArmorHealth(vQuery.FieldByName('armor_health').AsFloat);
+  SetWeaponHealth(vQuery.FieldByName('weapon_health').AsFloat);
   SetChimisheArmor(vQuery.FieldByName('chimishe').AsInteger);
   SetElectroArmor(vQuery.FieldByName('electro').AsInteger);
   SetFireArmor(vQuery.FieldByName('fire').AsInteger);
@@ -230,25 +232,25 @@ begin
 
   for i := 1 to 5 do
   begin
-    (FindComponent('imgGlass' + i.toString) as TImage).Bitmap.Assign(GlassList.Source[5].MultiResBitmap[0].Bitmap);
-    (FindComponent('imgSlot' + i.toString) as TImage).Bitmap := nil;
-    (FindComponent('btnSlot' + i.toString + 'Info') as TSpeedButton).Visible := false;
+    (FindComponent('imgGlass' + i.ToString) as TImage).Bitmap.Assign(GlassList.Source[5].MultiResBitmap[0].Bitmap);
+    (FindComponent('imgSlot' + i.ToString) as TImage).Bitmap := nil;
+    (FindComponent('btnSlot' + i.ToString + 'Info') as TSpeedButton).Visible := false;
   end;
 
   for i := 1 to vQuery.FieldByName('count_slots').AsInteger do
-    (FindComponent('imgGlass' + i.toString) as TImage).Bitmap.Assign(GlassList.Source[i - 1].MultiResBitmap[0].Bitmap);
+    (FindComponent('imgGlass' + i.ToString) as TImage).Bitmap.Assign(GlassList.Source[i - 1].MultiResBitmap[0].Bitmap);
 
-  ExeExec('select a.chimishe, a.electro, a.fire, a.phisic, a.psi, a.radiation, a.icon, ub.slot from arts a join user_belt ub on ub.art_id = a.art_id where user_id = ' + Person.UserId.ToString + ' order by slot;',
-    exActive, vQuery);
+  ExeExec('select a.chimishe, a.electro, a.fire, a.phisic, a.psi, a.radiation, a.icon, ub.slot from arts a join user_belt ub on ub.art_id = a.art_id where user_id = ' + Person.UserId.ToString +
+    ' order by slot;', exActive, vQuery);
 
   while not vQuery.Eof do
   begin
     vSlot := vQuery.FieldByName('slot').AsInteger;
-    (FindComponent('imgGlass' + vSlot.toString) as TImage).Bitmap.Assign(GlassList.Source[vSlot - 1].MultiResBitmap[0].Bitmap);
-    (FindComponent('btnSlot' + vSlot.toString + 'Info') as TSpeedButton).Visible := true;
-    (FindComponent('btnSlot' + vSlot.toString + 'Info') as TSpeedButton).Tag := vSlot - 1;
+    (FindComponent('imgGlass' + vSlot.ToString) as TImage).Bitmap.Assign(GlassList.Source[vSlot - 1].MultiResBitmap[0].Bitmap);
+    (FindComponent('btnSlot' + vSlot.ToString + 'Info') as TSpeedButton).Visible := true;
+    (FindComponent('btnSlot' + vSlot.ToString + 'Info') as TSpeedButton).Tag := vSlot - 1;
 
-    (FindComponent('imgSlot' + vSlot.toString) as TImage).Bitmap.Assign(vQuery.FieldByName('icon'));
+    (FindComponent('imgSlot' + vSlot.ToString) as TImage).Bitmap.Assign(vQuery.FieldByName('icon'));
     vPerc.PhisicArmor := vQuery.FieldByName('phisic').AsInteger;
     vPerc.RadiationArmor := vQuery.FieldByName('radiation').AsInteger;
     vPerc.ElectroArmor := vQuery.FieldByName('electro').AsInteger;
@@ -263,7 +265,7 @@ begin
   FreeQueryAndConn(vQuery);
 end;
 
-procedure TFramePercs.SetArmorHealth(Value: integer);
+procedure TFramePercs.SetArmorHealth(Value: Double);
 begin
   ArmorHealthProgress.Width := Value * ArmorHealthProgress.Tag / 100;
   Person.ArmorHealth := Value;
@@ -276,7 +278,7 @@ begin
     ArmorHealthProgress.Fill.Color := cFullColor;
 end;
 
-procedure TFramePercs.SetWeaponHealth(Value: integer);
+procedure TFramePercs.SetWeaponHealth(Value: Double);
 begin
   WeaponHealthProgress.Width := Value * WeaponHealthProgress.Tag / 100;
   Person.WeaponHealth := Value;
@@ -302,6 +304,7 @@ end;
 
 procedure TFramePercs.SetPsiArmor(Value: integer);
 begin
+  Person.PsiArmor := Value;
   PsiArmor.Width := Value * PsiArmor.Tag / 100;
 
   if Value = 0 then
@@ -309,67 +312,61 @@ begin
   else
     labPsiArmor.Text := Value.ToString + '%';
 
-  Person.WeaponHealth := Value;
 end;
 
 procedure TFramePercs.SetFireArmor(Value: integer);
 begin
+  Person.FireArmor := Value;
   FireArmor.Width := Value * FireArmor.Tag / 100;
 
-   if Value = 0 then
+  if Value = 0 then
     labFireArmor.Text := ''
   else
     labFireArmor.Text := Value.ToString + '%';
-
-  Person.WeaponHealth := Value;
 end;
 
 procedure TFramePercs.SetElectroArmor(Value: integer);
 begin
+  Person.ElectroArmor := Value;
   ElectroArmor.Width := Value * ElectroArmor.Tag / 100;
 
   if Value = 0 then
     labElectroArmor.Text := ''
   else
     labElectroArmor.Text := Value.ToString + '%';
-
-  Person.WeaponHealth := Value;
 end;
 
 procedure TFramePercs.SetChimisheArmor(Value: integer);
 begin
+  Person.ChimisheArmor := Value;
   ChimisheArmor.Width := Value * ChimisheArmor.Tag / 100;
 
   if Value = 0 then
     labChimisheArmor.Text := ''
   else
     labChimisheArmor.Text := Value.ToString + '%';
-
-  Person.WeaponHealth := Value;
 end;
 
 procedure TFramePercs.SetPhisicArmor(Value: integer);
 begin
+  Person.PhisicArmor := Value;
   PhisicArmor.Width := Value * PhisicArmor.Tag / 100;
 
   if Value = 0 then
     labPhisicArmor.Text := ''
   else
     labPhisicArmor.Text := Value.ToString + '%';
-
-  Person.WeaponHealth := Value;
 end;
 
 procedure TFramePercs.SetRadiationArmor(Value: integer);
 begin
+  Person.RadiationArmor := Value;
   RadiationArmor.Width := Value * RadiationArmor.Tag / 100;
 
   if Value = 0 then
     labRadiationArmor.Text := ''
   else
     labRadiationArmor.Text := Value.ToString + '%';
-
-  Person.WeaponHealth := Value;
 end;
 
 end.

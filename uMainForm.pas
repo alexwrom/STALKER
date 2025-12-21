@@ -13,6 +13,7 @@ uses
   FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys,
   FireDAC.FMXUI.Wait, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
   FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client, uGlobal, uDetectorFrame,
+  uQRScanerFrame,
 {$IFDEF ANDROID}
   Androidapi.JNI.JavaTypes, // Для JString
   Androidapi.JNI.GraphicsContentViewText,
@@ -27,7 +28,6 @@ uses
 type
 
   TMainForm = class(TForm)
-    Timer1: TTimer;
     TabControl: TTabControl;
     TabMap: TTabItem;
     TabPercs: TTabItem;
@@ -35,8 +35,6 @@ type
     Image11: TImage;
     Image13: TImage;
     Image10: TImage;
-    imgPersonHealth: TImage;
-    HealthProgress: TRectangle;
     FDConn: TFDConnection;
     FDQuery: TFDQuery;
     layMenu: TLayout;
@@ -44,32 +42,45 @@ type
     imgBtnMap: TImage;
     ImgBtnPercs: TImage;
     imgBtnBag: TImage;
-    imgBtnDetector: TImage;
+    imgBtnQRScanner: TImage;
     Image6: TImage;
     Image7: TImage;
     Image9: TImage;
     Image12: TImage;
     Image14: TImage;
     Image15: TImage;
-    recSelect: TRectangle;
     btnToMap: TSpeedButton;
     btnToPercs: TSpeedButton;
     btnToBag: TSpeedButton;
-    btnToDetector: TSpeedButton;
+    btnToQRScanner: TSpeedButton;
     TabDetector: TTabItem;
+    TabQRScanner: TTabItem;
+    imgPersonHealth: TImage;
+    HealthProgress: TRectangle;
+    recSelect: TRectangle;
+    Button1: TButton;
+    Button2: TButton;
     procedure FormCreate(Sender: TObject);
     procedure btnToMapClick(Sender: TObject);
     procedure btnToPercsClick(Sender: TObject);
     procedure btnToBagClick(Sender: TObject);
-    procedure btnToDetectorClick(Sender: TObject);
+    procedure btnToQRScannerClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
   private
-    FMapFrame: TMapFrame;
-    FPercsFrame: TFramePercs;
-    FDetectorFrame: TFrameDetector;
+
+    procedure LoadArtefacts;
+    procedure LoadPlaces;
 
   public
     { Public declarations }
+    FMapFrame: TMapFrame;
+    FPercsFrame: TFramePercs;
+    FDetectorFrame: TFrameDetector;
+    FFrameQRScanner: TFrameQRScanner;
+    procedure LoadIsuies;
+    procedure StopDetector;
   end;
 
 var
@@ -84,20 +95,49 @@ uses
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
-
 {$IF Defined(ANDROID) or Defined(IOS)}
   Self.FullScreen := true;
 {$ENDIF}
 end;
 
-procedure TMainForm.FormShow(Sender: TObject);
+procedure TMainForm.LoadIsuies;
+var
+  vQuery: TFDQuery;
+  vIssueList: TIssueData;
+begin
+  if Assigned(FIssueList) then
+    FIssueList.Clear
+  else
+    FIssueList := TList<TIssueData>.Create;
+
+  ExeExec('select * from open_issuies where user_id = ' + Person.UserId.ToString + ';', exActive, vQuery);
+  vQuery.First;
+
+  while Not vQuery.Eof do
+  begin
+    vIssueList.Coords.Latitude := vQuery.FieldByName('lat').AsFloat;
+    vIssueList.Coords.Longitude := vQuery.FieldByName('lon').AsFloat;
+    vIssueList.ID := vQuery.FieldByName('issue_id').AsInteger;
+    vIssueList.PrevID := vQuery.FieldByName('prev_issue_id').AsInteger;
+    vIssueList.Cost := vQuery.FieldByName('cost').AsInteger;
+    vIssueList.Name := vQuery.FieldByName('name').AsString;
+    vIssueList.Detail := vQuery.FieldByName('detail').AsString;
+    vIssueList.RadiusIN := vQuery.FieldByName('radius_in').AsInteger;
+    vIssueList.RadiusOUT := vQuery.FieldByName('radius_out').AsInteger;
+    vIssueList.CompleteAfterOUT := vQuery.FieldByName('complete_after_out').AsBoolean;
+    vIssueList.CompleteAfterIN := vQuery.FieldByName('complete_after_in').AsBoolean;
+    FIssueList.Add(vIssueList);
+    vQuery.Next;
+  end;
+
+  FreeQueryAndConn(vQuery);
+end;
+
+procedure TMainForm.LoadArtefacts;
 var
   vQuery: TFDQuery;
   vArtefactData: TArtefactData;
-  vIssueList: TIssueData;
 begin
-  Person := TPerson.Create;
-  Person.UserId := 1; // Получить ID при логировании
   FArtefactsList := TList<TArtefactData>.Create;
   ExeExec('select * from arts;', exActive, vQuery);
   vQuery.First;
@@ -110,25 +150,42 @@ begin
     FArtefactsList.Add(vArtefactData);
     vQuery.Next;
   end;
+end;
 
-  FIssueList:= TList<TIssueData>.Create;;
-  ExeExec('select i.* from user_issuies ui join issuies i on ui.issue_id = i.issue_id where ui.user_id = ' + Person.UserId.ToString + ';', exActive, vQuery);
+procedure TMainForm.LoadPlaces;
+var
+  vQuery: TFDQuery;
+  vPlaceData: TPlaceData;
+begin
+  FPlacesList := TList<TPlaceData>.Create;
+  ExeExec('select * from places;', exActive, vQuery);
   vQuery.First;
 
   while Not vQuery.Eof do
   begin
-    vIssueList.Coords.Latitude := vQuery.FieldByName('lat').AsFloat;
-    vIssueList.Coords.Longitude := vQuery.FieldByName('lon').AsFloat;
-    vIssueList.ID := vQuery.FieldByName('issue_id').AsInteger;
-    vIssueList.PrevID := vQuery.FieldByName('prev_issue_id').AsInteger;
-    vIssueList.Cost := vQuery.FieldByName('cost').AsInteger;
-    vIssueList.Name := vQuery.FieldByName('name').AsString;
-    vIssueList.Detail := vQuery.FieldByName('detail').AsString;
-    FIssueList.Add(vIssueList);
+    vPlaceData.Coords.Latitude := vQuery.FieldByName('lat').AsFloat;
+    vPlaceData.Coords.Longitude := vQuery.FieldByName('lon').AsFloat;
+    vPlaceData.Name := vQuery.FieldByName('name').AsString;
+    vPlaceData.Radius := vQuery.FieldByName('radius').AsInteger;
+
+    if vQuery.FieldByName('type').AsString = 'mtBase' then
+      vPlaceData.MarkerType := mtBase
+    else if vQuery.FieldByName('type').AsString = 'mtSafe' then
+      vPlaceData.MarkerType := mtSafe;
+
+    FPlacesList.Add(vPlaceData);
     vQuery.Next;
   end;
+end;
 
-  FreeQueryAndConn(vQuery);
+procedure TMainForm.FormShow(Sender: TObject);
+begin
+  Person := TPerson.Create;
+  Person.UserId := 1; // Получить ID при логировании
+
+  LoadArtefacts;
+  LoadIsuies;
+  LoadPlaces;
 
   FMapFrame := TMapFrame.Create(TabMap);
   FMapFrame.Parent := TabMap;
@@ -139,8 +196,11 @@ begin
   FDetectorFrame := TFrameDetector.Create(TabDetector);
   FDetectorFrame.Parent := TabDetector;
 
+  FFrameQRScanner := TFrameQRScanner.Create(TabQRScanner);
+  FFrameQRScanner.Parent := TabQRScanner;
+
   PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.ACCESS_COARSE_LOCATION',
-    'android.permission.CHANGE_WIFI_STATE'],
+    'android.permission.CHANGE_WIFI_STATE', 'android.permission.CAMERA'],
     procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
     begin
       if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
@@ -149,7 +209,7 @@ begin
       end
       else
       begin
-        // lblStatus.Text := 'Необходимы разрешения для сканирования Wi-Fi';
+        Showmessage('Необходимы разрешения для сканирования Wi-Fi');
       end;
     end);
 end;
@@ -159,13 +219,30 @@ begin
   recSelect.Parent := imgBtnBag;
   FDetectorFrame.timerScannerArtefacts.Enabled := false;
   FDetectorFrame.TimerSensor.Enabled := false;
+  FFrameQRScanner.StopScan;
+  StopDetector;
+  imgPersonHealth.Visible := true;
 end;
 
-procedure TMainForm.btnToDetectorClick(Sender: TObject);
+procedure TMainForm.btnToQRScannerClick(Sender: TObject);
 begin
-  TabControl.ActiveTab := TabDetector;
-  recSelect.Parent := imgBtnDetector;
-  FDetectorFrame.timerScannerArtefacts.Enabled := true;
+  TabControl.ActiveTab := TabQRScanner;
+  recSelect.Parent := imgBtnQRScanner;
+  FFrameQRScanner.StartScan;
+  StopDetector;
+  imgPersonHealth.Visible := true;
+end;
+
+procedure TMainForm.Button1Click(Sender: TObject);
+begin
+  FLocation.Latitude := 52.091127;
+  FLocation.Longitude := 23.709416;
+end;
+
+procedure TMainForm.Button2Click(Sender: TObject);
+begin
+  FLocation.Latitude := 52.090365;
+  FLocation.Longitude := 23.707528;
 end;
 
 procedure TMainForm.btnToMapClick(Sender: TObject);
@@ -174,21 +251,32 @@ begin
   recSelect.Parent := imgBtnMap;
   FDetectorFrame.timerScannerArtefacts.Enabled := false;
   FDetectorFrame.TimerSensor.Enabled := false;
+  FFrameQRScanner.StopScan;
+  StopDetector;
+  imgPersonHealth.Visible := true;
 end;
 
 procedure TMainForm.btnToPercsClick(Sender: TObject);
+begin
+  SetHealthProgress(FPercsFrame.HealthProgress, Person.Health);
+  TabControl.ActiveTab := TabPercs;
+  recSelect.Parent := ImgBtnPercs;
+  FFrameQRScanner.StopScan;
+  StopDetector;
+  imgPersonHealth.Visible := false;
+end;
+
+procedure TMainForm.StopDetector;
 var
   I: Integer;
 begin
-  TabControl.ActiveTab := TabPercs;
-  recSelect.Parent := ImgBtnPercs;
-
-  for I := 0 to 2 do
-  begin
-    sleep(100);
-    FDetectorFrame.timerScannerArtefacts.Enabled := false;
-    FDetectorFrame.TimerSensor.Enabled := false;
-  end;
+  if FDetectorFrame.timerScannerArtefacts.Enabled then
+    for I := 0 to 2 do
+    begin
+      sleep(100);
+      FDetectorFrame.timerScannerArtefacts.Enabled := false;
+      FDetectorFrame.TimerSensor.Enabled := false;
+    end;
 end;
 
 end.

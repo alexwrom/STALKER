@@ -531,6 +531,15 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
+        <DeployFile Include="Resources\music\detector_art.mp3" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>Project1\assets\internal\</RemoteDir>
+            <RemoteName>detector_art.mp3</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="base.db" Condition="'$(Config)'=='Debug'">
             <RemoteDir>Project1\assets\internal\</RemoteDir>
             <RemoteName>base.db</RemoteName>
@@ -543,15 +552,6 @@
         <DeployFile Include="base.db" Condition="'$(Config)'=='Release'">
             <RemoteDir>Project1\assets\internal\</RemoteDir>
             <RemoteName>base.db</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="Resources\music\detector_art.mp3" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>Project1\assets\internal\</RemoteDir>
-            <RemoteName>detector_art.mp3</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -744,6 +744,15 @@
             <RemoteName>colors.xml</RemoteName>
             <DeployClass>Android_Colors</DeployClass>
             <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="Resources\music\zvuk-smerti.mp3" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>Project1\assets\internal\</RemoteDir>
+            <RemoteName>zvuk-smerti.mp3</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>

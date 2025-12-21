@@ -268,6 +268,8 @@
         <Android_NotificationAccentColor>#000000</Android_NotificationAccentColor>
         <AUP_BODY_SENSORS>true</AUP_BODY_SENSORS>
         <AUP_ACCESS_BACKGROUND_LOCATION>true</AUP_ACCESS_BACKGROUND_LOCATION>
+        <BRCC_IncludePath>..\..\Lib\Classes;..\..\Lib\Classes\Common;..\..\Lib\Classes\Common\Detector;..\..\Lib\Classes\Common\ReedSolomon;..\..\Lib\Classes\Filtering;..\..\Lib\Classes\1D Barcodes;..\..\Lib\Classes\2D Barcodes;..\..\Lib\Classes\2D Barcodes\Decoder;..\..\Lib\Classes\2D Barcodes\Detector;..\..\Lib\Classes;..\..\Lib\Classes\Common;..\..\Lib\Classes\Common\Detector;..\..\Lib\Classes\Common\ReedSolomon;..\..\Lib\Classes\Filtering;..\..\Lib\Classes\1D Barcodes;..\..\Lib\Classes\2D Barcodes;..\..\Lib\Classes\2D Barcodes\Decoder;..\..\Lib\Classes\2D Barcodes\Detector;$(BRCC_IncludePath)</BRCC_IncludePath>
+        <DCC_UnitSearchPath>..\..\Lib\Classes;..\..\Lib\Classes\Common;..\..\Lib\Classes\Common\Detector;..\..\Lib\Classes\Common\ReedSolomon;..\..\Lib\Classes\Filtering;..\..\Lib\Classes\1D Barcodes;..\..\Lib\Classes\2D Barcodes;..\..\Lib\Classes\2D Barcodes\Decoder;..\..\Lib\Classes\2D Barcodes\Detector;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
@@ -313,6 +315,93 @@
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="uScanerWiFi.pas"/>
+        <DCCReference Include="uQRScanerFrame.pas">
+            <Form>FrameQRScanner</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.BarcodeFormat.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Filtering\ZXing.BaseLuminanceSource.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Filtering\ZXing.Binarizer.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Filtering\ZXing.BinaryBitmap.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.BitSource.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXIng.ByteSegments.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.CharacterSetECI.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.Common.BitArray.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.Common.BitArrayImplementation.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.Common.BitMatrix.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\Detector\ZXing.Common.Detector.MathUtils.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\Detector\ZXing.Common.Detector.WhiteRectangleDetector.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.Common.DetectorResult.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.Common.GridSampler.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.Common.PerspectiveTransform.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ReedSolomon\ZXing.Common.ReedSolomon.GenericGF.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ReedSolomon\ZXing.Common.ReedSolomon.ReedSolomonDecoder.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\ZXing.Datamatrix.DataMatrixReader.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Decoder\ZXing.Datamatrix.Internal.BitMatrixParser.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Decoder\ZXing.Datamatrix.Internal.DataBlock.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Decoder\ZXing.Datamatrix.Internal.DecodedBitStreamParser.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Decoder\ZXing.Datamatrix.Internal.Decoder.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Detector\ZXing.Datamatrix.Internal.Detector.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Decoder\ZXing.Datamatrix.Internal.Version.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.DecodeHintType.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.DecoderResult.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.DefaultGridSampler.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.EncodeHintType.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Filtering\ZXing.GlobalHistogramBinarizer.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.Helpers.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Filtering\ZXing.HybridBinarizer.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Filtering\ZXing.InvertedLuminanceSource.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Filtering\ZXing.LuminanceSource.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.MultiFormatReader.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\1D Barcodes\ZXing.OneD.Code39Reader.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\1D Barcodes\ZXing.OneD.Code93Reader.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\1D Barcodes\ZXing.OneD.Code128Reader.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\1D Barcodes\ZXing.OneD.EAN8Reader.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\1D Barcodes\ZXing.OneD.EAN13Reader.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\1D Barcodes\ZXing.OneD.EANManufacturerOrgSupport.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\1D Barcodes\ZXing.OneD.ITFReader.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\1D Barcodes\ZXing.OneD.OneDReader.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\1D Barcodes\ZXing.OneD.UPCAReader.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\1D Barcodes\ZXing.OneD.UPCEANExtension2Support.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\1D Barcodes\ZXing.OneD.UPCEANExtension5Support.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\1D Barcodes\ZXing.OneD.UPCEANExtensionSupport.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\1D Barcodes\ZXing.OneD.UPCEANReader.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\1D Barcodes\ZXing.OneD.UPCEReader.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Filtering\ZXing.PlanarYUVLuminanceSource.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Detector\ZXing.QrCode.Internal.AlignmentPattern.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Detector\ZXing.QrCode.Internal.AlignmentPatternFinder.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Detector\ZXing.QrCode.Internal.AlignmentPatternImplementation.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Decoder\ZXing.QrCode.Internal.BitMatrixParser.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Decoder\ZXing.QrCode.Internal.DataBlock.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Decoder\ZXing.QrCode.Internal.DataMask.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Decoder\ZXing.QrCode.Internal.DecodedBitStreamParser.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Decoder\ZXing.QrCode.Internal.Decoder.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Detector\ZXing.QrCode.Internal.Detector.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Decoder\ZXing.QrCode.Internal.ErrorCorrectionLevel.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Detector\ZXing.QrCode.Internal.FinderPattern.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Detector\ZXing.QrCode.Internal.FinderPatternFinder.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Detector\ZXing.QrCode.Internal.FinderPatternImplementation.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Detector\ZXing.QrCode.Internal.FinderPatternInfo.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Decoder\ZXing.QrCode.Internal.FormatInformation.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Decoder\ZXing.QrCode.Internal.Mode.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Decoder\ZXing.QrCode.Internal.QRCodeDecoderMetaData.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\Decoder\ZXing.QrCode.Internal.Version.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\2D Barcodes\ZXing.QrCode.QRCodeReader.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.Reader.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.ReadResult.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.ResultMetadataType.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.ResultPoint.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.ResultPointImplementation.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Filtering\ZXing.RGBLuminanceSource.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\ZXing.ScanManager.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.StringUtils.pas"/>
+        <DCCReference Include="..\ZXing.Delphi-3.10.0\DelphiZXingQRCode-master\Source\DelphiZXIngQRCode.pas"/>
+        <DCCReference Include="uFrameDead.pas">
+            <Form>FrameDead</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
         <RcItem Include="Resources\font\lcd.ttf">
             <ResourceType>FONT</ResourceType>
             <ResourceId>1</ResourceId>
@@ -833,6 +922,13 @@
                     <Platform Name="Android">
                         <RemoteDir>.\assets\internal\</RemoteDir>
                         <RemoteName>zvuk-radiacii.mp3</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Resources\music\zvuk-smerti.mp3" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\assets\internal\</RemoteDir>
+                        <RemoteName>zvuk-smerti.mp3</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

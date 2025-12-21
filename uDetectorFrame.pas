@@ -51,7 +51,6 @@ uses
   System.Permissions;
 {$R *.fmx}
 
-
 constructor TFrameDetector.Create(AObject: TFmxObject);
 begin
   inherited Create(AObject);
@@ -86,63 +85,66 @@ end;
 
 procedure TFrameDetector.TimerSensorTimer(Sender: TObject);
 begin
-  FrameResize(nil);
-
-  if FArtDistance <= Person.Detector.Radius then
+  if Not FIsDead then
   begin
-    case Person.Detector.Level of
-      1:
-        begin
-          MediaPlayer.CurrentTime := 0;
-          animDetectorOtklik.Start;
-          animLightOtklick.Start;
-          MediaPlayer.Volume := 100;
-          MediaPlayer.Play;
-        end;
-      2:
-        begin
+    FrameResize(nil);
 
-          case FArtDistance of
-            0 .. 2:
-              begin
-                pieBearSignal.EndAngle := 360;
-                pieBearSignal.StartAngle := 0;
-              end;
-            3 .. 5:
-              begin
-                pieBearSignal.EndAngle := -222;
-                pieBearSignal.StartAngle := 42;
-              end;
-            6 .. 9:
-              begin
-                pieBearSignal.EndAngle := -186;
-                pieBearSignal.StartAngle := 6;
-              end;
-            10 .. 15:
-              begin
-                pieBearSignal.EndAngle := -134;
-                pieBearSignal.StartAngle := -45;
-              end;
-          else
-            begin
-              pieBearSignal.EndAngle := -80;
-              pieBearSignal.StartAngle := -99;
-            end;
+    if FArtDistance <= Person.Detector.Radius then
+    begin
+      case Person.Detector.Level of
+        1:
+          begin
+            MediaPlayer.CurrentTime := 0;
+            animDetectorOtklik.Start;
+            animLightOtklick.Start;
+            MediaPlayer.Volume := 100;
+            MediaPlayer.Play;
           end;
+        2:
+          begin
 
-          MediaPlayer.CurrentTime := 0;
-          animDetectorBear.Start;
-          animLightBear.Start;
-          MediaPlayer.Volume := 100;
-          MediaPlayer.Play;
-        end;
-      3:
-        begin
-          labDisplayVilka.Text := FArtDistance.ToString.PadLeft(4, '0');
-          MediaPlayer.CurrentTime := 0;
-          MediaPlayer.Volume := 100;
-          MediaPlayer.Play;
-        end;
+            case FArtDistance of
+              0 .. 2:
+                begin
+                  pieBearSignal.EndAngle := 360;
+                  pieBearSignal.StartAngle := 0;
+                end;
+              3 .. 5:
+                begin
+                  pieBearSignal.EndAngle := -222;
+                  pieBearSignal.StartAngle := 42;
+                end;
+              6 .. 9:
+                begin
+                  pieBearSignal.EndAngle := -186;
+                  pieBearSignal.StartAngle := 6;
+                end;
+              10 .. 15:
+                begin
+                  pieBearSignal.EndAngle := -134;
+                  pieBearSignal.StartAngle := -45;
+                end;
+            else
+              begin
+                pieBearSignal.EndAngle := -80;
+                pieBearSignal.StartAngle := -99;
+              end;
+            end;
+
+            MediaPlayer.CurrentTime := 0;
+            animDetectorBear.Start;
+            animLightBear.Start;
+            MediaPlayer.Volume := 100;
+            MediaPlayer.Play;
+          end;
+        3:
+          begin
+            labDisplayVilka.Text := FArtDistance.ToString.PadLeft(4, '0');
+            MediaPlayer.CurrentTime := 0;
+            MediaPlayer.Volume := 100;
+            MediaPlayer.Play;
+          end;
+      end;
     end;
   end;
 end;
@@ -164,7 +166,7 @@ var
   vDistance: double;
   vMinDistance: double;
 begin
-  vMinDistance := Person.Detector.Radius;
+  vMinDistance := Person.Detector.Radius + 1;
 
   if FLocation.Latitude <> 0 then
     for I := 0 to FArtefactsList.Count - 1 do
@@ -185,47 +187,50 @@ procedure TFrameDetector.timerScannerArtefactsTimer(Sender: TObject);
 begin
   // Запрос разрешений для Android
 {$IFDEF ANDROID}
-  PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.ACCESS_COARSE_LOCATION'],
-    procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
-    begin
-      if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
+  if Not FIsDead then
+  begin
+    PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.ACCESS_COARSE_LOCATION'],
+      procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
       begin
-        TThread.CreateAnonymousThread(
-          procedure
-          begin
-            // ScanNetworks;    // по WIFI
+        if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
+        begin
+          TThread.CreateAnonymousThread(
+            procedure
+            begin
+              // ScanNetworks;    // по WIFI
 
-            TThread.Synchronize(nil,
-              procedure
-              begin
-                FArtDistance := Round(ScanDistanceToArtefacts);
-
-                if FArtDistance <= Person.Detector.Radius then
+              TThread.Synchronize(nil,
+                procedure
                 begin
-                  case FArtDistance of
-                    0 .. 2:
-                      TimerSensor.Interval := 200;
-                    3 .. 5:
-                      TimerSensor.Interval := 800;
-                    6 .. 9:
-                      TimerSensor.Interval := 1500;
-                    10 .. 15:
-                      TimerSensor.Interval := 2200;
+                  FArtDistance := Round(ScanDistanceToArtefacts);
+
+                  if FArtDistance <= Person.Detector.Radius then
+                  begin
+                    case FArtDistance of
+                      0 .. 2:
+                        TimerSensor.Interval := 200;
+                      3 .. 5:
+                        TimerSensor.Interval := 800;
+                      6 .. 9:
+                        TimerSensor.Interval := 1500;
+                      10 .. 15:
+                        TimerSensor.Interval := 2200;
+                    else
+                      TimerSensor.Interval := 5000;
+                    end;
+                    TimerSensor.Enabled := true;
+                  end
                   else
-                    TimerSensor.Interval := 5000;
-                  end;
-                  TimerSensor.Enabled := true;
-                end
-                else
-                  TimerSensor.Enabled := false;
-              end);
-          end).Start;
-      end
-      else
-      begin
-        // Label1.Text := 'Необходимы разрешения для сканирования Wi-Fi';
-      end;
-    end);
+                    TimerSensor.Enabled := false;
+                end);
+            end).Start;
+        end
+        else
+        begin
+          // Label1.Text := 'Необходимы разрешения для сканирования Wi-Fi';
+        end;
+      end);
+  end;
 {$ENDIF}
 end;
 

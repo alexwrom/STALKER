@@ -9,7 +9,7 @@ uses
   FireDAC.Stan.Pool, FireDAC.Phys, FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef,
   FireDAC.Stan.ExprFuncs, FireDAC.Phys.SQLiteWrapper.Stat, FireDAC.FMXUI.Wait,
   Data.DB, System.IOUtils, FireDAC.Comp.Client, FireDAC.Comp.DataSet, System.SysUtils, System.Sensors, FMX.Objects,
-  Generics.Collections;
+  Generics.Collections, DelphiZXingQRCode, FMX.Graphics;
 
 const
   cCriticalColor = $32F92F2F;
@@ -17,8 +17,8 @@ const
   cFullColor = $6422FC1A;
 
 type
-  TMarkerType = (mtPoint, mtRad, mtAnomaly, mtBag, mtIssue);
-  TAnomalyType = (atElectro, atFire, atGravity, atRadiation, atChemical, atPSI);
+  TMarkerType = (mtPoint, mtRad, mtAnomaly, mtBag, mtIssue, mtBase, mtSafe);
+  TAnomalyType = (atElectro, atFire, atPhisic, atRadiation, atChimishe, atPSI);
 
   TMarkerData = record
     Marker: TImage;
@@ -35,6 +35,13 @@ type
     AnomalyType: TAnomalyType;
   end;
 
+  TPlaceData = record
+    Name: string;
+    Coords: TLocationCoord2D;
+    MarkerType: TMarkerType;
+    Radius: integer;
+  end;
+
   TArtefactData = record
     Coords: TLocationCoord2D;
     Level: integer;
@@ -47,6 +54,10 @@ type
     Detail: string;
     Cost: integer;
     PrevID: integer;
+    RadiusIN: integer;
+    RadiusOUT: integer;
+    CompleteAfterOUT: boolean; // true - задача выполнена при ѕокидании точки
+    CompleteAfterIN: boolean; // true - задача выполнена при достижении точки
   end;
 
   TWiFiNetwork = record
@@ -85,6 +96,8 @@ type
     FDetector: TDetector;
     FUserId: integer;
     procedure SetHealth(const Value: double);
+    procedure SetHealthArmor(AValue: double);
+    procedure SetHealthWeapon(AValue: double);
 
   public
     constructor Create;
@@ -107,12 +120,17 @@ procedure GoToDetector;
 function ExeExec(Str: string; Typ: TExecType; var AQuery: TFDQuery): boolean;
 function CalculateFastDistance(const Lat1, Lon1, Lat2, Lon2: double): double;
 procedure FreeQueryAndConn(var AQuery: TFDQuery);
+procedure SetHealthProgress(AHealthProgress: TRectangle; AValue: double);
+procedure GenerateQRCode(const AText: string; ASize: integer; AImage: TImage);
+procedure ReloadIssies;
 
 var
   Person: TPerson;
   FLocation: TLocationCoord2D;
   FArtefactsList: TList<TArtefactData>;
   FIssueList: TList<TIssueData>;
+  FPlacesList: TList<TPlaceData>;
+  FIsDead: boolean;
 
 implementation
 
@@ -121,20 +139,124 @@ uses uMainForm;
 
 constructor TPerson.Create;
 begin
-  Health := 100;
+
+end;
+
+procedure TPerson.SetHealthArmor(AValue: double);
+begin
+  MainForm.FPercsFrame.ArmorHealthProgress.Width := AValue * MainForm.FPercsFrame.ArmorHealthProgress.Tag / 100;
+
+  if AValue < 33 then
+    MainForm.FPercsFrame.ArmorHealthProgress.Fill.Color := cCriticalColor
+  else if AValue < 66 then
+    MainForm.FPercsFrame.ArmorHealthProgress.Fill.Color := cNormalColor
+  else
+    MainForm.FPercsFrame.ArmorHealthProgress.Fill.Color := cFullColor;
+end;
+
+procedure TPerson.SetHealthWeapon(AValue: double);
+begin
+  MainForm.FPercsFrame.WeaponHealthProgress.Width := AValue * MainForm.FPercsFrame.WeaponHealthProgress.Tag / 100;
+
+  if AValue < 33 then
+    MainForm.FPercsFrame.WeaponHealthProgress.Fill.Color := cCriticalColor
+  else if AValue < 66 then
+    MainForm.FPercsFrame.WeaponHealthProgress.Fill.Color := cNormalColor
+  else
+    MainForm.FPercsFrame.WeaponHealthProgress.Fill.Color := cFullColor;
 end;
 
 procedure TPerson.SetHealth(const Value: double);
+var
+  vQuery: TFDQuery;
+  vDiff: double;
 begin
-  FHealth := Value;
-  MainForm.HealthProgress.Width := Value * MainForm.HealthProgress.Tag / 100;
+  if (FHealth <> Value) then
+  begin
+    MainForm.FMapFrame.igeDeadGlow.Enabled := false;
+    MainForm.layMenu.Enabled := true;
 
-  if Value < 33 then
-    MainForm.HealthProgress.Fill.Color := cCriticalColor
-  else if Value < 66 then
-    MainForm.HealthProgress.Fill.Color := cNormalColor
+    if MainForm.TabControl.ActiveTab <> MainForm.TabPercs then
+      MainForm.imgPersonHealth.Visible := true;
+
+    FIsDead := false;
+
+    if Value < 0 then
+    begin
+      vDiff := FHealth;
+      FHealth := 0;
+    end
+    else if Value > 100 then
+    begin
+      vDiff := -100;
+      FHealth := 100;
+    end
+    else
+    begin
+      vDiff := FHealth - Value;
+      FHealth := Value;
+    end;
+
+    if vDiff > 0 then
+    begin
+      FArmorHealth := FArmorHealth - vDiff * 0.2;
+
+      if FArmorHealth < 0 then
+        FArmorHealth := 0;
+
+      FWeaponHealth := FWeaponHealth - vDiff * 0.5;
+
+      if FWeaponHealth < 0 then
+        FWeaponHealth := 0;
+
+      ExeExec(Format('update users set health = %s, armor_health = %s, weapon_health = %s where user_id = %d;', [StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]),
+        StringReplace(FArmorHealth.ToString, ',', '.', [rfReplaceAll]), StringReplace(FWeaponHealth.ToString, ',', '.', [rfReplaceAll]), Person.UserId]), exExecute, vQuery);
+
+      SetHealthArmor(FArmorHealth);
+      SetHealthWeapon(FWeaponHealth);
+    end
+    else
+      ExeExec('update users set health = ' + StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]) + ' where user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
+
+    SetHealthProgress(MainForm.HealthProgress, FHealth);
+
+    if Assigned(MainForm.FPercsFrame) then
+    begin
+      SetHealthProgress(MainForm.FPercsFrame.HealthProgress, FHealth);
+      MainForm.FPercsFrame.ReloadPercs;
+    end;
+
+    if FHealth = 0 then
+    begin
+      FIsDead := true;
+      MainForm.FMapFrame.igeDeadGlow.Enabled := true;
+      MainForm.layMenu.Enabled := false;
+      MainForm.TabControl.ActiveTab := MainForm.TabMap;
+      MainForm.StopDetector;
+    end;
+  end
   else
-    MainForm.HealthProgress.Fill.Color := cFullColor;
+  begin
+    SetHealthProgress(MainForm.HealthProgress, FHealth);
+
+    if Assigned(MainForm.FPercsFrame) then
+      SetHealthProgress(MainForm.FPercsFrame.HealthProgress, FHealth);
+  end;
+end;
+
+procedure SetHealthProgress(AHealthProgress: TRectangle; AValue: double);
+begin
+  if AHealthProgress = MainForm.HealthProgress then
+    AHealthProgress.Height := AValue * AHealthProgress.Tag / 100
+  else
+    AHealthProgress.Width := AValue * AHealthProgress.Tag / 100;
+
+  if AValue < 33 then
+    AHealthProgress.Fill.Color := cCriticalColor
+  else if AValue < 66 then
+    AHealthProgress.Fill.Color := cNormalColor
+  else
+    AHealthProgress.Fill.Color := cFullColor;
 end;
 
 function GetUserAppPath: string;
@@ -195,7 +317,10 @@ end;
 
 procedure GoToDetector;
 begin
-  MainForm.btnToDetectorClick(nil);
+  MainForm.TabControl.ActiveTab := MainForm.TabDetector;
+  MainForm.FDetectorFrame.timerScannerArtefacts.Enabled := true;
+  MainForm.imgPersonHealth.Visible := true;
+  MainForm.recSelect.Parent := nil;
 end;
 
 function CalculateFastDistance(const Lat1, Lon1, Lat2, Lon2: double): double;
@@ -216,6 +341,35 @@ procedure FreeQueryAndConn(var AQuery: TFDQuery);
 begin
   AQuery.Connection.Connected := false;
   FreeAndNil(AQuery);
+end;
+
+procedure GenerateQRCode(const AText: string; ASize: integer; AImage: TImage);
+var
+  QRCode: TDelphiZXingQRCode;
+  Bitmap: TBitmap;
+  Row, Col: integer;
+begin
+  QRCode := TDelphiZXingQRCode.Create;
+  try
+    QRCode.Data := AText;
+    QRCode.Encoding := TQRCodeEncoding.qrAuto;
+    QRCode.QuietZone := 4;
+
+    Bitmap := TBitmap.Create(ASize, ASize);
+    try
+      // –исуем QR-код...
+      AImage.Bitmap.Assign(Bitmap);
+    finally
+      Bitmap.Free;
+    end;
+  finally
+    QRCode.Free;
+  end;
+end;
+
+procedure ReloadIssies;
+begin
+  MainForm.LoadIsuies;
 end;
 
 end.

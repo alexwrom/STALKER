@@ -10,7 +10,7 @@ uses
   System.Math, System.Sensors, System.Sensors.Components, System.Permissions,
   FMX.Effects, Generics.Collections, System.ImageList, FMX.ImgList,
   System.Actions, FMX.ActnList, uGlobal, FMX.Memo.Types, FMX.ScrollBox, FMX.Memo,
-  FMX.Media, System.IOUtils;
+  FMX.Media, System.IOUtils, FireDAC.Comp.Client;
 
 type
   TMapFrame = class(TFrame)
@@ -53,12 +53,15 @@ type
     gplDeleteYesNo: TGridPanelLayout;
     btnDeleteNo: TSpeedButton;
     btnDeleteYes: TSpeedButton;
-    Rectangle4: TRectangle;
+    recPanelDeleteMarker: TRectangle;
     InnerGlowEffect1: TInnerGlowEffect;
     InnerGlowEffect2: TInnerGlowEffect;
     InnerGlowEffect3: TInnerGlowEffect;
     MediaPlayerRad: TMediaPlayer;
     MediaPlayerAnomaly: TMediaPlayer;
+    InnerGlowEffect4: TInnerGlowEffect;
+    MediaPlayerDead: TMediaPlayer;
+    igeDeadGlow: TInnerGlowEffect;
     procedure MapImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure btnZoomInClick(Sender: TObject);
     procedure btnZoomOutClick(Sender: TObject);
@@ -110,6 +113,10 @@ type
     function GetNumberMarker(AMarker: TImage): integer;
     procedure ScrollToImageAdvanced(ScrollBox: TScrollBox; Image: TImage; Center: Boolean = True; Animate: Boolean = False);
     procedure ScanAnomalies;
+    procedure ScanIssuies;
+    procedure UpdateBaseSafeDead;
+    procedure ScanBaseSafeDead;
+    procedure LoadAnomalies;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -161,13 +168,53 @@ begin
 
   LoadMapFromFile(''); // Переписать
 
+  LoadAnomalies;
   UpdateIssue;
+  UpdateBaseSafeDead;
   ResetLocationMarkers;
 
 {$IFDEF ANDROID}
   MediaPlayerRad.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'zvuk-radiacii.mp3');
   MediaPlayerAnomaly.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'detector.mp3');
+  MediaPlayerDead.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'zvuk-smerti.mp3');
 {$ENDIF}
+end;
+
+procedure TMapFrame.LoadAnomalies;
+var
+  vQuery: TFDQuery;
+  vAnomalyItem: TAnomalyData;
+begin
+  FAnomalyList := TList<TAnomalyData>.Create;
+  ExeExec('select * from anomalies;', exActive, vQuery);
+  vQuery.First;
+
+  while Not vQuery.Eof do
+  begin
+    vAnomalyItem.Coords.Latitude := vQuery.FieldByName('lat').AsFloat;
+    vAnomalyItem.Coords.Longitude := vQuery.FieldByName('lon').AsFloat;
+    vAnomalyItem.Radius := vQuery.FieldByName('radius').AsInteger;
+    vAnomalyItem.Power := vQuery.FieldByName('power').AsInteger;
+    case vQuery.FieldByName('anomaly_type_id').AsInteger of
+      1:
+        vAnomalyItem.AnomalyType := atElectro;
+      2:
+        vAnomalyItem.AnomalyType := atFire;
+      3:
+        vAnomalyItem.AnomalyType := atPhisic;
+      4:
+        vAnomalyItem.AnomalyType := atRadiation;
+      5:
+        vAnomalyItem.AnomalyType := atChimishe;
+      6:
+        vAnomalyItem.AnomalyType := atPSI;
+    end;
+
+    FAnomalyList.Add(vAnomalyItem);
+    vQuery.Next;
+  end;
+
+  FreeQueryAndConn(vQuery);
 end;
 
 procedure TMapFrame.UpdateIssue;
@@ -175,6 +222,14 @@ var
   AMarker: TMarkerData;
   I: integer;
 begin
+  for I := 0 to FMarkerIssue.Count - 1 do
+  begin
+    FMarkerIssue[I].Marker.Visible := False;
+    FreeAndNil(FMarkerIssue[I].Marker);
+  end;
+
+  FMarkerIssue.Clear;
+
   for I := 0 to FIssueList.Count - 1 do
   begin
     FCoords := FIssueList[I].Coords;
@@ -185,6 +240,73 @@ begin
     AMarker.LabelDetail := FIssueList[I].Detail;
 
     CreateMarker(AMarker);
+  end;
+end;
+
+procedure TMapFrame.UpdateBaseSafeDead;
+var
+  AMarker: TMarkerData;
+  I: integer;
+begin
+  for I := 0 to FPlacesList.Count - 1 do
+  begin
+    FCoords := FPlacesList[I].Coords;
+    AMarker.Coords := FCoords;
+    AMarker.MarkerType := FPlacesList[I].MarkerType;
+
+    AMarker.LabelText := FPlacesList[I].Name;
+
+    CreateMarker(AMarker);
+  end;
+end;
+
+procedure TMapFrame.ScanIssuies;
+var
+  I: integer;
+  vDistance: Double;
+  vQuery: TFDQuery;
+begin
+  for I := 0 to FIssueList.Count - 1 do
+  begin
+    vDistance := CalculateFastDistance(FLocation.Latitude, FLocation.Longitude, FIssueList[I].Coords.Latitude, FIssueList[I].Coords.Longitude);
+
+    if (vDistance <= FIssueList[I].RadiusIN) and (FIssueList[I].RadiusIN <> -1) then
+      if FIssueList[I].CompleteAfterIN then
+      begin
+        ExeExec('update issuies set status_id = 1 where issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
+        ReloadIssies;
+        UpdateIssue;
+      end;
+
+    if (vDistance > FIssueList[I].RadiusOUT) and (FIssueList[I].RadiusOUT <> -1) then
+      if FIssueList[I].CompleteAfterOUT then
+      begin
+        ExeExec('update issuies set status_id = 1 where issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
+        ReloadIssies;
+        UpdateIssue;
+      end
+      else
+      begin
+        ExeExec('update issuies set status_id = 0 where issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
+        ReloadIssies;
+        UpdateIssue;
+      end
+  end;
+end;
+
+procedure TMapFrame.ScanBaseSafeDead;
+var
+  I: integer;
+  vDistance: Double;
+begin
+  for I := 0 to FPlacesList.Count - 1 do
+  begin
+    vDistance := CalculateFastDistance(FLocation.Latitude, FLocation.Longitude, FPlacesList[I].Coords.Latitude, FPlacesList[I].Coords.Longitude);
+
+    if vDistance <= FPlacesList[I].Radius then
+    begin
+      Person.Health := Person.Health + 20.1;
+    end;
   end;
 end;
 
@@ -284,6 +406,7 @@ procedure TMapFrame.ScanAnomalies;
 var
   I: integer;
   vDistance: Double;
+  vBlockDamage: Double;
 begin
 
   for I := 0 to FAnomalyList.Count - 1 do
@@ -305,7 +428,29 @@ begin
         MediaPlayerAnomaly.Play;
       end;
 
-      Person.Health := Person.Health - FAnomalyList[I].Power * (vDistance / FAnomalyList[I].Radius);
+      case FAnomalyList[I].AnomalyType of
+        atElectro:
+          vBlockDamage := Person.ElectroArmor;
+        atFire:
+          vBlockDamage := Person.FireArmor;
+        atPhisic:
+          vBlockDamage := Person.PhisicArmor;
+        atRadiation:
+          vBlockDamage := Person.RadiationArmor;
+        atChimishe:
+          vBlockDamage := Person.ChimisheArmor;
+        atPSI:
+          vBlockDamage := Person.PsiArmor;
+      end;
+
+      Person.Health := Person.Health - FAnomalyList[I].Power * (vDistance / FAnomalyList[I].Radius) * ((100 - vBlockDamage) / 100);
+
+      if Person.Health <= 0 then
+      begin
+        MediaPlayerDead.CurrentTime := 0;
+        MediaPlayerDead.Volume := vDistance / FAnomalyList[I].Radius * 100;
+        MediaPlayerDead.Play;
+      end;
     end;
   end;
 end;
@@ -501,7 +646,8 @@ begin
   btnDeleteYes.TagObject := (Sender as TImage);
   LayDetailMarker.Visible := True;
   layDetailIssue.Visible := False;
-  btnDelMarker.Visible := True;
+  recPanelDeleteMarker.Visible := (FMarkerList[GetNumberMarker(Sender as TImage)].MarkerType <> mtBase) and (FMarkerList[GetNumberMarker(Sender as TImage)].MarkerType <> mtSafe);
+  btnDelMarker.Visible := recPanelDeleteMarker.Visible;
   gplDeleteYesNo.Visible := False;
   (Sender as TImage).BringToFront;
 end;
@@ -602,6 +748,18 @@ begin
         AMarker.Marker.Bitmap.Assign(ImageList.Source[4].MultiResBitmap[0].Bitmap);
         AMarker.Marker.OnClick := OnMarkerIssueClick;
       end;
+    mtBase:
+      begin
+        AMarker.Marker.Bitmap.Assign(ImageList.Source[6].MultiResBitmap[0].Bitmap);
+        AMarker.Marker.Width := 100;
+        AMarker.Marker.Height := AMarker.Marker.Width;
+        // AMarker.Marker.OnClick := OnMarkerIssueClick;
+      end;
+    mtSafe:
+      begin
+        AMarker.Marker.Bitmap.Assign(ImageList.Source[5].MultiResBitmap[0].Bitmap);
+        // AMarker.Marker.OnClick := OnMarkerIssueClick;
+      end;
   end;
 
   AMarker.Marker.Visible := True;
@@ -672,7 +830,15 @@ end;
 
 procedure TMapFrame.TimerSensorTimer(Sender: TObject);
 begin
-  ScanAnomalies;
+  if Assigned(Person) then
+    if Person.Health < 100 then
+      ScanBaseSafeDead;
+
+  if Not FIsDead then
+  begin
+    ScanAnomalies;
+    ScanIssuies;
+  end;
 end;
 
 procedure TMapFrame.btnDeleteNoClick(Sender: TObject);
