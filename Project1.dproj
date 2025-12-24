@@ -5,7 +5,7 @@
         <FrameworkType>FMX</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Android</Platform>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>693267</TargetedPlatforms>
         <AppType>Application</AppType>
         <MainSource>Project1.dpr</MainSource>
@@ -298,24 +298,24 @@
             <Form>MainForm</Form>
             <FormType>fmx</FormType>
         </DCCReference>
-        <DCCReference Include="uMapFrame.pas">
-            <Form>MapFrame</Form>
+        <DCCReference Include="uFrameMap.pas">
+            <Form>FrameMap</Form>
             <FormType>fmx</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="uGlobal.pas"/>
-        <DCCReference Include="uPercs.pas">
+        <DCCReference Include="uFramePercs.pas">
             <Form>FramePercs</Form>
             <FormType>fmx</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
-        <DCCReference Include="uDetectorFrame.pas">
+        <DCCReference Include="uFrameDetector.pas">
             <Form>FrameDetector</Form>
             <FormType>fmx</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="uScanerWiFi.pas"/>
-        <DCCReference Include="uQRScanerFrame.pas">
+        <DCCReference Include="uFrameQRScaner.pas">
             <Form>FrameQRScanner</Form>
             <FormType>fmx</FormType>
             <DesignClass>TFrame</DesignClass>
@@ -397,14 +397,26 @@
         <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\ZXing.ScanManager.pas"/>
         <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.StringUtils.pas"/>
         <DCCReference Include="..\ZXing.Delphi-3.10.0\DelphiZXingQRCode-master\Source\DelphiZXIngQRCode.pas"/>
-        <DCCReference Include="uFrameDead.pas">
-            <Form>FrameDead</Form>
+        <DCCReference Include="uFrameIssuies.pas">
+            <Form>FrameIssuies</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="controls.item.pas"/>
+        <DCCReference Include="controls.listitem.pas"/>
+        <DCCReference Include="uFrameBag.pas"/>
+        <DCCReference Include="uFrameBagSection.pas">
+            <Form>FrameBagSection</Form>
             <FormType>fmx</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <RcItem Include="Resources\font\lcd.ttf">
             <ResourceType>FONT</ResourceType>
             <ResourceId>1</ResourceId>
+        </RcItem>
+        <RcItem Include="Resources\font\STALKER.TTF">
+            <ResourceType>FONT</ResourceType>
+            <ResourceId>2</ResourceId>
         </RcItem>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
@@ -898,9 +910,34 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="Resources\font\STALKER.TTF" Configuration="Debug" Class="ProjectFile">
+                    <Platform Name="Android">
+                        <RemoteDir>.\assets\internal\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Resources\font\STALKER.TTF" Configuration="Debug" Class="ProjectFile">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="Resources\font\lcd.ttf" Configuration="Debug" Class="ProjectFile">
                     <Platform Name="Android">
                         <RemoteDir>.\assets\internal\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Resources\font\lcd.ttf" Configuration="Debug" Class="ProjectFile">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Resources\music\damage.mp3" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\assets\internal\</RemoteDir>
+                        <RemoteName>damage.mp3</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

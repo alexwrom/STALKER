@@ -11,6 +11,15 @@
     </PropertyGroup>
     <ItemGroup Condition="'$(Platform)'=='OSX64'"/>
     <ItemGroup Condition="'$(Platform)'=='Win32'">
+        <DeployFile Include="Resources\font\STALKER.TTF" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>Project1\</RemoteDir>
+            <RemoteName>STALKER.TTF</RemoteName>
+            <DeployClass>ProjectFile</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="Win32\Debug\Project1.exe" Condition="'$(Config)'=='Debug'">
             <RemoteDir>Project1\</RemoteDir>
             <RemoteName>Project1.exe</RemoteName>
@@ -20,6 +29,15 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
             <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="Resources\font\lcd.ttf" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>Project1\</RemoteDir>
+            <RemoteName>lcd.ttf</RemoteName>
+            <DeployClass>ProjectFile</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
         </DeployFile>
     </ItemGroup>
     <ItemGroup Condition="'$(Platform)'=='Android64'">
@@ -748,9 +766,9 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="Resources\music\zvuk-smerti.mp3" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="Resources\music\damage.mp3" Condition="'$(Config)'=='Debug'">
             <RemoteDir>Project1\assets\internal\</RemoteDir>
-            <RemoteName>zvuk-smerti.mp3</RemoteName>
+            <RemoteName>damage.mp3</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -762,6 +780,24 @@
             <RemoteName>splash_image_def.xml</RemoteName>
             <DeployClass>AndroidSplashImageDef</DeployClass>
             <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="Resources\music\zvuk-smerti.mp3" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>Project1\assets\internal\</RemoteDir>
+            <RemoteName>zvuk-smerti.mp3</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="Resources\font\STALKER.TTF" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>Project1\assets\internal\</RemoteDir>
+            <RemoteName>STALKER.TTF</RemoteName>
+            <DeployClass>ProjectFile</DeployClass>
+            <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>

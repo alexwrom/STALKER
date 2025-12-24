@@ -6,12 +6,12 @@ uses
   System.StartUpCopy,
   FMX.Forms,
   uMainForm in 'uMainForm.pas' {MainForm},
-  uMapFrame in 'uMapFrame.pas' {MapFrame: TFrame},
+  uFrameMap in 'uFrameMap.pas' {FrameMap: TFrame},
   uGlobal in 'uGlobal.pas',
-  uPercs in 'uPercs.pas' {FramePercs: TFrame},
-  uDetectorFrame in 'uDetectorFrame.pas' {FrameDetector: TFrame},
+  uFramePercs in 'uFramePercs.pas' {FramePercs: TFrame},
+  uFrameDetector in 'uFrameDetector.pas' {FrameDetector: TFrame},
   uScanerWiFi in 'uScanerWiFi.pas',
-  uQRScanerFrame in 'uQRScanerFrame.pas' {FrameQRScanner: TFrame},
+  uFrameQRScaner in 'uFrameQRScaner.pas' {FrameQRScanner: TFrame},
   ZXing.BarcodeFormat in '..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.BarcodeFormat.pas',
   ZXing.BaseLuminanceSource in '..\ZXing.Delphi-3.10.0\Lib\Classes\Filtering\ZXing.BaseLuminanceSource.pas',
   ZXing.Binarizer in '..\ZXing.Delphi-3.10.0\Lib\Classes\Filtering\ZXing.Binarizer.pas',
@@ -89,7 +89,11 @@ uses
   ZXing.ScanManager in '..\ZXing.Delphi-3.10.0\Lib\Classes\ZXing.ScanManager.pas',
   ZXing.StringUtils in '..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.StringUtils.pas',
   DelphiZXIngQRCode in '..\ZXing.Delphi-3.10.0\DelphiZXingQRCode-master\Source\DelphiZXIngQRCode.pas',
-  uFrameDead in 'uFrameDead.pas' {FrameDead: TFrame};
+  uFrameIssuies in 'uFrameIssuies.pas' {FrameIssuies: TFrame},
+  controls.item in 'controls.item.pas',
+  controls.listitem in 'controls.listitem.pas',
+  uFrameBag in 'uFrameBag.pas',
+  uFrameBagSection in 'uFrameBagSection.pas' {FrameBagSection: TFrame};
 
 {$R *.res}
 

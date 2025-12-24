@@ -19,6 +19,7 @@ const
 type
   TMarkerType = (mtPoint, mtRad, mtAnomaly, mtBag, mtIssue, mtBase, mtSafe);
   TAnomalyType = (atElectro, atFire, atPhisic, atRadiation, atChimishe, atPSI);
+  TBagType = (btMedical, btArmor, btWeapon, btArt, btDetector);
 
   TMarkerData = record
     Marker: TImage;
@@ -35,11 +36,27 @@ type
     AnomalyType: TAnomalyType;
   end;
 
+  TBagData = record
+    Icon: TBitmap;
+    BagType: TBagType;
+    TableName: string;
+    RowID: integer;
+    Count: integer;
+  end;
+
   TPlaceData = record
     Name: string;
     Coords: TLocationCoord2D;
     MarkerType: TMarkerType;
     Radius: integer;
+  end;
+
+  TNotificationData = record
+    Name: string;
+    ID: integer;
+    MessageText: string;
+    IsOpen: boolean;
+    LoadData: string;
   end;
 
   TArtefactData = record
@@ -58,6 +75,9 @@ type
     RadiusOUT: integer;
     CompleteAfterOUT: boolean; // true - задача выполнена при Покидании точки
     CompleteAfterIN: boolean; // true - задача выполнена при достижении точки
+    StatusID: integer;
+    BlockStatusID: integer;
+    BlockDetail: string;
   end;
 
   TWiFiNetwork = record
@@ -95,13 +115,19 @@ type
     FChimisheArmor: double;
     FDetector: TDetector;
     FUserId: integer;
+    FGroupId: integer;
+    FCash: integer;
+    FIsClassicBag: boolean;
     procedure SetHealth(const Value: double);
     procedure SetHealthArmor(AValue: double);
     procedure SetHealthWeapon(AValue: double);
+    procedure SetCash(const Value: integer);
+    procedure SetIsClassicBag(const Value: boolean);
 
   public
     constructor Create;
     property UserId: integer read FUserId write FUserId;
+    property GroupId: integer read FGroupId write FGroupId;
     property Health: double read FHealth write SetHealth;
     property ArmorHealth: double read FArmorHealth write FArmorHealth;
     property WeaponHealth: double read FWeaponHealth write FWeaponHealth;
@@ -111,7 +137,8 @@ type
     property PhisicArmor: double read FPhisicArmor write FPhisicArmor;
     property ChimisheArmor: double read FChimisheArmor write FChimisheArmor;
     property RadiationArmor: double read FRadiationArmor write FRadiationArmor;
-
+    property Cash: integer read FCash write SetCash;
+    property IsClassicBag: boolean read FIsClassicBag write SetIsClassicBag;
     property Detector: TDetector read FDetector write FDetector;
   end;
 
@@ -122,7 +149,9 @@ function CalculateFastDistance(const Lat1, Lon1, Lat2, Lon2: double): double;
 procedure FreeQueryAndConn(var AQuery: TFDQuery);
 procedure SetHealthProgress(AHealthProgress: TRectangle; AValue: double);
 procedure GenerateQRCode(const AText: string; ASize: integer; AImage: TImage);
-procedure ReloadIssies;
+procedure ReloadIssuies;
+procedure StartDamageGlow;
+procedure StopDamageGlow;
 
 var
   Person: TPerson;
@@ -130,6 +159,7 @@ var
   FArtefactsList: TList<TArtefactData>;
   FIssueList: TList<TIssueData>;
   FPlacesList: TList<TPlaceData>;
+  FBagList: TList<TBagData>;
   FIsDead: boolean;
 
 implementation
@@ -144,26 +174,59 @@ end;
 
 procedure TPerson.SetHealthArmor(AValue: double);
 begin
-  MainForm.FPercsFrame.ArmorHealthProgress.Width := AValue * MainForm.FPercsFrame.ArmorHealthProgress.Tag / 100;
+  MainForm.FFramePercs.ArmorHealthProgress.Width := AValue * MainForm.FFramePercs.ArmorHealthProgress.Tag / 100;
 
   if AValue < 33 then
-    MainForm.FPercsFrame.ArmorHealthProgress.Fill.Color := cCriticalColor
+    MainForm.FFramePercs.ArmorHealthProgress.Fill.Color := cCriticalColor
   else if AValue < 66 then
-    MainForm.FPercsFrame.ArmorHealthProgress.Fill.Color := cNormalColor
+    MainForm.FFramePercs.ArmorHealthProgress.Fill.Color := cNormalColor
   else
-    MainForm.FPercsFrame.ArmorHealthProgress.Fill.Color := cFullColor;
+    MainForm.FFramePercs.ArmorHealthProgress.Fill.Color := cFullColor;
 end;
 
 procedure TPerson.SetHealthWeapon(AValue: double);
 begin
-  MainForm.FPercsFrame.WeaponHealthProgress.Width := AValue * MainForm.FPercsFrame.WeaponHealthProgress.Tag / 100;
+  MainForm.FFramePercs.WeaponHealthProgress.Width := AValue * MainForm.FFramePercs.WeaponHealthProgress.Tag / 100;
 
   if AValue < 33 then
-    MainForm.FPercsFrame.WeaponHealthProgress.Fill.Color := cCriticalColor
+    MainForm.FFramePercs.WeaponHealthProgress.Fill.Color := cCriticalColor
   else if AValue < 66 then
-    MainForm.FPercsFrame.WeaponHealthProgress.Fill.Color := cNormalColor
+    MainForm.FFramePercs.WeaponHealthProgress.Fill.Color := cNormalColor
   else
-    MainForm.FPercsFrame.WeaponHealthProgress.Fill.Color := cFullColor;
+    MainForm.FFramePercs.WeaponHealthProgress.Fill.Color := cFullColor;
+end;
+
+procedure TPerson.SetIsClassicBag(const Value: boolean);
+var
+  vQuery: TFDQuery;
+begin
+  FIsClassicBag := Value;
+  MainForm.CreateBagFrame;
+  ExeExec('update users set is_classic_bag = ' + FIsClassicBag.ToString + ' where user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
+end;
+
+procedure CancelingAllIssuies;
+var
+  vQuery: TFDQuery;
+begin
+  ExeExec('update issuies set status_id = 2 where status_id = 0 and issue_block_id in (select issue_block_id from user_issuies_block where user_id = ' + Person.UserId.ToString + ');',
+    exExecute, vQuery);
+  ExeExec('update issuies_block set status_id = 2 where status_id = 0 and issue_block_id in (select issue_block_id from user_issuies_block where user_id = ' + Person.UserId.ToString + ');',
+    exExecute, vQuery);
+
+  ReloadIssuies;
+  MainForm.FFrameMap.UpdateIssue;
+end;
+
+procedure TPerson.SetCash(const Value: integer);
+begin
+  FCash := Value;
+
+  if Assigned(MainForm.FFrameBag) then
+    MainForm.FFrameBag.labCash.Text := FCash.ToString;
+
+  if Assigned(MainForm.FFrameBagSection) then
+    MainForm.FFrameBagSection.labCash.Text := FCash.ToString;
 end;
 
 procedure TPerson.SetHealth(const Value: double);
@@ -173,7 +236,9 @@ var
 begin
   if (FHealth <> Value) then
   begin
-    MainForm.FMapFrame.igeDeadGlow.Enabled := false;
+    if NOT MainForm.animBlood.Running then
+      MainForm.igeDeadGlow.Enabled := false;
+
     MainForm.layMenu.Enabled := true;
 
     if MainForm.TabControl.ActiveTab <> MainForm.TabPercs then
@@ -220,27 +285,34 @@ begin
 
     SetHealthProgress(MainForm.HealthProgress, FHealth);
 
-    if Assigned(MainForm.FPercsFrame) then
+    if Assigned(MainForm.FFramePercs) then
     begin
-      SetHealthProgress(MainForm.FPercsFrame.HealthProgress, FHealth);
-      MainForm.FPercsFrame.ReloadPercs;
+      SetHealthProgress(MainForm.FFramePercs.HealthProgress, FHealth);
+      MainForm.FFramePercs.ReloadPercs;
     end;
 
     if FHealth = 0 then
     begin
+      CancelingAllIssuies;
       FIsDead := true;
-      MainForm.FMapFrame.igeDeadGlow.Enabled := true;
+      MainForm.animBlood.Stop;
+      MainForm.recSelect.Parent := MainForm.imgBtnMap;
+      MainForm.igeDeadGlow.Opacity := 1;
+      MainForm.igeDeadGlow.Enabled := true;
+
       MainForm.layMenu.Enabled := false;
       MainForm.TabControl.ActiveTab := MainForm.TabMap;
       MainForm.StopDetector;
+      MainForm.FFrameMap.MediaPlayerRad.Stop;
+      MainForm.FFrameMap.MediaPlayerAnomaly.Stop;
     end;
   end
   else
   begin
     SetHealthProgress(MainForm.HealthProgress, FHealth);
 
-    if Assigned(MainForm.FPercsFrame) then
-      SetHealthProgress(MainForm.FPercsFrame.HealthProgress, FHealth);
+    if Assigned(MainForm.FFramePercs) then
+      SetHealthProgress(MainForm.FFramePercs.HealthProgress, FHealth);
   end;
 end;
 
@@ -318,7 +390,7 @@ end;
 procedure GoToDetector;
 begin
   MainForm.TabControl.ActiveTab := MainForm.TabDetector;
-  MainForm.FDetectorFrame.timerScannerArtefacts.Enabled := true;
+  MainForm.FFrameDetector.timerScannerArtefacts.Enabled := true;
   MainForm.imgPersonHealth.Visible := true;
   MainForm.recSelect.Parent := nil;
 end;
@@ -367,9 +439,20 @@ begin
   end;
 end;
 
-procedure ReloadIssies;
+procedure ReloadIssuies;
 begin
   MainForm.LoadIsuies;
+end;
+
+procedure StartDamageGlow;
+begin
+  MainForm.igeDeadGlow.Enabled := true;
+  MainForm.animBlood.Start;
+end;
+
+procedure StopDamageGlow;
+begin
+  MainForm.animBlood.Stop;
 end;
 
 end.
