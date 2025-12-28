@@ -10,7 +10,6 @@ uses
 
 type
   TFrameDetector = class(TFrame)
-    Image9: TImage;
     imgDetector: TImage;
     recSignalOtklik: TRectangle;
     animDetectorOtklik: TFloatAnimation;
@@ -32,6 +31,8 @@ type
     imgDetectorVilka: TImage;
     recBackForIndicatorVilka: TRectangle;
     labDisplayVilka: TLabel;
+    Rectangle1: TRectangle;
+    InnerGlowEffect1: TInnerGlowEffect;
     procedure TimerSensorTimer(Sender: TObject);
     procedure timerScannerArtefactsTimer(Sender: TObject);
     procedure FrameResize(Sender: TObject);

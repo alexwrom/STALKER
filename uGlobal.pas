@@ -36,12 +36,26 @@ type
     AnomalyType: TAnomalyType;
   end;
 
+  TPerc = record
+    ID: integer;
+    PhisicArmor: double;
+    RadiationArmor: double;
+    ElectroArmor: double;
+    FireArmor: double;
+    PsiArmor: double;
+    ChimisheArmor: double;
+  end;
+
   TBagData = record
     Icon: TBitmap;
     BagType: TBagType;
     TableName: string;
     RowID: integer;
     Count: integer;
+    Health: double;
+    HealthRestore: double;
+    CountSlots: integer;
+    Percs: TPerc;
   end;
 
   TPlaceData = record
@@ -93,15 +107,6 @@ type
     Level: integer;
   end;
 
-  TPerc = record
-    PhisicArmor: double;
-    RadiationArmor: double;
-    ElectroArmor: double;
-    FireArmor: double;
-    PsiArmor: double;
-    ChimisheArmor: double;
-  end;
-
   TPerson = class
   private
     FHealth: double;
@@ -118,6 +123,9 @@ type
     FGroupId: integer;
     FCash: integer;
     FIsClassicBag: boolean;
+    FCountContener: integer;
+    FArmorId: integer;
+    FWeaponId: integer;
     procedure SetHealth(const Value: double);
     procedure SetHealthArmor(AValue: double);
     procedure SetHealthWeapon(AValue: double);
@@ -129,7 +137,9 @@ type
     property UserId: integer read FUserId write FUserId;
     property GroupId: integer read FGroupId write FGroupId;
     property Health: double read FHealth write SetHealth;
+    property ArmorId: integer read FArmorId write FArmorId;
     property ArmorHealth: double read FArmorHealth write FArmorHealth;
+    property WeaponId: integer read FWeaponId write FWeaponId;
     property WeaponHealth: double read FWeaponHealth write FWeaponHealth;
     property PsiArmor: double read FPsiArmor write FPsiArmor;
     property ElectroArmor: double read FElectroArmor write FElectroArmor;
@@ -138,6 +148,7 @@ type
     property ChimisheArmor: double read FChimisheArmor write FChimisheArmor;
     property RadiationArmor: double read FRadiationArmor write FRadiationArmor;
     property Cash: integer read FCash write SetCash;
+    property CountContener: integer read FCountContener write FCountContener;
     property IsClassicBag: boolean read FIsClassicBag write SetIsClassicBag;
     property Detector: TDetector read FDetector write FDetector;
   end;
@@ -152,6 +163,8 @@ procedure GenerateQRCode(const AText: string; ASize: integer; AImage: TImage);
 procedure ReloadIssuies;
 procedure StartDamageGlow;
 procedure StopDamageGlow;
+procedure ReloadBag;
+procedure ReloadPercs;
 
 var
   Person: TPerson;
@@ -444,6 +457,11 @@ begin
   MainForm.LoadIsuies;
 end;
 
+procedure ReloadBag;
+begin
+  MainForm.btnToBagClick(nil);
+end;
+
 procedure StartDamageGlow;
 begin
   MainForm.igeDeadGlow.Enabled := true;
@@ -453,6 +471,11 @@ end;
 procedure StopDamageGlow;
 begin
   MainForm.animBlood.Stop;
+end;
+
+procedure ReloadPercs;
+begin
+ MainForm.FFramePercs.ReloadPercs;
 end;
 
 end.

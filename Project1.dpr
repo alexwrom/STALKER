@@ -12,6 +12,11 @@ uses
   uFrameDetector in 'uFrameDetector.pas' {FrameDetector: TFrame},
   uScanerWiFi in 'uScanerWiFi.pas',
   uFrameQRScaner in 'uFrameQRScaner.pas' {FrameQRScanner: TFrame},
+  uFrameIssuies in 'uFrameIssuies.pas' {FrameIssuies: TFrame},
+  controls.item in 'controls.item.pas',
+  controls.listitem in 'controls.listitem.pas',
+  uFrameBag in 'uFrameBag.pas',
+  uFrameBagSection in 'uFrameBagSection.pas' {FrameBagSection: TFrame},
   ZXing.BarcodeFormat in '..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.BarcodeFormat.pas',
   ZXing.BaseLuminanceSource in '..\ZXing.Delphi-3.10.0\Lib\Classes\Filtering\ZXing.BaseLuminanceSource.pas',
   ZXing.Binarizer in '..\ZXing.Delphi-3.10.0\Lib\Classes\Filtering\ZXing.Binarizer.pas',
@@ -88,12 +93,7 @@ uses
   ZXing.RGBLuminanceSource in '..\ZXing.Delphi-3.10.0\Lib\Classes\Filtering\ZXing.RGBLuminanceSource.pas',
   ZXing.ScanManager in '..\ZXing.Delphi-3.10.0\Lib\Classes\ZXing.ScanManager.pas',
   ZXing.StringUtils in '..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.StringUtils.pas',
-  DelphiZXIngQRCode in '..\ZXing.Delphi-3.10.0\DelphiZXingQRCode-master\Source\DelphiZXIngQRCode.pas',
-  uFrameIssuies in 'uFrameIssuies.pas' {FrameIssuies: TFrame},
-  controls.item in 'controls.item.pas',
-  controls.listitem in 'controls.listitem.pas',
-  uFrameBag in 'uFrameBag.pas',
-  uFrameBagSection in 'uFrameBagSection.pas' {FrameBagSection: TFrame};
+  DelphiZXIngQRCode in '..\ZXing.Delphi-3.10.0\DelphiZXingQRCode-master\Source\DelphiZXIngQRCode.pas';
 
 {$R *.res}
 

@@ -115,7 +115,11 @@ var
   vQuery: TFDQuery;
   vBagData: TBagData;
 begin
-  FBagList := TList<TBagData>.Create;
+  if NOT Assigned(FBagList) then
+    FBagList := TList<TBagData>.Create
+  else
+    FBagList.Clear;
+
   ExeExec('select * from my_bag order by sor;', exActive, vQuery);
   vQuery.First;
 
@@ -138,6 +142,15 @@ begin
     else if vBagData.TableName = 'detectors' then
       vBagData.BagType := btDetector;
 
+    vBagData.Health := vQuery.FieldByName('health').AsFloat;
+    vBagData.HealthRestore := vQuery.FieldByName('health_restore').AsFloat;
+    vBagData.Percs.PhisicArmor := vQuery.FieldByName('phisic').AsInteger;
+    vBagData.Percs.RadiationArmor := vQuery.FieldByName('radiation').AsInteger;
+    vBagData.Percs.ElectroArmor := vQuery.FieldByName('electro').AsInteger;
+    vBagData.Percs.FireArmor := vQuery.FieldByName('fire').AsInteger;
+    vBagData.Percs.PsiArmor := vQuery.FieldByName('psi').AsInteger;
+    vBagData.Percs.ChimisheArmor := vQuery.FieldByName('chimishe').AsInteger;
+    vBagData.CountSlots := vQuery.FieldByName('count_slots').AsInteger;
     FBagList.Add(vBagData);
     vQuery.Next;
   end;
@@ -232,11 +245,11 @@ begin
   Person := TPerson.Create;
   Person.UserId := 1; // Получить ID при логировании
   Person.GroupId := 1;
+  Person.CountContener := -1;
 
   LoadArtefacts;
   LoadIsuies;
   LoadPlaces;
-  LoadBag;
 
   FFrameMap := TFrameMap.Create(TabMap);
   FFrameMap.Parent := TabMap;
@@ -253,8 +266,7 @@ begin
   FFrameIssuies := TFrameIssuies.Create(TabIssueis);
   FFrameIssuies.Parent := TabIssueis;
 
-  PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.ACCESS_COARSE_LOCATION',
-    'android.permission.CHANGE_WIFI_STATE', 'android.permission.CAMERA'],
+  PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.ACCESS_COARSE_LOCATION', 'android.permission.CHANGE_WIFI_STATE', 'android.permission.CAMERA'],
     procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
     begin
       if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
@@ -270,6 +282,7 @@ end;
 
 procedure TMainForm.btnToBagClick(Sender: TObject);
 begin
+  LoadBag;
   recSelect.Parent := imgBtnBag;
   TabControl.ActiveTab := TabBag;
   FFrameDetector.timerScannerArtefacts.Enabled := false;
@@ -290,9 +303,8 @@ begin
       FFrameBag := TFrameBag.Create(TabBag);
       FFrameBag.labCash.Text := Person.Cash.ToString;
       FFrameBag.LayBag.Height := Self.Height + 63;
-      FFrameBag.CreateElements;
     end;
-
+    FFrameBag.CreateElements;
     FFrameBag.Parent := TabBag;
     FFrameBag.SwitchStyle.IsChecked := true;
     FFrameBag.BringToFront;
@@ -302,11 +314,10 @@ begin
     if not Assigned(FFrameBagSection) then
     begin
       FFrameBagSection := TFrameBagSection.Create(TabBag);
-
-      FFrameBagSection.LoadBagElements;
       FFrameBagSection.labCash.Text := Person.Cash.ToString;
     end;
 
+    FFrameBagSection.LoadBagElements;
     FFrameBagSection.SwitchStyle.IsChecked := false;
     FFrameBagSection.Parent := TabBag;
     FFrameBagSection.BringToFront;

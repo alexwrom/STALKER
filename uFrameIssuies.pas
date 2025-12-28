@@ -44,9 +44,6 @@ type
     Label2: TLabel;
     layAdditionalActive: TLayout;
     Rectangle1: TRectangle;
-    Image9: TImage;
-    Image3: TImage;
-    Image16: TImage;
     Image17: TImage;
     layControlNotifications: TLayout;
     recSelectNotification: TRectangle;
@@ -56,6 +53,16 @@ type
     layDownload: TLayout;
     Image4: TImage;
     btnDownloadInfo: TCornerButton;
+    Rectangle2: TRectangle;
+    InnerGlowEffect3: TInnerGlowEffect;
+    Rectangle4: TRectangle;
+    InnerGlowEffect4: TInnerGlowEffect;
+    Rectangle3: TRectangle;
+    InnerGlowEffect2: TInnerGlowEffect;
+    Rectangle5: TRectangle;
+    InnerGlowEffect1: TInnerGlowEffect;
+    Rectangle6: TRectangle;
+    InnerGlowEffect5: TInnerGlowEffect;
     procedure btnToActiveClick(Sender: TObject);
     procedure btnToCompleteClick(Sender: TObject);
     procedure btnToCancelClick(Sender: TObject);

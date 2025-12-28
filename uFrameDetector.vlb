@@ -7,10 +7,6 @@ Coordinates=270,56,88,36
 [imgDetector]
 Coordinates=140,10,84,58
 
-[Image9]
-Coordinates=234,10,57,58
-Visible=True
-
 [recBackForIndicator]
 Coordinates=10,146,130,36
 
@@ -39,7 +35,8 @@ Coordinates=361,247,86,36
 Coordinates=73,78,101,36
 
 []
-Coordinates=10,78,53,58
+Coordinates=234,10,57,58
+Visible=True
 
 [pieBearSignal]
 Coordinates=150,146,40,36
