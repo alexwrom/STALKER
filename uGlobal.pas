@@ -13,8 +13,12 @@ uses
 
 const
   cCriticalColor = $32F92F2F;
-  cNormalColor = $32F9AC2F;
+  cNormalColor = $86C98826;
   cFullColor = $6422FC1A;
+
+  cWorseColor = $FFA31010;
+  cEgualColor = $FFC98826;
+  cBetterColor = $FF0D8409;
 
 type
   TMarkerType = (mtPoint, mtRad, mtAnomaly, mtBag, mtIssue, mtBase, mtSafe);
@@ -165,6 +169,7 @@ procedure StartDamageGlow;
 procedure StopDamageGlow;
 procedure ReloadBag;
 procedure ReloadPercs;
+function IsFullBelt: boolean;
 
 var
   Person: TPerson;
@@ -222,10 +227,8 @@ procedure CancelingAllIssuies;
 var
   vQuery: TFDQuery;
 begin
-  ExeExec('update issuies set status_id = 2 where status_id = 0 and issue_block_id in (select issue_block_id from user_issuies_block where user_id = ' + Person.UserId.ToString + ');',
-    exExecute, vQuery);
-  ExeExec('update issuies_block set status_id = 2 where status_id = 0 and issue_block_id in (select issue_block_id from user_issuies_block where user_id = ' + Person.UserId.ToString + ');',
-    exExecute, vQuery);
+  ExeExec('update issuies set status_id = 2 where status_id = 0 and issue_block_id in (select issue_block_id from user_issuies_block where user_id = ' + Person.UserId.ToString + ');', exExecute, vQuery);
+  ExeExec('update issuies_block set status_id = 2 where status_id = 0 and issue_block_id in (select issue_block_id from user_issuies_block where user_id = ' + Person.UserId.ToString + ');', exExecute, vQuery);
 
   ReloadIssuies;
   MainForm.FFrameMap.UpdateIssue;
@@ -287,8 +290,8 @@ begin
       if FWeaponHealth < 0 then
         FWeaponHealth := 0;
 
-      ExeExec(Format('update users set health = %s, armor_health = %s, weapon_health = %s where user_id = %d;', [StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]),
-        StringReplace(FArmorHealth.ToString, ',', '.', [rfReplaceAll]), StringReplace(FWeaponHealth.ToString, ',', '.', [rfReplaceAll]), Person.UserId]), exExecute, vQuery);
+      ExeExec(Format('update users set health = %s, armor_health = %s, weapon_health = %s where user_id = %d;', [StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]), StringReplace(FArmorHealth.ToString, ',', '.', [rfReplaceAll]),
+        StringReplace(FWeaponHealth.ToString, ',', '.', [rfReplaceAll]), Person.UserId]), exExecute, vQuery);
 
       SetHealthArmor(FArmorHealth);
       SetHealthWeapon(FWeaponHealth);
@@ -475,7 +478,16 @@ end;
 
 procedure ReloadPercs;
 begin
- MainForm.FFramePercs.ReloadPercs;
+  MainForm.FFramePercs.ReloadPercs;
+end;
+
+function IsFullBelt: boolean;
+var
+  vQuery: TFDQuery;
+begin
+  ExeExec('select count(1) as cnt from user_belt where user_id =  ' + Person.UserId.ToString + ';', exActive, vQuery);
+  result := vQuery.FieldByName('cnt').AsInteger = Person.CountContener;
+  FreeQueryAndConn(vQuery);
 end;
 
 end.

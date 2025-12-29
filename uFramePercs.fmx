@@ -2463,8 +2463,8 @@ object FramePercs: TFramePercs
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
-          XRadius = 3.000000000000000000
-          YRadius = 3.000000000000000000
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
         end
         object ChimisheArmor: TRectangle
           Tag = 166
@@ -2476,8 +2476,8 @@ object FramePercs: TFramePercs
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
-          XRadius = 3.000000000000000000
-          YRadius = 3.000000000000000000
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
         end
         object ElectroArmor: TRectangle
           Tag = 166
@@ -2489,8 +2489,8 @@ object FramePercs: TFramePercs
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
-          XRadius = 3.000000000000000000
-          YRadius = 3.000000000000000000
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
         end
         object PsiArmor: TRectangle
           Tag = 166
@@ -2502,8 +2502,8 @@ object FramePercs: TFramePercs
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
-          XRadius = 3.000000000000000000
-          YRadius = 3.000000000000000000
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
         end
         object PhisicArmor: TRectangle
           Tag = 166
@@ -2515,8 +2515,8 @@ object FramePercs: TFramePercs
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
-          XRadius = 3.000000000000000000
-          YRadius = 3.000000000000000000
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
         end
         object FireArmor: TRectangle
           Tag = 166
@@ -2528,8 +2528,8 @@ object FramePercs: TFramePercs
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
-          XRadius = 3.000000000000000000
-          YRadius = 3.000000000000000000
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
         end
         object labFireArmor: TLabel
           StyledSettings = []
@@ -4168,8 +4168,7 @@ object FramePercs: TFramePercs
           end
           object laySlot2: TLayout
             Align = Client
-            Margins.Left = 2.000000000000000000
-            Margins.Right = 3.000000000000000000
+            Margins.Right = 5.000000000000000000
             Size.Width = 65.000000000000000000
             Size.Height = 63.000000000000000000
             Size.PlatformDefault = False
@@ -4211,9 +4210,9 @@ object FramePercs: TFramePercs
           end
           object laySlot3: TLayout
             Align = Client
-            Margins.Left = 2.000000000000000000
+            Margins.Left = 1.000000000000000000
             Margins.Right = 3.000000000000000000
-            Size.Width = 65.000000000000000000
+            Size.Width = 66.000000000000000000
             Size.Height = 63.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 2
@@ -4224,7 +4223,7 @@ object FramePercs: TFramePercs
                 item
                 end>
               Align = Contents
-              Size.Width = 65.000000000000000000
+              Size.Width = 66.000000000000000000
               Size.Height = 63.000000000000000000
               Size.PlatformDefault = False
               WrapMode = Stretch
@@ -4243,7 +4242,7 @@ object FramePercs: TFramePercs
             object btnSlot3Info: TSpeedButton
               Tag = 3
               Align = Client
-              Size.Width = 65.000000000000000000
+              Size.Width = 66.000000000000000000
               Size.Height = 63.000000000000000000
               Size.PlatformDefault = False
               StyleLookup = 'transparentcirclebuttonstyle'
@@ -5542,15 +5541,6 @@ object FramePercs: TFramePercs
           Size.Height = 140.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
-          object btnWeaponInfo: TSpeedButton
-            Align = Client
-            Size.Width = 565.000000000000000000
-            Size.Height = 118.000000000000000000
-            Size.PlatformDefault = False
-            StyleLookup = 'transparentcirclebuttonstyle'
-            Text = 'btnOpenDetector'
-            TextSettings.Trimming = None
-          end
           object imgWeaponIcon: TImage
             MultiResBitmap.Height = 283
             MultiResBitmap.Width = 283
@@ -5808,6 +5798,16 @@ object FramePercs: TFramePercs
                 Stroke.Kind = None
               end
             end
+          end
+          object btnWeaponInfo: TSpeedButton
+            Align = Client
+            Size.Width = 565.000000000000000000
+            Size.Height = 118.000000000000000000
+            Size.PlatformDefault = False
+            StyleLookup = 'transparentcirclebuttonstyle'
+            Text = 'btnOpenDetector'
+            TextSettings.Trimming = None
+            OnClick = btnWeaponInfoClick
           end
         end
       end
@@ -7447,7 +7447,7 @@ object FramePercs: TFramePercs
       Size.PlatformDefault = False
       Stroke.Kind = None
     end
-    object Layout3: TLayout
+    object layPanel: TLayout
       Align = Center
       Size.Width = 401.000000000000000000
       Size.Height = 252.000000000000000000
@@ -11472,7 +11472,7 @@ object FramePercs: TFramePercs
             TabOrder = 0
             Text = #1047#1072#1082#1088#1099#1090#1100
             TextSettings.Font.Family = 'YouTube Sans Dark'
-            TextSettings.Font.Size = 20.000000000000000000
+            TextSettings.Font.Size = 15.000000000000000000
             TextSettings.Font.StyleExt = {00070000000000000004000000}
             TextSettings.FontColor = xFFC1BFBF
             TextSettings.Trimming = None
@@ -11482,7 +11482,7 @@ object FramePercs: TFramePercs
           end
         end
       end
-      object Image4: TImage
+      object imgPercs: TImage
         MultiResBitmap.Height = 119
         MultiResBitmap.Width = 343
         MultiResBitmap.LoadSize = 2
@@ -13888,8 +13888,8 @@ object FramePercs: TFramePercs
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
-          XRadius = 3.000000000000000000
-          YRadius = 3.000000000000000000
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
         end
         object infoChimishe: TRectangle
           Tag = 166
@@ -13901,8 +13901,8 @@ object FramePercs: TFramePercs
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
-          XRadius = 3.000000000000000000
-          YRadius = 3.000000000000000000
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
         end
         object infoElectro: TRectangle
           Tag = 166
@@ -13914,8 +13914,8 @@ object FramePercs: TFramePercs
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
-          XRadius = 3.000000000000000000
-          YRadius = 3.000000000000000000
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
         end
         object infoPsi: TRectangle
           Tag = 166
@@ -13927,8 +13927,8 @@ object FramePercs: TFramePercs
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
-          XRadius = 3.000000000000000000
-          YRadius = 3.000000000000000000
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
         end
         object infoPhisic: TRectangle
           Tag = 166
@@ -13940,8 +13940,8 @@ object FramePercs: TFramePercs
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
-          XRadius = 3.000000000000000000
-          YRadius = 3.000000000000000000
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
         end
         object infoFire: TRectangle
           Tag = 166
@@ -13953,8 +13953,8 @@ object FramePercs: TFramePercs
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
-          XRadius = 3.000000000000000000
-          YRadius = 3.000000000000000000
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
         end
         object infoLabChimishe: TLabel
           StyledSettings = []
@@ -14065,7 +14065,7 @@ object FramePercs: TFramePercs
           GlowColor = xFF060606
           Opacity = 1.000000000000000000
         end
-        object layClearArmor: TLayout
+        object layClearArmorWeapon: TLayout
           Align = Top
           Size.Width = 381.000000000000000000
           Size.Height = 34.000000000000000000
@@ -14251,7 +14251,7 @@ object FramePercs: TFramePercs
             Size.Height = 34.000000000000000000
             Size.PlatformDefault = False
             WrapMode = Stretch
-            object btnClearArmor: TCornerButton
+            object btnClearArmorWeapon: TCornerButton
               Align = Client
               StyledSettings = []
               Sides = [Top, Left, Bottom, Right]
@@ -14267,11 +14267,11 @@ object FramePercs: TFramePercs
               TextSettings.Trimming = None
               XRadius = 3.000000000000000000
               YRadius = 3.000000000000000000
-              OnClick = btnClearArmorClick
+              OnClick = btnClearArmorWeaponClick
             end
           end
         end
-        object layRestoreArmor: TLayout
+        object layRestoreArmorWeapon: TLayout
           Align = Top
           Position.Y = 34.000000000000000000
           Size.Width = 381.000000000000000000
@@ -14458,7 +14458,7 @@ object FramePercs: TFramePercs
             Size.Height = 34.000000000000000000
             Size.PlatformDefault = False
             WrapMode = Stretch
-            object btnRestoreArmor: TCornerButton
+            object btnRestoreArmorWeapon: TCornerButton
               Align = Client
               StyledSettings = []
               Sides = [Top, Left, Bottom, Right]
@@ -22660,6 +22660,78 @@ object FramePercs: TFramePercs
             FileName = 'E:\Delphi\STALKER PDA\Resources\art_bloc_2.png'
           end>
         Name = 'art_bloc_2'
+      end
+      item
+        MultiResBitmap.Height = 63
+        MultiResBitmap.Width = 63
+        MultiResBitmap.LoadSize = 0
+        MultiResBitmap = <
+          item
+            Width = 63
+            Height = 63
+            PNG = {
+              89504E470D0A1A0A0000000D494844520000003F0000003F0806000000575F10
+              DF0000000473424954080808087C08648800000715494441546881DD5B4B72E4
+              360C7DA0B8F505B24B79CA97F2A153B39EF13273012F6D095950A04010FC48DD
+              ED4982AA2E4914080224881FD5F4FAFAFAF7DBDBDB1333A3024A17E67CAB6E00
+              707A262280F747221000964EACFAB5EE152D694FB4F4CDCE4883877C0F808519
+              8B0B80F686E76FCFEFF1C7CF1F7F7CFFEB7BEA20349893401D28DE338AFE2E2E
+              11C00C77920D7314A8924BF33602C12122173F5000333F05227A67944C59C159
+              33BD5F0BA2FD799A454974D524CEF6010E9E85AF6559F2B3964F9E89E83D4AA7
+              DE4A8710F428EEA0338CCDE2CFD2D2C0CC082160DBB60237F3AEBA1111880851
+              1E7A2BEF0D68FBE809D26A770584394B6BB865F67EADC9D6DB99991129EDB2AC
+              6E3D4D989914590122CAAB208C6BDA7682AC6022C4B66DDDC9B49323FDACDDDA
+              B6AD183FAFBC80DE2723C1BD7666C6B22C883166C13DC6CF6E032DD0997E1A44
+              36BD2D92F074B8006FD64683C9BB1042167CA4FA23FA2315EEEDFDD1B8F22EED
+              F9247DB3E3CC1690559F616006A4EFB22CD9DB5883D6EBA7F9F070880801846C
+              096784ECB56DDB866DDB4AEFD061D2AEA46D1301880831464BC2A533E453DDC7
+              2EE2C5B69E55BEAA55B32BEE194E8F1F0692B5974EBD3D356BFDEFA1F25E7F6D
+              C9755BAB9F671C53C82D6A0E04748CCA19E6ECBB5B856F8DA7699F55790B91F9
+              F0C5AD8EB35A702F812D2F23D7AB71EC8A7BCF4404622082FBD6F9CA449C793F
+              D3A7B59F5B7D4613201045ED3582B7BFA4E315FF3FC21B412FB2EBE17AA1B1BE
+              EF5A7B4B34A11C8972EA63B3BB142EEB7C348DD548B02760D6B0E9773356DF75
+              9EEDE8A93D3011E528115056150011E3406D144DF41C9234B6C1755F130267DE
+              0988366EF6C2DB2BFB9AB165010884A1D6AB40EBE04184F285F3C61ED98523C1
+              21C4638032EBF2AE76C0F6A4D0BEF86990B3DBFDB0DCD33D767EF6B17194B25A
+              DE026004C261C474583AE33F7B5E42D2DA7BB9FB56CACB7B322EBF02D7195B1B
+              ED200FCBB220843055236B31663DC6574036AE4A7AA2A3CD8B0A9939F9799D31
+              95FBAD56ED5B7DBE07B3E1F02C6D665686F7E8EB8D132C92A49096B99941BD36
+              FBB3E085AB37C71392A9520707C6D549F63433CB5A4B4E97BA4FC2CC0258D5D6
+              BC593CF9454116D5F706BE35443DA3B296494BB33711C2FFBAAE2E4DDD464449
+              ED8908EBBA625DD7E680AD10D32F79016271AE2C784FE58F00EBE041605DD7AA
+              68EAF12C50A9BDBEAF0516A31100102423AC06508CB26ED1BCE8FDC8E5ABD681
+              483266429B41E9E4A5AADA0A88F75AD7B5288765E119A83A76831735780ADFFD
+              D2D310D8BDEDE2C92311C04CC5DEAEBA99E44CEA7FBACC16B11B392DF838824B
+              6A675D8A4019E7EB1707632368262E4400ED270D3904AEF3796DF04458ADCD0C
+              3ED49EC139129716CD757A7F62037750CB4995F42F00D82A61DD0528B6E79815
+              6D0035A420C79C87DAF030DBAF3B85AA0790B95E738923F7ACB588B247A3A36E
+              CFBC156968CECB6F606A0CACAEFE12CE68C219DE08B22D716475337BDD1A18CF
+              17FF0E38C383DEF7E14CFAE159F5472730AD316783AFDE028D8F561E023AF036
+              417885D7D744B9B6F287DEE2B865AC91BFBFACEAC4A97E5436A2EDE9FDAAEB59
+              6D6B4D48B386F71075CE8217F11CDAC2FB606380AB8BF19BD45EC3A36D86D7B6
+              1B3C303F7AFC2F8196A6DA04A888FD21C9FF7F183CC1BCF716626B7FFF1BFCF7
+              2C9C31864197B11EE5A61FEDFFAF95D7184C87818DD873E4FFC1B6AFA0767100
+              18D828B507A0E3655B473D9381C4A356FFEA78728822B8E14865CF0F3823DCBD
+              27E02CBDBA3A5CB83AB8CEF09E06EF5E13703B9D3262F43F719A64C42B17F7F0
+              65D02B634DE3EC068D37AFE05A3EC7199DEFD5CA3CBC29266F05B1DAEC1CB155
+              F94369AF043F68867AA72E1E5CB503F703674198AA15E6DDCCDB4FEB432BBC1B
+              1D20F4E04B2680098DCA798D2A0BC8E573D00816F4E1E5B22C4595B7D58F88A6
+              BEC0BC1566B47194DF37B9D42BBD2C4BF3ECCB12D4C2DB0243ABE0300BA3FEDA
+              E6081FC7D8F584C5EA4CC6CC9C0621E61936699323A3AF2E79F54E6E046C90D6
+              74759E6B223ABE69B1EF5BEA756BF4372A61B5DA675CEF949F1722FAE3DF9EDF
+              BEB5C2320B3DA3DCD23C8D172D1179D62B2A077D21847CFAD113DAA3731566DC
+              A90DB698B9D8A2ADBED1EE718F597D74DDDA5BADBE2D1B716FB0DBACF5C704CD
+              4BB48D9E9193F7EBBA167F1EF266D7D268B9C85998891835EF7AD5ADB0C542C3
+              44781E51615C1FFCCBD50A6FEFBDEB2D828F8CAABE7E7C7CE42D6AF94AFCF3F1
+              3596BCF0BE8A900920227C7E7E66955FD7B55A794B43DB88E90960B881A75D65
+              2DB0D52E8F2FCD1F6FC9DA3FA52F2DFCCFCF42082926DE52DEBFC1CB9129F35B
+              AD161102D51F3164B6946710C6D287ABCE9138A59A93A6C5CC298F6146A090E8
+              E9406B1F439FCB070A00E129BEBCBCFC5A4278E24CBF3E885CC158501FF6E719
+              A5747E1F9CE5CA7427DB89085808FCB9157F764C13B9277306C4AC05945B43AA
+              75E478873F9F9FDFFF013A9EC984FA931B0B0000000049454E44AE426082}
+            FileName = 'E:\Delphi\STALKER PDA\Resources\full_element 63.png'
+          end>
+        Name = 'full_element 63'
       end>
     Destination = <
       item
@@ -22668,6 +22740,14 @@ object FramePercs: TFramePercs
             Name = 'art_bloc_2'
             SourceRect.Right = 94.000000000000000000
             SourceRect.Bottom = 94.000000000000000000
+          end>
+      end
+      item
+        Layers = <
+          item
+            Name = 'full_element 63'
+            SourceRect.Right = 63.000000000000000000
+            SourceRect.Bottom = 63.000000000000000000
           end>
       end>
     Left = 617

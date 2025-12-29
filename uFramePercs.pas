@@ -58,14 +58,14 @@ type
     GlassList: TImageList;
     layInfo: TLayout;
     Rectangle8: TRectangle;
-    Layout3: TLayout;
+    layPanel: TLayout;
     Image10: TImage;
     Image11: TImage;
     Image13: TImage;
     Image8: TImage;
     Layout4: TLayout;
     Image3: TImage;
-    Image4: TImage;
+    imgPercs: TImage;
     infoRadiation: TRectangle;
     infoChimishe: TRectangle;
     infoElectro: TRectangle;
@@ -110,12 +110,12 @@ type
     Rectangle4: TRectangle;
     Rectangle5: TRectangle;
     InnerGlowEffect2: TInnerGlowEffect;
-    layClearArmor: TLayout;
+    layClearArmorWeapon: TLayout;
     Image1: TImage;
-    btnClearArmor: TCornerButton;
-    layRestoreArmor: TLayout;
+    btnClearArmorWeapon: TCornerButton;
+    layRestoreArmorWeapon: TLayout;
     Image2: TImage;
-    btnRestoreArmor: TCornerButton;
+    btnRestoreArmorWeapon: TCornerButton;
     layClearArt: TLayout;
     Image9: TImage;
     btnClearArt: TCornerButton;
@@ -123,8 +123,9 @@ type
     procedure btnCloseInfoClick(Sender: TObject);
     procedure btnArmorInfoClick(Sender: TObject);
     procedure btnOpenDetectorClick(Sender: TObject);
-    procedure btnClearArmorClick(Sender: TObject);
+    procedure btnClearArmorWeaponClick(Sender: TObject);
     procedure btnClearArtClick(Sender: TObject);
+    procedure btnWeaponInfoClick(Sender: TObject);
   private
     { Private declarations }
     FArtsList: TList<TPerc>;
@@ -167,21 +168,32 @@ begin
   infoLabPhisic.Text := IfThen(FArmorPerc.PhisicArmor = 0, '', FArmorPerc.PhisicArmor.ToString + ' %');
   infoLabFire.Text := IfThen(FArmorPerc.FireArmor = 0, '', FArmorPerc.FireArmor.ToString + ' %');
 
-  layClearArmor.Visible := true;
-  layRestoreArmor.Visible := true;
-  btnRestoreArmor.Enabled := Person.ArmorHealth < 100;
+  layClearArmorWeapon.Visible := true;
+  layRestoreArmorWeapon.Visible := true;
+  btnRestoreArmorWeapon.Enabled := Person.ArmorHealth < 100;
   layClearArt.Visible := false;
+  layPanel.Height := 54 + layClearArmorWeapon.Height + layRestoreArmorWeapon.Height + imgPercs.Height;
+  layInfo.Tag := 0;
+  imgPercs.Visible := true;
   layInfo.Visible := true;
 end;
 
-procedure TFramePercs.btnClearArmorClick(Sender: TObject);
+procedure TFramePercs.btnClearArmorWeaponClick(Sender: TObject);
 var
   vQuery: TFDQuery;
 begin
-  ExeExec('insert into bag (table_name, row_id, health) select ''arts'', art_id, 100 from user_belt;', exExecute, vQuery);
-  ExeExec('update users set armor_id = NULL, armor_health = 0 where user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
-  ExeExec('delete from user_belt where user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
-  ExeExec('insert into bag (table_name, row_id, health) values (''armors'',' + Person.ArmorId.ToString + ',' + Person.ArmorHealth.ToString + ');', exExecute, vQuery);
+  if layInfo.Tag = 0 then
+  begin
+    ExeExec('insert into bag (table_name, row_id, health) select ''arts'', art_id, 100 from user_belt;', exExecute, vQuery);
+    ExeExec('update users set armor_id = NULL, armor_health = 0 where user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
+    ExeExec('delete from user_belt where user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
+    ExeExec('insert into bag (table_name, row_id, health) values (''armors'',' + Person.ArmorId.ToString + ',' + Person.ArmorHealth.ToString + ');', exExecute, vQuery);
+  end
+  else
+  begin
+    ExeExec('update users set weapon_id = NULL, weapon_health = 0 where user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
+    ExeExec('insert into bag (table_name, row_id, health) values (''weapons'',' + Person.WeaponId.ToString + ',' + Person.WeaponHealth.ToString + ');', exExecute, vQuery);
+  end;
   ReloadPercs;
   layInfo.Visible := false;
 end;
@@ -191,7 +203,8 @@ var
   vQuery: TFDQuery;
 begin
   ExeExec('delete from user_belt where slot = ' + layInfo.Tag.ToString + ' and user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
-  ExeExec('insert into bag (table_name, row_id, health) values (''arts'',' + FArtsList[layInfo.Tag -1].ID.ToString + ', 100);', exExecute, vQuery);
+  ExeExec('update user_belt set slot = slot - 1 where slot > ' + layInfo.Tag.ToString + ' and user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
+  ExeExec('insert into bag (table_name, row_id, health) values (''arts'',' + FArtsList[layInfo.Tag - 1].ID.ToString + ', 100);', exExecute, vQuery);
   ReloadPercs;
   layInfo.Visible := false;
 end;
@@ -220,8 +233,10 @@ begin
     infoLabFire.Text := IfThen(FArtsList[(Sender as TSpeedButton).Tag - 1].FireArmor = 0, '', FArtsList[(Sender as TSpeedButton).Tag - 1].FireArmor.ToString + ' %');
     layInfo.Tag := (Sender as TSpeedButton).Tag;
     layClearArt.Visible := true;
-    layClearArmor.Visible := false;
-    layRestoreArmor.Visible := false;
+    layClearArmorWeapon.Visible := false;
+    layRestoreArmorWeapon.Visible := false;
+    imgPercs.Visible := true;
+    layPanel.Height := 54 + layClearArt.Height + imgPercs.Height;
     layInfo.Visible := true;
   end;
 end;
@@ -229,6 +244,18 @@ end;
 procedure TFramePercs.btnOpenDetectorClick(Sender: TObject);
 begin
   GoToDetector;
+end;
+
+procedure TFramePercs.btnWeaponInfoClick(Sender: TObject);
+begin
+  layInfo.Tag := 1;
+  imgPercs.Visible := false;
+  layClearArt.Visible := false;
+  layClearArmorWeapon.Visible := true;
+  layRestoreArmorWeapon.Visible := true;
+  btnRestoreArmorWeapon.Enabled := Person.WeaponHealth < 100;
+  layPanel.Height := 54 + layClearArmorWeapon.Height + layRestoreArmorWeapon.Height;
+  layInfo.Visible := true;
 end;
 
 constructor TFramePercs.Create(AObject: TFmxObject);
@@ -284,7 +311,6 @@ procedure TFramePercs.ReloadArmor;
 var
   vQuery: TFDQuery;
 begin
-  FArtsList.Clear;
   ExeExec('select * from armors_data where user_id = ' + Person.UserId.ToString + ';', exActive, vQuery);
 
   if vQuery.RecordCount <> 0 then
@@ -321,6 +347,7 @@ var
   vQuery2: TFDQuery;
 begin
   ReloadArmor;
+  FArtsList.Clear;
 
   for i := 1 to 5 do
   begin
@@ -342,7 +369,7 @@ begin
     begin
       (FindComponent('btnSlot' + vSlot.ToString + 'Info') as TSpeedButton).Visible := true;
       (FindComponent('btnSlot' + vSlot.ToString + 'Info') as TSpeedButton).Tag := vSlot;
-
+      (FindComponent('imgGlass' + vSlot.ToString) as TImage).Bitmap.Assign(GlassList.Source[1].MultiResBitmap[0].Bitmap);
       (FindComponent('imgSlot' + vSlot.ToString) as TImage).Bitmap.Assign(vQuery.FieldByName('icon'));
       vPerc.ID := vQuery.FieldByName('art_id').AsInteger;
       vPerc.PhisicArmor := vQuery.FieldByName('phisic').AsInteger;

@@ -76,17 +76,82 @@ type
     Image5: TImage;
     Label3: TLabel;
     labHealthRestore: TLabel;
+    layChangeSlot: TLayout;
+    Rectangle3: TRectangle;
+    Layout3: TLayout;
+    Image9: TImage;
+    Image12: TImage;
+    Image14: TImage;
+    Image15: TImage;
+    Layout5: TLayout;
+    Image16: TImage;
+    btnCloseChangeSlot: TCornerButton;
+    Image17: TImage;
+    recRadiationArt: TRectangle;
+    recChimisheArt: TRectangle;
+    recElectroArt: TRectangle;
+    recPsiArt: TRectangle;
+    recPhisicArt: TRectangle;
+    recFireArt: TRectangle;
+    Rectangle12: TRectangle;
+    InnerGlowEffect7: TInnerGlowEffect;
+    Layout8: TLayout;
+    Image20: TImage;
+    btnChooseArt: TCornerButton;
+    Rectangle16: TRectangle;
+    InnerGlowEffect10: TInnerGlowEffect;
+    layArts: TLayout;
+    Image22: TImage;
+    GridPanelLayout1: TGridPanelLayout;
+    laySlot1: TLayout;
+    ImgGlass1: TImage;
+    ImgSlot1: TImage;
+    btnSlot1Info: TSpeedButton;
+    laySlot2: TLayout;
+    ImgGlass2: TImage;
+    ImgSlot2: TImage;
+    btnSlot2Info: TSpeedButton;
+    laySlot3: TLayout;
+    ImgGlass3: TImage;
+    ImgSlot3: TImage;
+    btnSlot3Info: TSpeedButton;
+    laySlot4: TLayout;
+    ImgGlass4: TImage;
+    ImgSlot4: TImage;
+    btnSlot4Info: TSpeedButton;
+    laySlot5: TLayout;
+    ImgGlass5: TImage;
+    ImgSlot5: TImage;
+    btnSlot5Info: TSpeedButton;
+    Rectangle13: TRectangle;
+    InnerGlowEffect8: TInnerGlowEffect;
+    imgArt: TImage;
+    Label12: TLabel;
+    labArtName: TLabel;
+    recChimisheChangeArt: TRectangle;
+    recElectroChangeArt: TRectangle;
+    recFireChangeArt: TRectangle;
+    recPsiChangeArt: TRectangle;
+    recPhisicChangeArt: TRectangle;
+    recRadiationChangeArt: TRectangle;
+    GlassList: TImageList;
+    igfSelect: TInnerGlowEffect;
     procedure FramePainting(Sender: TObject; Canvas: TCanvas; const ARect: TRectF);
     procedure SwitchStyleSwitch(Sender: TObject);
     procedure btnCloseInfoClick(Sender: TObject);
     procedure btnAddArmorClick(Sender: TObject);
     procedure btnUseClick(Sender: TObject);
+    procedure btnAddArtClick(Sender: TObject);
+    procedure btnCloseChangeSlotClick(Sender: TObject);
+    procedure btnChooseArtClick(Sender: TObject);
   private
-
+    FArtsList: TList<TPerc>;
     procedure CreateFreeCell(ALayout: TFlowLayout);
     procedure OnClickElement(Sender: TObject);
     procedure SetLayBagHeight;
     procedure ClearElements;
+    procedure ReloadArts;
+    procedure btnArtClick(Sender: TObject);
 
     { Private declarations }
   public
@@ -104,6 +169,7 @@ constructor TFrameBag.Create(AObject: TFmxObject);
 begin
   inherited Create(AObject);
   labCash.TextSettings.Font.Family := 'lcd';
+  FArtsList := TList<TPerc>.Create;
 end;
 
 procedure TFrameBag.CreateBagBackground;
@@ -186,6 +252,155 @@ begin
   layInfo.Visible := false;
   ReloadBag;
   ReloadPercs;
+end;
+
+procedure TFrameBag.btnAddArtClick(Sender: TObject);
+var
+  vQuery: TFDQuery;
+  vIndex: Integer;
+begin
+  vIndex := layInfo.Tag;
+
+  if IsFullBelt then
+    begin
+      imgArt.Bitmap.Assign(FBagList[vIndex].Icon);
+      ExeExec('select * from arts where art_id = ' + FBagList[vIndex].RowID.ToString + ';', exActive, vQuery);
+
+      labArtName.Text := vQuery.FieldByName('art_name').AsString;
+      recPsiArt.Width := recPsiArt.Tag * vQuery.FieldByName('psi').AsFloat / 100;
+      recPhisicArt.Width := recPhisicArt.Tag * vQuery.FieldByName('phisic').AsFloat / 100;
+      recFireArt.Width := recFireArt.Tag * vQuery.FieldByName('fire').AsFloat / 100;
+      recRadiationArt.Width := recRadiationArt.Tag * vQuery.FieldByName('radiation').AsFloat / 100;
+      recChimisheArt.Width := recChimisheArt.Tag * vQuery.FieldByName('chimishe').AsFloat / 100;
+      recElectroArt.Width := recElectroArt.Tag * vQuery.FieldByName('electro').AsFloat / 100;
+      FreeQueryAndConn(vQuery);
+
+      recRadiationChangeArt.Width := 0;
+      recChimisheChangeArt.Width := 0;
+      recElectroChangeArt.Width := 0;
+      recPsiChangeArt.Width := 0;
+      recPhisicChangeArt.Width := 0;
+      recFireChangeArt.Width := 0;
+
+      ReloadArts;
+      layChangeSlot.Visible := true;
+    end
+    else
+    begin
+      ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''arts'' and row_id = ' + FBagList[vIndex].RowID.ToString + ' limit 1);', exExecute, vQuery);
+      ExeExec('insert into user_belt (art_id, slot, user_id) values (' + FBagList[vIndex].RowID.ToString + ', (select count(1) + 1 from user_belt where user_id = ' + Person.UserId.ToString + '), ' + Person.UserId.ToString + ');', exExecute, vQuery);
+    end;
+  layInfo.Visible := false;
+  ReloadBag;
+  ReloadPercs;
+end;
+
+procedure TFrameBag.ReloadArts;
+var
+  vQuery: TFDQuery;
+  vPerc: TPerc;
+  i: integer;
+  vSlot: integer;
+  vQuery2: TFDQuery;
+begin
+  FArtsList.Clear;
+
+  for i := 1 to 5 do
+  begin
+    (FindComponent('imgGlass' + i.ToString) as TImage).Bitmap.Assign(GlassList.Source[0].MultiResBitmap[0].Bitmap);
+    (FindComponent('imgSlot' + i.ToString) as TImage).Bitmap := nil;
+    (FindComponent('btnSlot' + i.ToString + 'Info') as TSpeedButton).Visible := false;
+  end;
+
+  for i := 1 to Person.CountContener do
+    (FindComponent('imgGlass' + i.ToString) as TImage).Bitmap := nil;
+
+  ExeExec('select a.chimishe, a.electro, a.fire, a.phisic, a.psi, a.radiation, a.icon, ub.slot, a.art_id from arts a join user_belt ub on ub.art_id = a.art_id where user_id = ' + Person.UserId.ToString + ' order by slot;', exActive, vQuery);
+
+  while not vQuery.Eof do
+  begin
+    vSlot := vQuery.FieldByName('slot').AsInteger;
+
+    if vSlot <= Person.CountContener then
+    begin
+      (FindComponent('btnSlot' + vSlot.ToString + 'Info') as TSpeedButton).Visible := true;
+      (FindComponent('btnSlot' + vSlot.ToString + 'Info') as TSpeedButton).OnClick := btnArtClick;
+      (FindComponent('btnSlot' + vSlot.ToString + 'Info') as TSpeedButton).Tag := vSlot;
+      (FindComponent('imgGlass' + vSlot.ToString) as TImage).Bitmap.Assign(GlassList.Source[1].MultiResBitmap[0].Bitmap);
+      (FindComponent('imgSlot' + vSlot.ToString) as TImage).Bitmap.Assign(vQuery.FieldByName('icon'));
+      vPerc.ID := vQuery.FieldByName('art_id').AsInteger;
+      vPerc.PhisicArmor := vQuery.FieldByName('phisic').AsInteger;
+      vPerc.RadiationArmor := vQuery.FieldByName('radiation').AsInteger;
+      vPerc.ElectroArmor := vQuery.FieldByName('electro').AsInteger;
+      vPerc.FireArmor := vQuery.FieldByName('fire').AsInteger;
+      vPerc.PsiArmor := vQuery.FieldByName('psi').AsInteger;
+      vPerc.ChimisheArmor := vQuery.FieldByName('chimishe').AsInteger;
+      FArtsList.Add(vPerc);
+    end
+    else
+      ExeExec('delete from user_belt where slot = ' + vSlot.ToString + ' and user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery2);
+
+    vQuery.Next;
+  end;
+
+  FreeQueryAndConn(vQuery);
+end;
+
+procedure TFrameBag.btnArtClick(Sender: TObject);
+procedure Compare(AArt, AChangeArt: TRectangle);
+begin
+  if AChangeArt.Width > AArt.Width then
+      begin
+        AArt.BringToFront;
+        AChangeArt.Fill.Color := cBetterColor;
+        AArt.Fill.Color := cEgualColor;
+      end
+      else
+       begin
+        AChangeArt.BringToFront;
+        AChangeArt.Fill.Color := cEgualColor;
+        AArt.Fill.Color := cWorseColor;
+      end
+end;
+
+begin
+  if FArtsList.Count >= (Sender as TSpeedButton).Tag then
+  begin
+    igfSelect.Enabled := true;
+    igfSelect.Parent := (FindComponent('imgGlass' + (Sender as TSpeedButton).Tag.ToString) as TImage);
+    igfSelect.Tag := (Sender as TSpeedButton).Tag;
+    recRadiationChangeArt.Width := recRadiationChangeArt.Tag * FArtsList[(Sender as TSpeedButton).Tag - 1].RadiationArmor / 100;
+    recChimisheChangeArt.Width := recChimisheChangeArt.Tag * FArtsList[(Sender as TSpeedButton).Tag - 1].ChimisheArmor / 100;
+    recElectroChangeArt.Width := recElectroChangeArt.Tag * FArtsList[(Sender as TSpeedButton).Tag - 1].ElectroArmor / 100;
+    recPsiChangeArt.Width := recPsiChangeArt.Tag * FArtsList[(Sender as TSpeedButton).Tag - 1].PsiArmor / 100;
+    recPhisicChangeArt.Width := recPhisicChangeArt.Tag * FArtsList[(Sender as TSpeedButton).Tag - 1].PhisicArmor / 100;
+    recFireChangeArt.Width := recFireChangeArt.Tag * FArtsList[(Sender as TSpeedButton).Tag - 1].FireArmor / 100;
+
+    Compare(recRadiationArt, recRadiationChangeArt);
+    Compare(recChimisheArt, recChimisheChangeArt);
+    Compare(recElectroArt, recElectroChangeArt);
+    Compare(recPsiArt, recPsiChangeArt);
+    Compare(recPhisicArt, recPhisicChangeArt);
+    Compare(recFireArt, recFireChangeArt);
+  end;
+end;
+
+procedure TFrameBag.btnChooseArtClick(Sender: TObject);
+var
+  vQuery: TFDQuery;
+begin
+  ExeExec('update user_belt set art_id = ' + FBagList[layInfo.Tag].RowID.ToString + ' where slot = ' + igfSelect.Tag.ToString + ' and user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
+  ExeExec('insert into bag (table_name, row_id, health) values (''arts'',' + FArtsList[igfSelect.Tag - 1].ID.ToString + ', 100);', exExecute, vQuery);
+  ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''arts'' and row_id = ' + FBagList[layInfo.Tag].RowID.ToString + ' limit 1);', exExecute, vQuery);
+  ReloadBag;
+  ReloadPercs;
+  igfSelect.Parent := nil;
+  layChangeSlot.Visible := false;
+end;
+
+procedure TFrameBag.btnCloseChangeSlotClick(Sender: TObject);
+begin
+   layChangeSlot.Visible := false;
 end;
 
 procedure TFrameBag.btnCloseInfoClick(Sender: TObject);
