@@ -119,6 +119,18 @@ type
     layClearArt: TLayout;
     Image9: TImage;
     btnClearArt: TCornerButton;
+    recChimisheFull: TRectangle;
+    recElectroFull: TRectangle;
+    recFireFull: TRectangle;
+    recPhisicFull: TRectangle;
+    recPsiFull: TRectangle;
+    recRadiationFull: TRectangle;
+    infoChimisheFullArmor: TRectangle;
+    infoElectroFullArmor: TRectangle;
+    infoFireFullArmor: TRectangle;
+    infoRadiationFullArmor: TRectangle;
+    infoPhisicFullArmor: TRectangle;
+    infoPsiFullArmor: TRectangle;
     procedure btnInfoClick(Sender: TObject);
     procedure btnCloseInfoClick(Sender: TObject);
     procedure btnArmorInfoClick(Sender: TObject);
@@ -160,6 +172,13 @@ begin
   infoPsi.Width := infoPsi.Tag * FArmorPerc.PsiArmor / 100;
   infoPhisic.Width := infoPhisic.Tag * FArmorPerc.PhisicArmor / 100;
   infoFire.Width := infoFire.Tag * FArmorPerc.FireArmor / 100;
+
+  infoRadiationFullArmor.Width := infoRadiation.Tag * (FArmorPerc.RadiationArmor / Person.ArmorHealth);
+  infoChimisheFullArmor.Width := infoChimishe.Tag * (FArmorPerc.ChimisheArmor / Person.ArmorHealth);
+  infoElectroFullArmor.Width := infoElectro.Tag * (FArmorPerc.ElectroArmor / Person.ArmorHealth);
+  infoPsiFullArmor.Width := infoPsi.Tag * (FArmorPerc.PsiArmor / Person.ArmorHealth);
+  infoPhisicFullArmor.Width := infoPhisic.Tag * (FArmorPerc.PhisicArmor / Person.ArmorHealth);
+  infoFireFullArmor.Width := infoFire.Tag * (FArmorPerc.FireArmor / Person.ArmorHealth);
 
   infoLabradiation.Text := IfThen(FArmorPerc.RadiationArmor = 0, '', FArmorPerc.RadiationArmor.ToString + ' %');
   infoLabChimishe.Text := IfThen(FArmorPerc.ChimisheArmor = 0, '', FArmorPerc.ChimisheArmor.ToString + ' %');
@@ -231,6 +250,14 @@ begin
     infoLabPsi.Text := IfThen(FArtsList[(Sender as TSpeedButton).Tag - 1].PsiArmor = 0, '', FArtsList[(Sender as TSpeedButton).Tag - 1].PsiArmor.ToString + ' %');
     infoLabPhisic.Text := IfThen(FArtsList[(Sender as TSpeedButton).Tag - 1].PhisicArmor = 0, '', FArtsList[(Sender as TSpeedButton).Tag - 1].PhisicArmor.ToString + ' %');
     infoLabFire.Text := IfThen(FArtsList[(Sender as TSpeedButton).Tag - 1].FireArmor = 0, '', FArtsList[(Sender as TSpeedButton).Tag - 1].FireArmor.ToString + ' %');
+
+    infoRadiationFullArmor.Width := 0;
+    infoChimisheFullArmor.Width := 0;
+    infoElectroFullArmor.Width := 0;
+    infoPsiFullArmor.Width := 0;
+    infoPhisicFullArmor.Width := 0;
+    infoFireFullArmor.Width := 0;
+
     layInfo.Tag := (Sender as TSpeedButton).Tag;
     layClearArt.Visible := true;
     layClearArmorWeapon.Visible := false;
@@ -285,6 +312,7 @@ procedure TFramePercs.ReloadPercs;
 var
   vQuery: TFDQuery;
 begin
+  ReloadArmor;
   ExeExec('select health, armor_health, weapon_health, weapon_icon, detector_id, level, radius, chimishe, electro, fire, phisic, psi, radiation, cash, armor_id, weapon_id, is_classic_bag  from user_info where user_id = ' + Person.UserId.ToString +
     ';', exActive, vQuery);
   Person.Health := vQuery.FieldByName('health').AsFloat;
@@ -346,7 +374,6 @@ var
   vSlot: integer;
   vQuery2: TFDQuery;
 begin
-  ReloadArmor;
   FArtsList.Clear;
 
   for i := 1 to 5 do
@@ -430,6 +457,7 @@ procedure TFramePercs.SetPsiArmor(Value: integer);
 begin
   Person.PsiArmor := Value;
   PsiArmor.Width := Value * PsiArmor.Tag / 100;
+  recPsiFull.Width := (Value - FArmorPerc.PsiArmor + (FArmorPerc.PsiArmor / Person.ArmorHealth * 100)) * recPsiFull.Tag / 100;
 
   if Value = 0 then
     labPsiArmor.Text := ''
@@ -442,6 +470,7 @@ procedure TFramePercs.SetFireArmor(Value: integer);
 begin
   Person.FireArmor := Value;
   FireArmor.Width := Value * FireArmor.Tag / 100;
+  recFireFull.Width := (Value - FArmorPerc.FireArmor + (FArmorPerc.FireArmor / Person.ArmorHealth * 100)) * recFireFull.Tag / 100;
 
   if Value = 0 then
     labFireArmor.Text := ''
@@ -453,6 +482,7 @@ procedure TFramePercs.SetElectroArmor(Value: integer);
 begin
   Person.ElectroArmor := Value;
   ElectroArmor.Width := Value * ElectroArmor.Tag / 100;
+  recElectroFull.Width := (Value - FArmorPerc.ElectroArmor + (FArmorPerc.ElectroArmor / Person.ArmorHealth * 100)) * recElectroFull.Tag / 100;
 
   if Value = 0 then
     labElectroArmor.Text := ''
@@ -464,6 +494,7 @@ procedure TFramePercs.SetChimisheArmor(Value: integer);
 begin
   Person.ChimisheArmor := Value;
   ChimisheArmor.Width := Value * ChimisheArmor.Tag / 100;
+  recChimisheFull.Width := (Value - FArmorPerc.ChimisheArmor + (FArmorPerc.ChimisheArmor / Person.ArmorHealth * 100)) * recChimisheFull.Tag / 100;
 
   if Value = 0 then
     labChimisheArmor.Text := ''
@@ -475,6 +506,7 @@ procedure TFramePercs.SetPhisicArmor(Value: integer);
 begin
   Person.PhisicArmor := Value;
   PhisicArmor.Width := Value * PhisicArmor.Tag / 100;
+  recPhisicFull.Width := (Value - FArmorPerc.PhisicArmor + (FArmorPerc.PhisicArmor / Person.ArmorHealth * 100)) * recPhisicFull.Tag / 100;
 
   if Value = 0 then
     labPhisicArmor.Text := ''
@@ -486,6 +518,7 @@ procedure TFramePercs.SetRadiationArmor(Value: integer);
 begin
   Person.RadiationArmor := Value;
   RadiationArmor.Width := Value * RadiationArmor.Tag / 100;
+  recRadiationFull.Width := (Value - FArmorPerc.RadiationArmor + (FArmorPerc.RadiationArmor / Person.ArmorHealth * 100)) * recRadiationFull.Tag / 100;
 
   if Value = 0 then
     labRadiationArmor.Text := ''

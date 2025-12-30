@@ -70,12 +70,6 @@ type
     Image12: TImage;
     btnCloseInfo: TCornerButton;
     imgPercs: TImage;
-    infoRadiation: TRectangle;
-    infoChimishe: TRectangle;
-    infoElectro: TRectangle;
-    infoPsi: TRectangle;
-    infoPhisic: TRectangle;
-    infoFire: TRectangle;
     infoLabChimishe: TLabel;
     infoLabElectro: TLabel;
     infoLabradiation: TLabel;
@@ -167,12 +161,25 @@ type
     imgArt: TImage;
     labArtName: TLabel;
     GlassList: TImageList;
+    infoChimishe: TRectangle;
+    infoChimisheFullArmor: TRectangle;
+    infoElectro: TRectangle;
+    infoElectroFullArmor: TRectangle;
+    infoFire: TRectangle;
+    infoFireFullArmor: TRectangle;
+    infoPhisic: TRectangle;
+    infoPhisicFullArmor: TRectangle;
+    infoPsi: TRectangle;
+    infoPsiFullArmor: TRectangle;
+    infoRadiation: TRectangle;
+    infoRadiationFullArmor: TRectangle;
     procedure SwitchStyleSwitch(Sender: TObject);
     procedure btnUseClick(Sender: TObject);
     procedure btnAddArmorClick(Sender: TObject);
     procedure btnCloseInfoClick(Sender: TObject);
     procedure btnChooseArtClick(Sender: TObject);
     procedure btnAddArtClick(Sender: TObject);
+    procedure btnCloseChangeSlotClick(Sender: TObject);
   private
     FArtsList: TList<TPerc>;
     procedure CreateFreeCell(ALayout: TFlowLayout);
@@ -181,7 +188,6 @@ type
     procedure OnClickElement(Sender: TObject);
     procedure ClearElements;
     procedure btnArtClick(Sender: TObject);
-    procedure btnCloseChangeSlotClick(Sender: TObject);
     procedure ReloadArts;
     { Private declarations }
   public
@@ -435,14 +441,14 @@ begin
   if AChangeArt.Width > AArt.Width then
       begin
         AArt.BringToFront;
-        AChangeArt.Fill.Color := cBetterColor;
+        AChangeArt.Fill.Color := cWorseColor;
         AArt.Fill.Color := cEgualColor;
       end
       else
        begin
         AChangeArt.BringToFront;
         AChangeArt.Fill.Color := cEgualColor;
-        AArt.Fill.Color := cWorseColor;
+        AArt.Fill.Color := cBetterColor;
       end
 end;
 
@@ -470,6 +476,7 @@ end;
 
 procedure TFrameBagSection.btnCloseChangeSlotClick(Sender: TObject);
 begin
+   igfSelect.Parent := nil;
    layChangeSlot.Visible := false;
 end;
 
@@ -608,6 +615,13 @@ begin
         infoPhisic.Width := infoPhisic.Tag * FBagList[vIndex].Percs.PhisicArmor / 100;
         infoFire.Width := infoFire.Tag * FBagList[vIndex].Percs.FireArmor / 100;
 
+        infoRadiationFullArmor.Width := 0;
+        infoChimisheFullArmor.Width := 0;
+        infoElectroFullArmor.Width := 0;
+        infoPsiFullArmor.Width := 0;
+        infoPhisicFullArmor.Width := 0;
+        infoFireFullArmor.Width := 0;
+
         infoLabradiation.Text := IfThen(FBagList[vIndex].Percs.RadiationArmor = 0, '', FBagList[vIndex].Percs.RadiationArmor.ToString + ' %');
         infoLabChimishe.Text := IfThen(FBagList[vIndex].Percs.ChimisheArmor = 0, '', FBagList[vIndex].Percs.ChimisheArmor.ToString + ' %');
         infoLabElectro.Text := IfThen(FBagList[vIndex].Percs.ElectroArmor = 0, '', FBagList[vIndex].Percs.ElectroArmor.ToString + ' %');
@@ -636,6 +650,13 @@ begin
         infoPsi.Width := infoPsi.Tag * FBagList[vIndex].Percs.PsiArmor / 100;
         infoPhisic.Width := infoPhisic.Tag * FBagList[vIndex].Percs.PhisicArmor / 100;
         infoFire.Width := infoFire.Tag * FBagList[vIndex].Percs.FireArmor / 100;
+
+        infoRadiationFullArmor.Width := infoRadiationFullArmor.Tag * FBagList[vIndex].Percs.RadiationArmor / FBagList[vIndex].Health;
+        infoChimisheFullArmor.Width := infoChimisheFullArmor.Tag * FBagList[vIndex].Percs.ChimisheArmor / FBagList[vIndex].Health;
+        infoElectroFullArmor.Width := infoElectroFullArmor.Tag * FBagList[vIndex].Percs.ElectroArmor / FBagList[vIndex].Health;
+        infoPsiFullArmor.Width := infoPsiFullArmor.Tag * FBagList[vIndex].Percs.PsiArmor / FBagList[vIndex].Health;
+        infoPhisicFullArmor.Width := infoPhisicFullArmor.Tag * FBagList[vIndex].Percs.PhisicArmor / FBagList[vIndex].Health;
+        infoFireFullArmor.Width := infoFireFullArmor.Tag * FBagList[vIndex].Percs.FireArmor / FBagList[vIndex].Health;
 
         infoLabradiation.Text := IfThen(FBagList[vIndex].Percs.RadiationArmor = 0, '', FBagList[vIndex].Percs.RadiationArmor.ToString + ' %');
         infoLabChimishe.Text := IfThen(FBagList[vIndex].Percs.ChimisheArmor = 0, '', FBagList[vIndex].Percs.ChimisheArmor.ToString + ' %');

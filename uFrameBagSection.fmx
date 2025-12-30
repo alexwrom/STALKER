@@ -11173,84 +11173,6 @@ object FrameBagSection: TFrameBagSection
         Size.Height = 127.000000000000000000
         Size.PlatformDefault = False
         WrapMode = Stretch
-        object infoRadiation: TRectangle
-          Tag = 166
-          Corners = []
-          Fill.Color = x86C98826
-          Position.X = 200.000000000000000000
-          Position.Y = 30.000000000000000000
-          Size.Width = 140.000000000000000000
-          Size.Height = 5.000000000000000000
-          Size.PlatformDefault = False
-          Stroke.Kind = None
-          XRadius = 2.500000000000000000
-          YRadius = 2.500000000000000000
-        end
-        object infoChimishe: TRectangle
-          Tag = 166
-          Corners = []
-          Fill.Color = x86C98826
-          Position.X = 15.000000000000000000
-          Position.Y = 106.000000000000000000
-          Size.Width = 140.000000000000000000
-          Size.Height = 5.000000000000000000
-          Size.PlatformDefault = False
-          Stroke.Kind = None
-          XRadius = 2.500000000000000000
-          YRadius = 2.500000000000000000
-        end
-        object infoElectro: TRectangle
-          Tag = 166
-          Corners = []
-          Fill.Color = x86C98826
-          Position.X = 15.000000000000000000
-          Position.Y = 68.000000000000000000
-          Size.Width = 140.000000000000000000
-          Size.Height = 5.000000000000000000
-          Size.PlatformDefault = False
-          Stroke.Kind = None
-          XRadius = 2.500000000000000000
-          YRadius = 2.500000000000000000
-        end
-        object infoPsi: TRectangle
-          Tag = 166
-          Corners = []
-          Fill.Color = x86C98826
-          Position.X = 200.000000000000000000
-          Position.Y = 68.000000000000000000
-          Size.Width = 140.000000000000000000
-          Size.Height = 5.000000000000000000
-          Size.PlatformDefault = False
-          Stroke.Kind = None
-          XRadius = 2.500000000000000000
-          YRadius = 2.500000000000000000
-        end
-        object infoPhisic: TRectangle
-          Tag = 166
-          Corners = []
-          Fill.Color = x86C98826
-          Position.X = 200.000000000000000000
-          Position.Y = 106.000000000000000000
-          Size.Width = 140.000000000000000000
-          Size.Height = 5.000000000000000000
-          Size.PlatformDefault = False
-          Stroke.Kind = None
-          XRadius = 2.500000000000000000
-          YRadius = 2.500000000000000000
-        end
-        object infoFire: TRectangle
-          Tag = 166
-          Corners = []
-          Fill.Color = x86C98826
-          Position.X = 15.000000000000000000
-          Position.Y = 30.000000000000000000
-          Size.Width = 140.000000000000000000
-          Size.Height = 5.000000000000000000
-          Size.PlatformDefault = False
-          Stroke.Kind = None
-          XRadius = 2.500000000000000000
-          YRadius = 2.500000000000000000
-        end
         object infoLabChimishe: TLabel
           StyledSettings = []
           Position.X = 127.000000000000000000
@@ -11346,6 +11268,162 @@ object FrameBagSection: TFrameBagSection
           TextSettings.Trimming = None
           Text = '100%'
           TabOrder = 5
+        end
+        object infoChimishe: TRectangle
+          Tag = 166
+          Corners = []
+          Fill.Color = xFFC98826
+          Position.X = 15.000000000000000000
+          Position.Y = 106.000000000000000000
+          Size.Width = 140.000000000000000000
+          Size.Height = 5.000000000000000000
+          Size.PlatformDefault = False
+          Stroke.Kind = None
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
+        end
+        object infoChimisheFullArmor: TRectangle
+          Tag = 166
+          Corners = []
+          Fill.Color = x5AC98826
+          Position.X = 15.000000000000000000
+          Position.Y = 106.000000000000000000
+          Size.Width = 140.000000000000000000
+          Size.Height = 5.000000000000000000
+          Size.PlatformDefault = False
+          Stroke.Kind = None
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
+        end
+        object infoElectro: TRectangle
+          Tag = 166
+          Corners = []
+          Fill.Color = xFFC98826
+          Position.X = 15.000000000000000000
+          Position.Y = 68.000000000000000000
+          Size.Width = 140.000000000000000000
+          Size.Height = 5.000000000000000000
+          Size.PlatformDefault = False
+          Stroke.Kind = None
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
+        end
+        object infoElectroFullArmor: TRectangle
+          Tag = 166
+          Corners = []
+          Fill.Color = x5AC98826
+          Position.X = 15.000000000000000000
+          Position.Y = 68.000000000000000000
+          Size.Width = 140.000000000000000000
+          Size.Height = 5.000000000000000000
+          Size.PlatformDefault = False
+          Stroke.Kind = None
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
+        end
+        object infoFire: TRectangle
+          Tag = 166
+          Corners = []
+          Fill.Color = xFFC98826
+          Position.X = 15.000000000000000000
+          Position.Y = 30.000000000000000000
+          Size.Width = 140.000000000000000000
+          Size.Height = 5.000000000000000000
+          Size.PlatformDefault = False
+          Stroke.Kind = None
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
+        end
+        object infoFireFullArmor: TRectangle
+          Tag = 166
+          Corners = []
+          Fill.Color = x5AC98826
+          Position.X = 15.000000000000000000
+          Position.Y = 30.000000000000000000
+          Size.Width = 140.000000000000000000
+          Size.Height = 5.000000000000000000
+          Size.PlatformDefault = False
+          Stroke.Kind = None
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
+        end
+        object infoPhisic: TRectangle
+          Tag = 166
+          Corners = []
+          Fill.Color = xFFC98826
+          Position.X = 201.000000000000000000
+          Position.Y = 106.000000000000000000
+          Size.Width = 140.000000000000000000
+          Size.Height = 5.000000000000000000
+          Size.PlatformDefault = False
+          Stroke.Kind = None
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
+        end
+        object infoPhisicFullArmor: TRectangle
+          Tag = 166
+          Corners = []
+          Fill.Color = x5AC98826
+          Position.X = 201.000000000000000000
+          Position.Y = 106.000000000000000000
+          Size.Width = 140.000000000000000000
+          Size.Height = 5.000000000000000000
+          Size.PlatformDefault = False
+          Stroke.Kind = None
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
+        end
+        object infoPsi: TRectangle
+          Tag = 166
+          Corners = []
+          Fill.Color = xFFC98826
+          Position.X = 201.000000000000000000
+          Position.Y = 68.000000000000000000
+          Size.Width = 140.000000000000000000
+          Size.Height = 5.000000000000000000
+          Size.PlatformDefault = False
+          Stroke.Kind = None
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
+        end
+        object infoPsiFullArmor: TRectangle
+          Tag = 166
+          Corners = []
+          Fill.Color = x5AC98826
+          Position.X = 201.000000000000000000
+          Position.Y = 68.000000000000000000
+          Size.Width = 140.000000000000000000
+          Size.Height = 5.000000000000000000
+          Size.PlatformDefault = False
+          Stroke.Kind = None
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
+        end
+        object infoRadiation: TRectangle
+          Tag = 166
+          Corners = []
+          Fill.Color = xFFC98826
+          Position.X = 201.000000000000000000
+          Position.Y = 30.000000000000000000
+          Size.Width = 140.000000000000000000
+          Size.Height = 5.000000000000000000
+          Size.PlatformDefault = False
+          Stroke.Kind = None
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
+        end
+        object infoRadiationFullArmor: TRectangle
+          Tag = 166
+          Corners = []
+          Fill.Color = x5AC98826
+          Position.X = 201.000000000000000000
+          Position.Y = 30.000000000000000000
+          Size.Width = 140.000000000000000000
+          Size.Height = 5.000000000000000000
+          Size.PlatformDefault = False
+          Stroke.Kind = None
+          XRadius = 2.500000000000000000
+          YRadius = 2.500000000000000000
         end
       end
       object Rectangle5: TRectangle
@@ -12296,21 +12374,23 @@ object FrameBagSection: TFrameBagSection
         end
         object Label1: TLabel
           Align = Left
+          AutoSize = True
           StyledSettings = [Style]
           Position.X = 190.000000000000000000
-          Size.Width = 10.000000000000000000
+          Size.Width = 21.000000000000000000
           Size.Height = 45.000000000000000000
           Size.PlatformDefault = False
           TextSettings.Font.Family = 'LCD'
           TextSettings.Font.Size = 20.000000000000000000
           TextSettings.FontColor = claDarkgray
-          Text = 'x'
+          TextSettings.WordWrap = False
+          Text = ' x '
           TabOrder = 2
         end
         object labCountSlots: TLabel
           Align = Left
           StyledSettings = []
-          Position.X = 200.000000000000000000
+          Position.X = 211.000000000000000000
           Size.Width = 89.000000000000000000
           Size.Height = 45.000000000000000000
           Size.PlatformDefault = False
@@ -16872,6 +16952,7 @@ object FrameBagSection: TFrameBagSection
             TextSettings.Trimming = None
             XRadius = 3.000000000000000000
             YRadius = 3.000000000000000000
+            OnClick = btnCloseChangeSlotClick
           end
         end
       end
@@ -19449,7 +19530,7 @@ object FrameBagSection: TFrameBagSection
           Size.Width = 381.000000000000000000
           Size.Height = 90.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 7
+          TabOrder = 6
           object Image25: TImage
             MultiResBitmap.Height = 138
             MultiResBitmap.Width = 587
@@ -21000,7 +21081,7 @@ object FrameBagSection: TFrameBagSection
                 WrapMode = Stretch
                 object igfSelect: TInnerGlowEffect
                   Softness = 0.800000011920929000
-                  GlowColor = xFF00FF12
+                  GlowColor = xFFC98826
                   Opacity = 1.000000000000000000
                   Enabled = False
                 end

@@ -136,6 +136,12 @@ type
     recRadiationChangeArt: TRectangle;
     GlassList: TImageList;
     igfSelect: TInnerGlowEffect;
+    infoChimisheFullArmor: TRectangle;
+    infoElectroFullArmor: TRectangle;
+    infoFireFullArmor: TRectangle;
+    infoPhisicFullArmor: TRectangle;
+    infoPsiFullArmor: TRectangle;
+    infoRadiationFullArmor: TRectangle;
     procedure FramePainting(Sender: TObject; Canvas: TCanvas; const ARect: TRectF);
     procedure SwitchStyleSwitch(Sender: TObject);
     procedure btnCloseInfoClick(Sender: TObject);
@@ -257,39 +263,39 @@ end;
 procedure TFrameBag.btnAddArtClick(Sender: TObject);
 var
   vQuery: TFDQuery;
-  vIndex: Integer;
+  vIndex: integer;
 begin
   vIndex := layInfo.Tag;
 
   if IsFullBelt then
-    begin
-      imgArt.Bitmap.Assign(FBagList[vIndex].Icon);
-      ExeExec('select * from arts where art_id = ' + FBagList[vIndex].RowID.ToString + ';', exActive, vQuery);
+  begin
+    imgArt.Bitmap.Assign(FBagList[vIndex].Icon);
+    ExeExec('select * from arts where art_id = ' + FBagList[vIndex].RowID.ToString + ';', exActive, vQuery);
 
-      labArtName.Text := vQuery.FieldByName('art_name').AsString;
-      recPsiArt.Width := recPsiArt.Tag * vQuery.FieldByName('psi').AsFloat / 100;
-      recPhisicArt.Width := recPhisicArt.Tag * vQuery.FieldByName('phisic').AsFloat / 100;
-      recFireArt.Width := recFireArt.Tag * vQuery.FieldByName('fire').AsFloat / 100;
-      recRadiationArt.Width := recRadiationArt.Tag * vQuery.FieldByName('radiation').AsFloat / 100;
-      recChimisheArt.Width := recChimisheArt.Tag * vQuery.FieldByName('chimishe').AsFloat / 100;
-      recElectroArt.Width := recElectroArt.Tag * vQuery.FieldByName('electro').AsFloat / 100;
-      FreeQueryAndConn(vQuery);
+    labArtName.Text := vQuery.FieldByName('art_name').AsString;
+    recPsiArt.Width := recPsiArt.Tag * vQuery.FieldByName('psi').AsFloat / 100;
+    recPhisicArt.Width := recPhisicArt.Tag * vQuery.FieldByName('phisic').AsFloat / 100;
+    recFireArt.Width := recFireArt.Tag * vQuery.FieldByName('fire').AsFloat / 100;
+    recRadiationArt.Width := recRadiationArt.Tag * vQuery.FieldByName('radiation').AsFloat / 100;
+    recChimisheArt.Width := recChimisheArt.Tag * vQuery.FieldByName('chimishe').AsFloat / 100;
+    recElectroArt.Width := recElectroArt.Tag * vQuery.FieldByName('electro').AsFloat / 100;
+    FreeQueryAndConn(vQuery);
 
-      recRadiationChangeArt.Width := 0;
-      recChimisheChangeArt.Width := 0;
-      recElectroChangeArt.Width := 0;
-      recPsiChangeArt.Width := 0;
-      recPhisicChangeArt.Width := 0;
-      recFireChangeArt.Width := 0;
+    recRadiationChangeArt.Width := 0;
+    recChimisheChangeArt.Width := 0;
+    recElectroChangeArt.Width := 0;
+    recPsiChangeArt.Width := 0;
+    recPhisicChangeArt.Width := 0;
+    recFireChangeArt.Width := 0;
 
-      ReloadArts;
-      layChangeSlot.Visible := true;
-    end
-    else
-    begin
-      ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''arts'' and row_id = ' + FBagList[vIndex].RowID.ToString + ' limit 1);', exExecute, vQuery);
-      ExeExec('insert into user_belt (art_id, slot, user_id) values (' + FBagList[vIndex].RowID.ToString + ', (select count(1) + 1 from user_belt where user_id = ' + Person.UserId.ToString + '), ' + Person.UserId.ToString + ');', exExecute, vQuery);
-    end;
+    ReloadArts;
+    layChangeSlot.Visible := true;
+  end
+  else
+  begin
+    ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''arts'' and row_id = ' + FBagList[vIndex].RowID.ToString + ' limit 1);', exExecute, vQuery);
+    ExeExec('insert into user_belt (art_id, slot, user_id) values (' + FBagList[vIndex].RowID.ToString + ', (select count(1) + 1 from user_belt where user_id = ' + Person.UserId.ToString + '), ' + Person.UserId.ToString + ');', exExecute, vQuery);
+  end;
   layInfo.Visible := false;
   ReloadBag;
   ReloadPercs;
@@ -347,21 +353,21 @@ begin
 end;
 
 procedure TFrameBag.btnArtClick(Sender: TObject);
-procedure Compare(AArt, AChangeArt: TRectangle);
-begin
-  if AChangeArt.Width > AArt.Width then
-      begin
-        AArt.BringToFront;
-        AChangeArt.Fill.Color := cBetterColor;
-        AArt.Fill.Color := cEgualColor;
-      end
-      else
-       begin
-        AChangeArt.BringToFront;
-        AChangeArt.Fill.Color := cEgualColor;
-        AArt.Fill.Color := cWorseColor;
-      end
-end;
+  procedure Compare(AArt, AChangeArt: TRectangle);
+  begin
+    if AChangeArt.Width > AArt.Width then
+    begin
+      AArt.BringToFront;
+      AChangeArt.Fill.Color := cBetterColor;
+      AArt.Fill.Color := cEgualColor;
+    end
+    else
+    begin
+      AChangeArt.BringToFront;
+      AChangeArt.Fill.Color := cEgualColor;
+      AArt.Fill.Color := cWorseColor;
+    end
+  end;
 
 begin
   if FArtsList.Count >= (Sender as TSpeedButton).Tag then
@@ -400,7 +406,8 @@ end;
 
 procedure TFrameBag.btnCloseChangeSlotClick(Sender: TObject);
 begin
-   layChangeSlot.Visible := false;
+  igfSelect.Parent := nil;
+  layChangeSlot.Visible := false;
 end;
 
 procedure TFrameBag.btnCloseInfoClick(Sender: TObject);
@@ -564,6 +571,13 @@ begin
         infoPhisic.Width := infoPhisic.Tag * FBagList[vIndex].Percs.PhisicArmor / 100;
         infoFire.Width := infoFire.Tag * FBagList[vIndex].Percs.FireArmor / 100;
 
+        infoRadiationFullArmor.Width := 0;
+        infoChimisheFullArmor.Width := 0;
+        infoElectroFullArmor.Width := 0;
+        infoPsiFullArmor.Width := 0;
+        infoPhisicFullArmor.Width := 0;
+        infoFireFullArmor.Width := 0;
+
         infoLabradiation.Text := IfThen(FBagList[vIndex].Percs.RadiationArmor = 0, '', FBagList[vIndex].Percs.RadiationArmor.ToString + ' %');
         infoLabChimishe.Text := IfThen(FBagList[vIndex].Percs.ChimisheArmor = 0, '', FBagList[vIndex].Percs.ChimisheArmor.ToString + ' %');
         infoLabElectro.Text := IfThen(FBagList[vIndex].Percs.ElectroArmor = 0, '', FBagList[vIndex].Percs.ElectroArmor.ToString + ' %');
@@ -592,6 +606,13 @@ begin
         infoPsi.Width := infoPsi.Tag * FBagList[vIndex].Percs.PsiArmor / 100;
         infoPhisic.Width := infoPhisic.Tag * FBagList[vIndex].Percs.PhisicArmor / 100;
         infoFire.Width := infoFire.Tag * FBagList[vIndex].Percs.FireArmor / 100;
+
+        infoRadiationFullArmor.Width := infoRadiationFullArmor.Tag * FBagList[vIndex].Percs.RadiationArmor / FBagList[vIndex].Health;
+        infoChimisheFullArmor.Width := infoChimisheFullArmor.Tag * FBagList[vIndex].Percs.ChimisheArmor / FBagList[vIndex].Health;
+        infoElectroFullArmor.Width := infoElectroFullArmor.Tag * FBagList[vIndex].Percs.ElectroArmor / FBagList[vIndex].Health;
+        infoPsiFullArmor.Width := infoPsiFullArmor.Tag * FBagList[vIndex].Percs.PsiArmor / FBagList[vIndex].Health;
+        infoPhisicFullArmor.Width := infoPhisicFullArmor.Tag * FBagList[vIndex].Percs.PhisicArmor / FBagList[vIndex].Health;
+        infoFireFullArmor.Width := infoFireFullArmor.Tag * FBagList[vIndex].Percs.FireArmor / FBagList[vIndex].Health;
 
         infoLabradiation.Text := IfThen(FBagList[vIndex].Percs.RadiationArmor = 0, '', FBagList[vIndex].Percs.RadiationArmor.ToString + ' %');
         infoLabChimishe.Text := IfThen(FBagList[vIndex].Percs.ChimisheArmor = 0, '', FBagList[vIndex].Percs.ChimisheArmor.ToString + ' %');
