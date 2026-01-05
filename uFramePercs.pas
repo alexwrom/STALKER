@@ -13,7 +13,7 @@ uses
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Param,
   FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf,
   FireDAC.Stan.Async, FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet, StrUtils,
-  FireDAC.Comp.Client;
+  FireDAC.Comp.Client, Math;
 
 type
   TFramePercs = class(TFrame)
@@ -454,10 +454,13 @@ begin
 end;
 
 procedure TFramePercs.SetPsiArmor(Value: integer);
+var
+  vFullValue: single;
 begin
   Person.PsiArmor := Value;
   PsiArmor.Width := Value * PsiArmor.Tag / 100;
-  recPsiFull.Width := (Value - FArmorPerc.PsiArmor + (FArmorPerc.PsiArmor / Person.ArmorHealth * 100)) * recPsiFull.Tag / 100;
+  vFullValue := Value - FArmorPerc.PsiArmor + (FArmorPerc.PsiArmor / Person.ArmorHealth * 100);
+  recPsiFull.Width := IfThen(vFullValue > 100, 100, vFullValue) * recPsiFull.Tag / 100;
 
   if Value = 0 then
     labPsiArmor.Text := ''
@@ -467,10 +470,13 @@ begin
 end;
 
 procedure TFramePercs.SetFireArmor(Value: integer);
+var
+  vFullValue: single;
 begin
   Person.FireArmor := Value;
   FireArmor.Width := Value * FireArmor.Tag / 100;
-  recFireFull.Width := (Value - FArmorPerc.FireArmor + (FArmorPerc.FireArmor / Person.ArmorHealth * 100)) * recFireFull.Tag / 100;
+  vFullValue := Value - FArmorPerc.FireArmor + (FArmorPerc.FireArmor / Person.ArmorHealth * 100);
+  recFireFull.Width := IfThen(vFullValue > 100, 100, vFullValue) * recFireFull.Tag / 100;
 
   if Value = 0 then
     labFireArmor.Text := ''
@@ -479,10 +485,13 @@ begin
 end;
 
 procedure TFramePercs.SetElectroArmor(Value: integer);
+var
+  vFullValue: single;
 begin
   Person.ElectroArmor := Value;
   ElectroArmor.Width := Value * ElectroArmor.Tag / 100;
-  recElectroFull.Width := (Value - FArmorPerc.ElectroArmor + (FArmorPerc.ElectroArmor / Person.ArmorHealth * 100)) * recElectroFull.Tag / 100;
+  vFullValue := Value - FArmorPerc.ElectroArmor + (FArmorPerc.ElectroArmor / Person.ArmorHealth * 100);
+  recElectroFull.Width := IfThen(vFullValue > 100, 100, vFullValue) * recElectroFull.Tag / 100;
 
   if Value = 0 then
     labElectroArmor.Text := ''
@@ -491,10 +500,13 @@ begin
 end;
 
 procedure TFramePercs.SetChimisheArmor(Value: integer);
+var
+  vFullValue: single;
 begin
   Person.ChimisheArmor := Value;
   ChimisheArmor.Width := Value * ChimisheArmor.Tag / 100;
-  recChimisheFull.Width := (Value - FArmorPerc.ChimisheArmor + (FArmorPerc.ChimisheArmor / Person.ArmorHealth * 100)) * recChimisheFull.Tag / 100;
+  vFullValue := Value - FArmorPerc.ChimisheArmor + (FArmorPerc.ChimisheArmor / Person.ArmorHealth * 100);
+  recChimisheFull.Width := IfThen(vFullValue > 100, 100, vFullValue) * recChimisheFull.Tag / 100;
 
   if Value = 0 then
     labChimisheArmor.Text := ''
@@ -503,10 +515,13 @@ begin
 end;
 
 procedure TFramePercs.SetPhisicArmor(Value: integer);
+var
+  vFullValue: single;
 begin
   Person.PhisicArmor := Value;
   PhisicArmor.Width := Value * PhisicArmor.Tag / 100;
-  recPhisicFull.Width := (Value - FArmorPerc.PhisicArmor + (FArmorPerc.PhisicArmor / Person.ArmorHealth * 100)) * recPhisicFull.Tag / 100;
+  vFullValue := Value - FArmorPerc.PhisicArmor + (FArmorPerc.PhisicArmor / Person.ArmorHealth * 100);
+  recPhisicFull.Width := IfThen(vFullValue > 100, 100, vFullValue) * recPhisicFull.Tag / 100;
 
   if Value = 0 then
     labPhisicArmor.Text := ''
@@ -515,10 +530,13 @@ begin
 end;
 
 procedure TFramePercs.SetRadiationArmor(Value: integer);
+var
+  vFullValue: single;
 begin
   Person.RadiationArmor := Value;
   RadiationArmor.Width := Value * RadiationArmor.Tag / 100;
-  recRadiationFull.Width := (Value - FArmorPerc.RadiationArmor + (FArmorPerc.RadiationArmor / Person.ArmorHealth * 100)) * recRadiationFull.Tag / 100;
+  vFullValue := Value - FArmorPerc.RadiationArmor + (FArmorPerc.RadiationArmor / Person.ArmorHealth * 100);
+  recRadiationFull.Width := IfThen(vFullValue > 100, 100, vFullValue) * recRadiationFull.Tag / 100;
 
   if Value = 0 then
     labRadiationArmor.Text := ''

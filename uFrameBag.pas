@@ -42,17 +42,6 @@ type
     infoLabPhisic: TLabel;
     infoLabFire: TLabel;
     infoLabPsi: TLabel;
-    Rectangle5: TRectangle;
-    InnerGlowEffect2: TInnerGlowEffect;
-    layAddArmor: TLayout;
-    Image1: TImage;
-    btnAddArmor: TCornerButton;
-    layUse: TLayout;
-    Image2: TImage;
-    btnUse: TCornerButton;
-    layAddArt: TLayout;
-    Image6: TImage;
-    btnAddArt: TCornerButton;
     Rectangle1: TRectangle;
     InnerGlowEffect1: TInnerGlowEffect;
     Image7: TImage;
@@ -142,6 +131,33 @@ type
     infoPhisicFullArmor: TRectangle;
     infoPsiFullArmor: TRectangle;
     infoRadiationFullArmor: TRectangle;
+    Layout1: TLayout;
+    Rectangle5: TRectangle;
+    InnerGlowEffect2: TInnerGlowEffect;
+    layAddArmor: TLayout;
+    Image1: TImage;
+    btnAddArmor: TCornerButton;
+    layUse: TLayout;
+    Image2: TImage;
+    btnUse: TCornerButton;
+    layAddArt: TLayout;
+    Image6: TImage;
+    btnAddArt: TCornerButton;
+    layCells: TLayout;
+    Image18: TImage;
+    bntCells: TCornerButton;
+    Rectangle4: TRectangle;
+    InnerGlowEffect9: TInnerGlowEffect;
+    Rectangle6: TRectangle;
+    InnerGlowEffect11: TInnerGlowEffect;
+    layCellQR: TLayout;
+    Rectangle7: TRectangle;
+    Layout9: TLayout;
+    Image25: TImage;
+    btnCloseQR: TCornerButton;
+    Rectangle27: TRectangle;
+    InnerGlowEffect16: TInnerGlowEffect;
+    imgQR: TImage;
     procedure FramePainting(Sender: TObject; Canvas: TCanvas; const ARect: TRectF);
     procedure SwitchStyleSwitch(Sender: TObject);
     procedure btnCloseInfoClick(Sender: TObject);
@@ -150,6 +166,8 @@ type
     procedure btnAddArtClick(Sender: TObject);
     procedure btnCloseChangeSlotClick(Sender: TObject);
     procedure btnChooseArtClick(Sender: TObject);
+    procedure bntCellsClick(Sender: TObject);
+    procedure btnCloseQRClick(Sender: TObject);
   private
     FArtsList: TList<TPerc>;
     procedure CreateFreeCell(ALayout: TFlowLayout);
@@ -229,6 +247,13 @@ procedure TFrameBag.FramePainting(Sender: TObject; Canvas: TCanvas; const ARect:
 begin
   if flBackground.ChildrenCount = 0 then
     CreateBagBackground;
+end;
+
+procedure TFrameBag.bntCellsClick(Sender: TObject);
+begin
+  //layCellQR.Visible := true;
+  layInfo.Visible := false;
+  SellStart('TEST');
 end;
 
 procedure TFrameBag.btnAddArmorClick(Sender: TObject);
@@ -358,14 +383,14 @@ procedure TFrameBag.btnArtClick(Sender: TObject);
     if AChangeArt.Width > AArt.Width then
     begin
       AArt.BringToFront;
-      AChangeArt.Fill.Color := cBetterColor;
+      AChangeArt.Fill.Color := cWorseColor;
       AArt.Fill.Color := cEgualColor;
     end
     else
     begin
       AChangeArt.BringToFront;
       AChangeArt.Fill.Color := cEgualColor;
-      AArt.Fill.Color := cWorseColor;
+      AArt.Fill.Color := cBetterColor;
     end
   end;
 
@@ -441,6 +466,11 @@ begin
     (flElements.Children[0] as TImage).Visible := false;
     FreeAndNil(flElements.Children[0]);
   end;
+end;
+
+procedure TFrameBag.btnCloseQRClick(Sender: TObject);
+begin
+  layCellQR.Visible := false;
 end;
 
 procedure TFrameBag.CreateElements;
@@ -558,7 +588,7 @@ begin
         layUse.Visible := true;
         layAddArt.Visible := false;
         layAddArmor.Visible := false;
-        layPanel.Height := 54 + layUse.Height + recHealthRestore.Height;
+        layPanel.Height := 54 + layUse.Height + layCells.Height;
         layInfo.Visible := true;
       end;
 
@@ -594,7 +624,7 @@ begin
         layAddArmor.Visible := false;
         layAddArt.Visible := true;
         layUse.Visible := false;
-        layPanel.Height := 54 + layAddArt.Height + imgPercs.Height;
+        layPanel.Height := 54 + imgPercs.Height;
         layInfo.Visible := true;
       end;
 
@@ -632,7 +662,7 @@ begin
         layAddArmor.Visible := true;
         layAddArt.Visible := false;
         layUse.Visible := false;
-        layPanel.Height := 54 + layAddArmor.Height + imgPercs.Height + recCountSlots.Height + recHealth.Height;
+        layPanel.Height := 54 + imgPercs.Height + recCountSlots.Height + recHealth.Height;
         layInfo.Visible := true;
       end;
 
@@ -648,7 +678,7 @@ begin
         layAddArmor.Visible := true;
         layAddArt.Visible := false;
         layUse.Visible := false;
-        layPanel.Height := 54 + layUse.Height + recHealth.Height;
+        layPanel.Height := 54 + layAddArmor.Height + layCells.Height;
         layInfo.Visible := true;
       end;
   end;

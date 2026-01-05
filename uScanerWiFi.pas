@@ -8,20 +8,17 @@ uses System.SysUtils, System.Sensors, uGlobal, System.Classes, Math,
   Androidapi.JNIBridge, Androidapi.Helpers, Androidapi.JNI.Os,
   Androidapi.JNI.Net,
 {$ENDIF}
+  System.Sensors.Components, Generics.Collections, FMX.Dialogs;
 
-  System.Sensors.Components, Generics.Collections;
-
-
-
-function ScanDistanceToArtefacts(ALevel: integer): double;
+function ScanDistanceToArtefacts(ALevel: Integer): double;
 procedure ScanNetworks;
 
 {$IFDEF ANDROID}
 function ScanAndroidNetworks: TList<TWiFiNetwork>;
 function CalculateDistanceInMeters(Lat1, Lon1, Lat2, Lon2: double): double;
 function CalculateWifiDistance(rssi: Integer; frequency: Integer = 2412): double;
+procedure aaa(reserrvation: JWifiManager_LocalOnlyHotspotReservation);
 {$ENDIF}
-
 
 var
   FNetworks: TList<TWiFiNetwork>;
@@ -29,19 +26,19 @@ var
 implementation
 
 // Сканмруем ближайший артефакт и возвращаем к ниму дистанцию
-function ScanDistanceToArtefacts(ALevel: integer): double;
+function ScanDistanceToArtefacts(ALevel: Integer): double;
 var
   Net: TWiFiNetwork;
   vMinDist: double;
 begin
-    vMinDist := 10000;
+  vMinDist := 10000;
 
-    for Net in FNetworks do
-    begin
-      vMinDist := MinValue([vMinDist, Net.Distance]);
-    end;
+  for Net in FNetworks do
+  begin
+    vMinDist := MinValue([vMinDist, Net.Distance]);
+  end;
 
-    Result := vMinDist;
+  Result := vMinDist;
 end;
 
 procedure ScanNetworks;
@@ -54,7 +51,6 @@ begin
 {$IFDEF ANDROID}
     Networks := ScanAndroidNetworks;
 {$ENDIF}
-
     if Networks = nil then
       Networks := TList<TWiFiNetwork>.Create;
 
@@ -122,9 +118,14 @@ begin
   end;
 end;
 
+procedure aaa(reserrvation: JWifiManager_LocalOnlyHotspotReservation);
+begin
+
+end;
+
 function ScanAndroidNetworks: TList<TWiFiNetwork>;
 var
-  WiFiManager: JWifiManager;
+  WiFiManager: JWiFiManager;
   ScanResults: JList;
   i: Integer;
   Network: TWiFiNetwork;
@@ -136,9 +137,9 @@ begin
 
   try
     WiFiManager := TJWifiManager.Wrap(TAndroidHelper.Context.getSystemService(TJContext.JavaClass.WIFI_SERVICE));
-
     if (WiFiManager <> nil) and WiFiManager.isWifiEnabled then
     begin
+
       WiFiManager.startScan;
 
       ScanResults := WiFiManager.getScanResults;

@@ -16,7 +16,7 @@ type
     Camera: TCameraComponent;
     imgCamera: TImage;
     Image9: TImage;
-    procedure Button1Click(Sender: TObject);
+    imgQR: TImage;
   private
     fScanInProgress: Boolean;
     fFrameTake: Integer;
@@ -43,11 +43,6 @@ uses
   FMX.DialogService;
 
 {$R *.fmx}
-
-procedure TFrameQRScanner.Button1Click(Sender: TObject);
-begin
-  GenerateQRCode('Пробное создание', 200, imgCamera);
-end;
 
 procedure TFrameQRScanner.CameraPermissionRequestResult(Sender: TObject; const APermissions: TClassicStringDynArray; const AGrantResults: TClassicPermissionStatusDynArray);
 begin
@@ -136,7 +131,15 @@ begin
           begin
             if (ReadResult <> nil) then
             begin
-              ShowMessage(ReadResult.Text);
+              // сюда обработка данных
+              if ReadResult.Text = '<OK>' then
+                ShowMessage('Все отлично')
+              else
+              begin
+                GenerateQRCode('<OK>', imgQR);
+                imgCamera.Visible := false;
+                imgQR.Visible := True;
+              end;
             end;
           end);
 

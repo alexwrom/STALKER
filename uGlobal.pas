@@ -9,7 +9,7 @@ uses
   FireDAC.Stan.Pool, FireDAC.Phys, FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef,
   FireDAC.Stan.ExprFuncs, FireDAC.Phys.SQLiteWrapper.Stat, FireDAC.FMXUI.Wait,
   Data.DB, System.IOUtils, FireDAC.Comp.Client, FireDAC.Comp.DataSet, System.SysUtils, System.Sensors, FMX.Objects,
-  Generics.Collections, DelphiZXingQRCode, FMX.Graphics;
+  Generics.Collections, DelphiZXingQRCode, FMX.Graphics, System.UITypes, System.Types;
 
 const
   cCriticalColor = $32F92F2F;
@@ -163,13 +163,14 @@ function ExeExec(Str: string; Typ: TExecType; var AQuery: TFDQuery): boolean;
 function CalculateFastDistance(const Lat1, Lon1, Lat2, Lon2: double): double;
 procedure FreeQueryAndConn(var AQuery: TFDQuery);
 procedure SetHealthProgress(AHealthProgress: TRectangle; AValue: double);
-procedure GenerateQRCode(const AText: string; ASize: integer; AImage: TImage);
+procedure GenerateQRCode(const AText: string; AImage: TImage);
 procedure ReloadIssuies;
 procedure StartDamageGlow;
 procedure StopDamageGlow;
 procedure ReloadBag;
 procedure ReloadPercs;
 function IsFullBelt: boolean;
+procedure SellStart(AText: string);
 
 var
   Person: TPerson;
@@ -431,11 +432,13 @@ begin
   FreeAndNil(AQuery);
 end;
 
-procedure GenerateQRCode(const AText: string; ASize: integer; AImage: TImage);
+procedure GenerateQRCode(const AText: string; AImage: TImage);
 var
   QRCode: TDelphiZXingQRCode;
   Bitmap: TBitmap;
-  Row, Col: integer;
+  Row: integer;
+  Col: integer;
+  vScale: single;
 begin
   QRCode := TDelphiZXingQRCode.Create;
   try
@@ -443,9 +446,34 @@ begin
     QRCode.Encoding := TQRCodeEncoding.qrAuto;
     QRCode.QuietZone := 4;
 
-    Bitmap := TBitmap.Create(ASize, ASize);
+    vScale := AImage.Height / QRCode.Rows;
+
+    Bitmap := TBitmap.Create();
     try
-      // Рисуем QR-код...
+      Bitmap.SetSize(Round(AImage.Height), Round(AImage.Height));
+
+      for Row := 0 to QRCode.Rows - 1 do
+      begin
+        for Col := 0 to QRCode.Columns - 1 do
+        begin
+          if not Bitmap.Canvas.BeginScene then
+            Exit;
+          try
+            Bitmap.Canvas.Fill.Kind := TBrushKind.Solid;
+
+            if (QRCode.IsBlack[Row, Col]) then
+              Bitmap.Canvas.Fill.Color := TAlphaColors.Black
+            else
+              Bitmap.Canvas.Fill.Color := TAlphaColors.White;
+
+            // Рисуем пиксель
+            Bitmap.Canvas.FillRect(RectF(Col * vScale, Row * vScale, Col * vScale + vScale, Row * vScale + vScale), // Прямоугольник 1x1
+              0, 0, [], 1.0);
+          finally
+            Bitmap.Canvas.EndScene;
+          end;
+        end;
+      end;
       AImage.Bitmap.Assign(Bitmap);
     finally
       Bitmap.Free;
@@ -488,6 +516,14 @@ begin
   ExeExec('select count(1) as cnt from user_belt where user_id =  ' + Person.UserId.ToString + ';', exActive, vQuery);
   result := vQuery.FieldByName('cnt').AsInteger = Person.CountContener;
   FreeQueryAndConn(vQuery);
+end;
+
+procedure SellStart(AText: string);
+begin
+  MainForm.btnToQRScannerClick(nil);
+  MainForm.FFrameQRScanner.imgCamera.Visible := false;
+  MainForm.FFrameQRScanner.imgQR.Visible := true;
+  GenerateQRCode(AText, MainForm.FFrameQRScanner.imgQR);
 end;
 
 end.

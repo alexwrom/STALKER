@@ -2454,12 +2454,12 @@ object FramePercs: TFramePercs
         Size.PlatformDefault = False
         WrapMode = Stretch
         object recPhisicFull: TRectangle
-          Tag = 166
+          Tag = 172
           Corners = []
           Fill.Color = x5AC98826
           Position.X = 200.000000000000000000
           Position.Y = 106.000000000000000000
-          Size.Width = 110.000000000000000000
+          Size.Width = 172.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
@@ -2467,12 +2467,12 @@ object FramePercs: TFramePercs
           YRadius = 2.500000000000000000
         end
         object recPsiFull: TRectangle
-          Tag = 166
+          Tag = 172
           Corners = []
           Fill.Color = x5AC98826
           Position.X = 200.000000000000000000
           Position.Y = 68.000000000000000000
-          Size.Width = 110.000000000000000000
+          Size.Width = 172.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
@@ -2480,12 +2480,12 @@ object FramePercs: TFramePercs
           YRadius = 2.500000000000000000
         end
         object recRadiationFull: TRectangle
-          Tag = 166
+          Tag = 172
           Corners = []
           Fill.Color = x5AC98826
           Position.X = 200.000000000000000000
           Position.Y = 30.000000000000000000
-          Size.Width = 160.000000000000000000
+          Size.Width = 172.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
@@ -2493,12 +2493,12 @@ object FramePercs: TFramePercs
           YRadius = 2.500000000000000000
         end
         object recFireFull: TRectangle
-          Tag = 166
+          Tag = 172
           Corners = []
           Fill.Color = x5AC98826
           Position.X = 15.000000000000000000
           Position.Y = 30.000000000000000000
-          Size.Width = 110.000000000000000000
+          Size.Width = 172.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
@@ -2506,12 +2506,12 @@ object FramePercs: TFramePercs
           YRadius = 2.500000000000000000
         end
         object recElectroFull: TRectangle
-          Tag = 166
+          Tag = 172
           Corners = []
           Fill.Color = x5AC98826
           Position.X = 15.000000000000000000
           Position.Y = 68.000000000000000000
-          Size.Width = 110.000000000000000000
+          Size.Width = 172.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
@@ -2519,12 +2519,12 @@ object FramePercs: TFramePercs
           YRadius = 2.500000000000000000
         end
         object recChimisheFull: TRectangle
-          Tag = 166
+          Tag = 172
           Corners = []
           Fill.Color = x5AC98826
           Position.X = 15.000000000000000000
           Position.Y = 106.000000000000000000
-          Size.Width = 110.000000000000000000
+          Size.Width = 172.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
@@ -2532,12 +2532,12 @@ object FramePercs: TFramePercs
           YRadius = 2.500000000000000000
         end
         object RadiationArmor: TRectangle
-          Tag = 166
+          Tag = 172
           Corners = []
           Fill.Color = xFFC98826
           Position.X = 201.000000000000000000
           Position.Y = 30.000000000000000000
-          Size.Width = 166.000000000000000000
+          Size.Width = 172.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
@@ -2545,12 +2545,12 @@ object FramePercs: TFramePercs
           YRadius = 2.500000000000000000
         end
         object ChimisheArmor: TRectangle
-          Tag = 166
+          Tag = 172
           Corners = []
           Fill.Color = xFFC98826
           Position.X = 15.000000000000000000
           Position.Y = 106.000000000000000000
-          Size.Width = 166.000000000000000000
+          Size.Width = 172.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
@@ -2558,12 +2558,12 @@ object FramePercs: TFramePercs
           YRadius = 2.500000000000000000
         end
         object ElectroArmor: TRectangle
-          Tag = 166
+          Tag = 172
           Corners = []
           Fill.Color = xFFC98826
           Position.X = 15.000000000000000000
           Position.Y = 68.000000000000000000
-          Size.Width = 166.000000000000000000
+          Size.Width = 172.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
@@ -2571,12 +2571,12 @@ object FramePercs: TFramePercs
           YRadius = 2.500000000000000000
         end
         object PsiArmor: TRectangle
-          Tag = 166
+          Tag = 172
           Corners = []
           Fill.Color = xFFC98826
           Position.X = 201.000000000000000000
           Position.Y = 68.000000000000000000
-          Size.Width = 166.000000000000000000
+          Size.Width = 172.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
@@ -2584,12 +2584,12 @@ object FramePercs: TFramePercs
           YRadius = 2.500000000000000000
         end
         object PhisicArmor: TRectangle
-          Tag = 166
+          Tag = 172
           Corners = []
           Fill.Color = xFFC98826
           Position.X = 201.000000000000000000
           Position.Y = 106.000000000000000000
-          Size.Width = 166.000000000000000000
+          Size.Width = 172.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
@@ -2597,12 +2597,12 @@ object FramePercs: TFramePercs
           YRadius = 2.500000000000000000
         end
         object FireArmor: TRectangle
-          Tag = 166
+          Tag = 172
           Corners = []
           Fill.Color = xFFC98826
           Position.X = 15.000000000000000000
           Position.Y = 30.000000000000000000
-          Size.Width = 166.000000000000000000
+          Size.Width = 172.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
