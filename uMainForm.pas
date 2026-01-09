@@ -13,7 +13,7 @@ uses
   FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys,
   FireDAC.FMXUI.Wait, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
   FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client, uGlobal, uFrameDetector,
-  uFrameQRScaner, uFrameIssuies, uFrameBag, uFrameBagSection,
+  uFrameQRScaner, uFrameIssuies, uFrameBag, classes.sell, classes.action, Rest.Json, IdGlobal,
 {$IFDEF ANDROID}
   Androidapi.JNI.JavaTypes, // Для JString
   Androidapi.JNI.GraphicsContentViewText,
@@ -23,7 +23,7 @@ uses
   Androidapi.JNI.Os,
   FMX.Platform.Android,
 {$ENDIF}
-  uScanerWiFi, FMX.Ani, FMX.Effects;
+  uScanerWiFi, FMX.Ani, FMX.Effects, IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer;
 
 type
 
@@ -66,6 +66,7 @@ type
     Image2: TImage;
     TabIssueis: TTabItem;
     TabBag: TTabItem;
+    IdTCPServer: TIdTCPServer;
     procedure FormCreate(Sender: TObject);
     procedure btnToMapClick(Sender: TObject);
     procedure btnToPercsClick(Sender: TObject);
@@ -73,6 +74,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure btnToQRScannerClick(Sender: TObject);
     procedure btnToIssuiesClick(Sender: TObject);
+    procedure IdTCPServerExecute(AContext: TIdContext);
   private
 
     procedure LoadArtefacts;
@@ -87,7 +89,6 @@ type
     FFrameQRScanner: TFrameQRScanner;
     FFrameIssuies: TFrameIssuies;
     FFrameBag: TFrameBag;
-    FFrameBagSection: TFrameBagSection;
     procedure LoadIsuies;
     procedure StopDetector;
     procedure CreateBagFrame;
@@ -151,6 +152,7 @@ begin
     vBagData.Percs.PsiArmor := vQuery.FieldByName('psi').AsInteger;
     vBagData.Percs.ChimisheArmor := vQuery.FieldByName('chimishe').AsInteger;
     vBagData.CountSlots := vQuery.FieldByName('count_slots').AsInteger;
+    vBagData.Cost := vQuery.FieldByName('cost').AsInteger;
     FBagList.Add(vBagData);
     vQuery.Next;
   end;
@@ -280,11 +282,50 @@ begin
     end);
 end;
 
+procedure TMainForm.IdTCPServerExecute(AContext: TIdContext);
+var
+  vAnswerText: string;
+  vSell: TSell;
+  FDQuery: TFDQuery;
+begin
+  vAnswerText := AContext.Connection.Socket.ReadLn();
+
+  if Assigned(FFrameBag.FActiveAction) then
+    try
+      case FFrameBag.FActiveAction.SendType of
+        stSell:
+          begin
+            vSell := TSell.Create;
+            vSell := TJson.JsonToObject<TSell>(FFrameBag.FActiveAction.JSONObject);
+
+            if vAnswerText.ToInteger - vSell.Cost >= 0 then
+            begin
+              ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''' + vSell.TableName + ''' and row_id = ' + vSell.RowID.ToString + ' and health = ' + vSell.Health.ToString + ' limit 1);', exExecute, FDQuery);
+              Person.Cash := Person.Cash + vSell.Cost;
+              AContext.Connection.Socket.WriteLn(TJson.ObjectToJsonString(FFrameBag.FActiveAction), IndyUTF8Encoding(True));
+              AContext.Connection.Disconnect;
+
+            end
+            else
+            begin
+              FFrameBag.FActiveAction.SendType := stCancelSell;
+              FFrameBag.FActiveAction.JSONObject := '0';
+              AContext.Connection.Socket.WriteLn(TJson.ObjectToJsonString(FFrameBag.FActiveAction), IndyUTF8Encoding(True));
+              AContext.Connection.Disconnect;
+            end;
+          end;
+      end;
+    finally
+      FFrameBag.laySellQR.Visible := false;
+      ReloadBag;
+    end;
+end;
+
 procedure TMainForm.btnToBagClick(Sender: TObject);
 begin
   LoadBag;
   recSelect.Parent := imgBtnBag;
-  TabControl.ActiveTab := TabBag;
+
   FFrameDetector.timerScannerArtefacts.Enabled := false;
   FFrameDetector.TimerSensor.Enabled := false;
   FFrameQRScanner.StopScan;
@@ -292,37 +333,29 @@ begin
   imgPersonHealth.Visible := false;
 
   CreateBagFrame;
+  TabControl.ActiveTab := TabBag;
 end;
 
 procedure TMainForm.CreateBagFrame;
 begin
-  if Person.IsClassicBag then
-  begin
-    if not Assigned(FFrameBag) then
+  if Assigned(FFrameBag) then
     begin
-      FFrameBag := TFrameBag.Create(TabBag);
-      FFrameBag.labCash.Text := Person.Cash.ToString;
-      FFrameBag.LayBag.Height := Self.Height + 63;
+      FFrameBag.Parent := nil;
+      FFrameBag.Visible := false;
+      FreeAndNil(FFrameBag);
     end;
+
+    FFrameBag := TFrameBag.Create(TabBag);
+
     FFrameBag.CreateElements;
     FFrameBag.Parent := TabBag;
-    FFrameBag.SwitchStyle.IsChecked := true;
+    FFrameBag.LoadBagElements;
+
+    FFrameBag.SwitchStyle.IsChecked := Person.IsClassicBag;
     FFrameBag.BringToFront;
-  end
-  else
-  begin
-    if not Assigned(FFrameBagSection) then
-    begin
-      FFrameBagSection := TFrameBagSection.Create(TabBag);
-      FFrameBagSection.labCash.Text := Person.Cash.ToString;
-    end;
+    FFrameBag.timerScanner.Enabled := true;
 
-    FFrameBagSection.LoadBagElements;
-    FFrameBagSection.SwitchStyle.IsChecked := false;
-    FFrameBagSection.Parent := TabBag;
-    FFrameBagSection.BringToFront;
-  end;
-
+  Person.Cash := Person.Cash;
 end;
 
 procedure TMainForm.btnToIssuiesClick(Sender: TObject);
@@ -336,6 +369,12 @@ begin
   imgPersonHealth.Visible := true;
   FFrameIssuies.btnToActiveClick(nil);
   FFrameIssuies.ClearSelection;
+
+  if Assigned(FFrameBag) then
+    FFrameBag.timerScanner.Enabled := false;
+
+  // if Assigned(FFrameBagSection) then
+  // FFrameBagSection.timerScanner.Enabled := false;
 end;
 
 procedure TMainForm.btnToMapClick(Sender: TObject);
@@ -347,6 +386,12 @@ begin
   FFrameQRScanner.StopScan;
   StopDetector;
   imgPersonHealth.Visible := true;
+
+  if Assigned(FFrameBag) then
+    FFrameBag.timerScanner.Enabled := false;
+
+  // if Assigned(FFrameBagSection) then
+  // FFrameBagSection.timerScanner.Enabled := false;
 end;
 
 procedure TMainForm.btnToPercsClick(Sender: TObject);
@@ -357,6 +402,12 @@ begin
   FFrameQRScanner.StopScan;
   StopDetector;
   imgPersonHealth.Visible := false;
+
+  if Assigned(FFrameBag) then
+    FFrameBag.timerScanner.Enabled := false;
+
+  // if Assigned(FFrameBagSection) then
+  // FFrameBagSection.timerScanner.Enabled := false;
 end;
 
 procedure TMainForm.btnToQRScannerClick(Sender: TObject);
@@ -366,6 +417,12 @@ begin
   FFrameQRScanner.StartScan;
   StopDetector;
   imgPersonHealth.Visible := true;
+
+  if Assigned(FFrameBag) then
+    FFrameBag.timerScanner.Enabled := false;
+
+  // if Assigned(FFrameBagSection) then
+  // FFrameBagSection.timerScanner.Enabled := false;
 end;
 
 procedure TMainForm.StopDetector;

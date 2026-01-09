@@ -1856,6 +1856,13 @@ object FrameBagSection: TFrameBagSection
           JustifyLastLine = Left
           FlowDirection = LeftToRight
         end
+        object timerScanner: TTimer
+          Enabled = False
+          Interval = 300
+          OnTimer = timerScannerTimer
+          Left = 912
+          Top = 221
+        end
       end
     end
     object layTop: TLayout
@@ -3427,7 +3434,7 @@ object FrameBagSection: TFrameBagSection
     Size.Width = 974.000000000000000000
     Size.Height = 40.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 5
+    TabOrder = 2
     object Image7: TImage
       MultiResBitmap.Height = 49
       MultiResBitmap.Width = 747
@@ -4734,7 +4741,7 @@ object FrameBagSection: TFrameBagSection
     Size.Height = 481.000000000000000000
     Size.PlatformDefault = False
     Visible = False
-    TabOrder = 3
+    TabOrder = 1
     object Rectangle3: TRectangle
       Align = Contents
       Fill.Color = x962B2B2B
@@ -11169,9 +11176,9 @@ object FrameBagSection: TFrameBagSection
           end>
         Align = Bottom
         Position.X = 153.000000000000000000
-        Position.Y = 10.000000000000000000
+        Position.Y = 9.000000000000000000
         Size.Width = 381.000000000000000000
-        Size.Height = 127.000000000000000000
+        Size.Height = 128.000000000000000000
         Size.PlatformDefault = False
         WrapMode = Stretch
         object recPsiChangeArt: TRectangle
@@ -11179,7 +11186,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = x86C98826
           Position.X = 200.000000000000000000
-          Position.Y = 68.000000000000000000
+          Position.Y = 69.000000000000000000
           Size.Width = 140.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -11193,7 +11200,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = x86C98826
           Position.X = 15.000000000000000000
-          Position.Y = 30.000000000000000000
+          Position.Y = 31.000000000000000000
           Size.Width = 140.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -11206,7 +11213,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = x86C98826
           Position.X = 15.000000000000000000
-          Position.Y = 68.000000000000000000
+          Position.Y = 69.000000000000000000
           Size.Width = 140.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -11219,7 +11226,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = xFF0D8409
           Position.X = 15.000000000000000000
-          Position.Y = 106.000000000000000000
+          Position.Y = 107.000000000000000000
           Size.Width = 140.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -11232,7 +11239,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = x6422FC1A
           Position.X = 200.000000000000000000
-          Position.Y = 106.000000000000000000
+          Position.Y = 107.000000000000000000
           Size.Width = 140.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -11245,7 +11252,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = xFFC98826
           Position.X = 200.000000000000000000
-          Position.Y = 30.000000000000000000
+          Position.Y = 31.000000000000000000
           Size.Width = 160.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -11258,7 +11265,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = xFFC98826
           Position.X = 15.000000000000000000
-          Position.Y = 106.000000000000000000
+          Position.Y = 107.000000000000000000
           Size.Width = 110.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -11271,7 +11278,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = xFFC98826
           Position.X = 15.000000000000000000
-          Position.Y = 68.000000000000000000
+          Position.Y = 69.000000000000000000
           Size.Width = 110.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -11284,7 +11291,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = xFFC98826
           Position.X = 200.000000000000000000
-          Position.Y = 68.000000000000000000
+          Position.Y = 69.000000000000000000
           Size.Width = 110.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -11297,7 +11304,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = xFFC98826
           Position.X = 200.000000000000000000
-          Position.Y = 106.000000000000000000
+          Position.Y = 107.000000000000000000
           Size.Width = 110.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -11310,7 +11317,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = xFFC98826
           Position.X = 15.000000000000000000
-          Position.Y = 30.000000000000000000
+          Position.Y = 31.000000000000000000
           Size.Width = 110.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -11323,7 +11330,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = xFFF9AC2F
           Position.X = 200.000000000000000000
-          Position.Y = 30.000000000000000000
+          Position.Y = 31.000000000000000000
           Size.Width = 140.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -11352,7 +11359,7 @@ object FrameBagSection: TFrameBagSection
           Size.Width = 381.000000000000000000
           Size.Height = 90.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 5
+          TabOrder = 3
           object Image22: TImage
             MultiResBitmap.Height = 138
             MultiResBitmap.Width = 587
@@ -13352,16 +13359,15 @@ object FrameBagSection: TFrameBagSection
   end
   object layInfo: TLayout
     Align = Contents
-    Size.Width = 1054.000000000000000000
-    Size.Height = 614.000000000000000000
+    Size.Width = 974.000000000000000000
+    Size.Height = 481.000000000000000000
     Size.PlatformDefault = False
-    Visible = False
     TabOrder = 4
     object Rectangle8: TRectangle
       Align = Contents
       Fill.Color = x962B2B2B
-      Size.Width = 1054.000000000000000000
-      Size.Height = 614.000000000000000000
+      Size.Width = 974.000000000000000000
+      Size.Height = 481.000000000000000000
       Size.PlatformDefault = False
       Stroke.Kind = None
     end
@@ -19791,9 +19797,9 @@ object FrameBagSection: TFrameBagSection
           end>
         Align = Bottom
         Position.X = 187.000000000000000000
-        Position.Y = 16.000000000000000000
+        Position.Y = 15.000000000000000000
         Size.Width = 381.000000000000000000
-        Size.Height = 127.000000000000000000
+        Size.Height = 128.000000000000000000
         Size.PlatformDefault = False
         WrapMode = Stretch
         object infoRadiation: TRectangle
@@ -19801,7 +19807,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = xFFC98826
           Position.X = 200.000000000000000000
-          Position.Y = 30.000000000000000000
+          Position.Y = 31.000000000000000000
           Size.Width = 140.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -19814,7 +19820,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = xFFC98826
           Position.X = 15.000000000000000000
-          Position.Y = 106.000000000000000000
+          Position.Y = 107.000000000000000000
           Size.Width = 140.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -19827,7 +19833,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = xFFC98826
           Position.X = 15.000000000000000000
-          Position.Y = 68.000000000000000000
+          Position.Y = 69.000000000000000000
           Size.Width = 140.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -19840,7 +19846,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = xFFC98826
           Position.X = 200.000000000000000000
-          Position.Y = 68.000000000000000000
+          Position.Y = 69.000000000000000000
           Size.Width = 140.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -19853,7 +19859,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = xFFC98826
           Position.X = 200.000000000000000000
-          Position.Y = 106.000000000000000000
+          Position.Y = 107.000000000000000000
           Size.Width = 140.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -19866,7 +19872,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = xFFC98826
           Position.X = 15.000000000000000000
-          Position.Y = 30.000000000000000000
+          Position.Y = 31.000000000000000000
           Size.Width = 140.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -19975,7 +19981,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = x5AC98826
           Position.X = 15.000000000000000000
-          Position.Y = 106.000000000000000000
+          Position.Y = 107.000000000000000000
           Size.Width = 140.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -19988,7 +19994,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = x5AC98826
           Position.X = 15.000000000000000000
-          Position.Y = 68.000000000000000000
+          Position.Y = 69.000000000000000000
           Size.Width = 140.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -20001,7 +20007,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = x5AC98826
           Position.X = 15.000000000000000000
-          Position.Y = 30.000000000000000000
+          Position.Y = 31.000000000000000000
           Size.Width = 140.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -20014,7 +20020,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = x5AC98826
           Position.X = 200.000000000000000000
-          Position.Y = 106.000000000000000000
+          Position.Y = 107.000000000000000000
           Size.Width = 140.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -20027,7 +20033,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = x5AC98826
           Position.X = 200.000000000000000000
-          Position.Y = 68.000000000000000000
+          Position.Y = 69.000000000000000000
           Size.Width = 140.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -20040,7 +20046,7 @@ object FrameBagSection: TFrameBagSection
           Corners = []
           Fill.Color = x5AC98826
           Position.X = 200.000000000000000000
-          Position.Y = 30.000000000000000000
+          Position.Y = 31.000000000000000000
           Size.Width = 140.000000000000000000
           Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
@@ -21535,7 +21541,7 @@ object FrameBagSection: TFrameBagSection
               end
             end
           end
-          object layCells: TLayout
+          object laySells: TLayout
             Align = Top
             Position.Y = 102.000000000000000000
             Size.Width = 177.000000000000000000
@@ -21721,7 +21727,7 @@ object FrameBagSection: TFrameBagSection
               Size.Height = 34.000000000000000000
               Size.PlatformDefault = False
               WrapMode = Stretch
-              object bntCells: TCornerButton
+              object bntSells: TCornerButton
                 Align = Client
                 StyledSettings = []
                 Sides = [Top, Left, Bottom, Right]
@@ -21746,7 +21752,7 @@ object FrameBagSection: TFrameBagSection
         Align = Client
         Fill.Color = xFF111611
         Size.Width = 381.000000000000000000
-        Size.Height = 6.000000000000000000
+        Size.Height = 5.000000000000000000
         Size.PlatformDefault = False
         Stroke.Kind = None
         object InnerGlowEffect9: TInnerGlowEffect

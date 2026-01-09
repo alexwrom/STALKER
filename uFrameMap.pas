@@ -279,7 +279,10 @@ begin
       if FIssueList[I].CompleteAfterIN then
       begin
         ExeExec('update issuies set status_id = 1 where issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
-        ExeExec('update users set cash = cash + (select cost from issuies where issue_id = ' + FIssueList[I].ID.ToString + ') where user_id = ' +Person.UserId.ToString +';', exExecute, vQuery);
+        ExeExec('select cost from issuies where issue_id = ' + FIssueList[I].ID.ToString + ';', exActive, vQuery);
+        Person.Cash := Person.Cash + vQuery.FieldByName('cost').AsFloat;
+        FreeQueryAndConn(vQuery);
+
         ExeExec('update issuies set status_id = 0 where prev_issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
         ReloadIssuies;
         UpdateIssue;
@@ -289,7 +292,9 @@ begin
       if FIssueList[I].CompleteAfterOUT then
       begin
         ExeExec('update issuies set status_id = 1 where issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
-        ExeExec('update users set cash = cash + (select cost from issuies where issue_id = ' + FIssueList[I].ID.ToString + ') where user_id = ' +Person.UserId.ToString +';', exExecute, vQuery);
+        ExeExec('select cost from issuies where issue_id = ' + FIssueList[I].ID.ToString + ';', exActive, vQuery);
+        Person.Cash := Person.Cash + vQuery.FieldByName('cost').AsFloat;
+        FreeQueryAndConn(vQuery);
         ExeExec('update issuies set status_id = 0 where prev_issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
         ReloadIssuies;
         UpdateIssue;
@@ -911,10 +916,10 @@ end;
 procedure TFrameMap.UpdateMapBounds;
 begin
   // Устанавливаем границы по умолчанию
-  FTopLeftLat := 52.093602;
-  FTopLeftLon := 23.697432;
-  FBottomRightLat := 52.085325;
-  FBottomRightLon := 23.721153;
+  FTopLeftLat := 52.154782;
+  FTopLeftLon := 23.581863;
+  FBottomRightLat := 52.151343;
+  FBottomRightLon := 23.596943;
 end;
 
 procedure TFrameMap.SetMapBounds(TopLeftLat, TopLeftLon, BottomRightLat, BottomRightLon: Double);

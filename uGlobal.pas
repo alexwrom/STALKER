@@ -9,7 +9,7 @@ uses
   FireDAC.Stan.Pool, FireDAC.Phys, FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef,
   FireDAC.Stan.ExprFuncs, FireDAC.Phys.SQLiteWrapper.Stat, FireDAC.FMXUI.Wait,
   Data.DB, System.IOUtils, FireDAC.Comp.Client, FireDAC.Comp.DataSet, System.SysUtils, System.Sensors, FMX.Objects,
-  Generics.Collections, DelphiZXingQRCode, FMX.Graphics, System.UITypes, System.Types;
+  Generics.Collections, DelphiZXingQRCode, FMX.Graphics, System.UITypes, System.Types, FMX.Layouts, Math;
 
 const
   cCriticalColor = $32F92F2F;
@@ -24,6 +24,7 @@ type
   TMarkerType = (mtPoint, mtRad, mtAnomaly, mtBag, mtIssue, mtBase, mtSafe);
   TAnomalyType = (atElectro, atFire, atPhisic, atRadiation, atChimishe, atPSI);
   TBagType = (btMedical, btArmor, btWeapon, btArt, btDetector);
+  TSendType = (stSell, stIssue, stAnswerSell, stCancelSell);
 
   TMarkerData = record
     Marker: TImage;
@@ -60,6 +61,7 @@ type
     HealthRestore: double;
     CountSlots: integer;
     Percs: TPerc;
+    Cost: Extended;
   end;
 
   TPlaceData = record
@@ -125,7 +127,7 @@ type
     FDetector: TDetector;
     FUserId: integer;
     FGroupId: integer;
-    FCash: integer;
+    FCash: Extended;
     FIsClassicBag: boolean;
     FCountContener: integer;
     FArmorId: integer;
@@ -133,7 +135,7 @@ type
     procedure SetHealth(const Value: double);
     procedure SetHealthArmor(AValue: double);
     procedure SetHealthWeapon(AValue: double);
-    procedure SetCash(const Value: integer);
+    procedure SetCash(const Value: Extended);
     procedure SetIsClassicBag(const Value: boolean);
 
   public
@@ -151,7 +153,7 @@ type
     property PhisicArmor: double read FPhisicArmor write FPhisicArmor;
     property ChimisheArmor: double read FChimisheArmor write FChimisheArmor;
     property RadiationArmor: double read FRadiationArmor write FRadiationArmor;
-    property Cash: integer read FCash write SetCash;
+    property Cash: Extended read FCash write SetCash;
     property CountContener: integer read FCountContener write FCountContener;
     property IsClassicBag: boolean read FIsClassicBag write SetIsClassicBag;
     property Detector: TDetector read FDetector write FDetector;
@@ -170,7 +172,7 @@ procedure StopDamageGlow;
 procedure ReloadBag;
 procedure ReloadPercs;
 function IsFullBelt: boolean;
-procedure SellStart(AText: string);
+procedure ActiveScaner(AValue: boolean);
 
 var
   Person: TPerson;
@@ -220,7 +222,6 @@ var
   vQuery: TFDQuery;
 begin
   FIsClassicBag := Value;
-  MainForm.CreateBagFrame;
   ExeExec('update users set is_classic_bag = ' + FIsClassicBag.ToString + ' where user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
 end;
 
@@ -235,15 +236,16 @@ begin
   MainForm.FFrameMap.UpdateIssue;
 end;
 
-procedure TPerson.SetCash(const Value: integer);
+procedure TPerson.SetCash(const Value: Extended);
+var
+  FDQuery: TFDQuery;
 begin
   FCash := Value;
 
   if Assigned(MainForm.FFrameBag) then
-    MainForm.FFrameBag.labCash.Text := FCash.ToString;
+    MainForm.FFrameBag.labCash.Text := Format('%.0n', [FCash]);
 
-  if Assigned(MainForm.FFrameBagSection) then
-    MainForm.FFrameBagSection.labCash.Text := FCash.ToString;
+  ExeExec(Format('update users set cash = %d where user_id = %d;', [Round(FCash), Person.UserId]), exExecute, FDQuery);
 end;
 
 procedure TPerson.SetHealth(const Value: double);
@@ -518,12 +520,10 @@ begin
   FreeQueryAndConn(vQuery);
 end;
 
-procedure SellStart(AText: string);
+procedure ActiveScaner(AValue: boolean);
 begin
-  MainForm.btnToQRScannerClick(nil);
-  MainForm.FFrameQRScanner.imgCamera.Visible := false;
-  MainForm.FFrameQRScanner.imgQR.Visible := true;
-  GenerateQRCode(AText, MainForm.FFrameQRScanner.imgQR);
+  MainForm.imgBtnQRScanner.Enabled := AValue;
+  MainForm.imgBtnQRScanner.Opacity := IfThen(AValue, 1, 0.5);
 end;
 
 end.

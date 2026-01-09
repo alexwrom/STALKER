@@ -9,14 +9,15 @@ uses
   ZXing.BarcodeFormat,
   ZXing.ReadResult,
   ZXing.ScanManager, FMX.Platform, Permissions, FMX.Controls.Presentation,
-  uGlobal;
+  uGlobal, Classes.sell, Rest.Json, Classes.send, FireDAC.Comp.Client, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient,
+  IdGlobal, Classes.action, StrUtils;
 
 type
   TFrameQRScanner = class(TFrame)
     Camera: TCameraComponent;
     imgCamera: TImage;
     Image9: TImage;
-    imgQR: TImage;
+    IdTCPClient: TIdTCPClient;
   private
     fScanInProgress: Boolean;
     fFrameTake: Integer;
@@ -114,7 +115,10 @@ begin
     var
       ReadResult: TReadResult;
       ScanManager: TScanManager;
-
+      vSend: TSend;
+      vAction: TAction;
+      vSell: TSell;
+      vAnswer: string;
     begin
       fScanInProgress := True;
       ScanManager := TScanManager.Create(TBarcodeFormat.Auto, nil);
@@ -128,18 +132,42 @@ begin
 
         TThread.Synchronize(TThread.CurrentThread,
           procedure
+          var
+            FDQuery: TFDQuery;
           begin
             if (ReadResult <> nil) then
             begin
-              // сюда обработка данных
-              if ReadResult.Text = '<OK>' then
-                ShowMessage('Все отлично')
-              else
-              begin
-                GenerateQRCode('<OK>', imgQR);
-                imgCamera.Visible := false;
-                imgQR.Visible := True;
+
+              vSend := TSend.Create;
+              vSend := TJson.JsonToObject<TSend>(ReadResult.Text);
+
+              IdTCPClient.Host := vSend.Ip;
+              IdTCPClient.Port := 2026;
+
+              IdTCPClient.Connect;
+              try
+                IdTCPClient.IOHandler.WriteLn(Person.Cash.ToString, IndyUTF8Encoding(True));
+
+                vAnswer := IdTCPClient.IOHandler.ReadLn(IndyUTF8Encoding(True));
+                vAction := TJson.JsonToObject<TAction>(vAnswer);
+              finally
+                IdTCPClient.Disconnect;
               end;
+
+              case vAction.SendType of
+                stSell:
+                  begin
+                    vSell := TSell.Create;
+                    vSell := TJson.JsonToObject<TSell>(vAction.JSONObject);
+
+                    ExeExec(Format('insert into bag (table_name, row_id, health) values(''%s'', %d, %d);', [vSell.TableName, vSell.RowID, Round(vSell.Health)]), exExecute, FDQuery);
+                    Person.Cash := Person.Cash - vSell.Cost;
+                    ReloadBag;
+                  end;
+                stCancelSell:
+                  Showmessage('Недостаточно средств');
+              end;
+
             end;
           end);
 

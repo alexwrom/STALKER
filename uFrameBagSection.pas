@@ -6,7 +6,8 @@ uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Graphics, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.StdCtrls,
   FMX.Objects, FMX.Layouts, uGlobal, System.ImageList, FMX.ImgList, Generics.Collections,
-  FMX.Controls.Presentation, FMX.Effects, StrUtils, FireDAC.Comp.Client;
+  FMX.Controls.Presentation, FMX.Effects, StrUtils, FireDAC.Comp.Client, uScanerWiFi, Classes.send, Classes.sell,
+  Rest.JSON;
 
 type
   TFrameBagSection = class(TFrame)
@@ -176,11 +177,12 @@ type
     layAddArt: TLayout;
     Image26: TImage;
     btnAddArt: TCornerButton;
-    layCells: TLayout;
+    laySells: TLayout;
     Image27: TImage;
-    bntCells: TCornerButton;
+    bntSells: TCornerButton;
     Rectangle4: TRectangle;
     InnerGlowEffect9: TInnerGlowEffect;
+    timerScanner: TTimer;
     procedure SwitchStyleSwitch(Sender: TObject);
     procedure btnUseClick(Sender: TObject);
     procedure btnAddArmorClick(Sender: TObject);
@@ -188,6 +190,7 @@ type
     procedure btnChooseArtClick(Sender: TObject);
     procedure btnAddArtClick(Sender: TObject);
     procedure btnCloseChangeSlotClick(Sender: TObject);
+    procedure timerScannerTimer(Sender: TObject);
   private
     FArtsList: TList<TPerc>;
     procedure CreateFreeCell(ALayout: TFlowLayout);
@@ -213,7 +216,25 @@ constructor TFrameBagSection.Create(AObject: TFmxObject);
 begin
   inherited Create(AObject);
   labCash.TextSettings.Font.Family := 'lcd';
+  infoLabChimishe.TextSettings.Font.Family := 'lcd';
+  infoLabElectro.TextSettings.Font.Family := 'lcd';
+  infoLabFire.TextSettings.Font.Family := 'lcd';
+  infoLabPhisic.TextSettings.Font.Family := 'lcd';
+  infoLabPsi.TextSettings.Font.Family := 'lcd';
+  infoLabradiation.TextSettings.Font.Family := 'lcd';
+
   FArtsList:= TList<TPerc>.Create;
+end;
+
+procedure TFrameBagSection.timerScannerTimer(Sender: TObject);
+begin
+{$IFDEF ANDROID}
+  TThread.CreateAnonymousThread(
+    procedure
+    begin
+      laySells.Visible := ConnectToMerchatZone; // Поиск зоны торговли
+    end).Start;
+{$ENDIF}
 end;
 
 procedure TFrameBagSection.LoadBagElements;

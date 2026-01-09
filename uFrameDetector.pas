@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Graphics, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.StdCtrls,
   FMX.Objects, FMX.Effects, FMX.Ani, FMX.Media, uScanerWiFi,
-  FMX.Controls.Presentation, System.IOUtils, uGlobal, FMX.Layouts, Generics.Collections;
+  FMX.Controls.Presentation, System.IOUtils, uGlobal, FMX.Layouts, Generics.Collections, FMX.Memo.Types, FMX.ScrollBox, FMX.Memo;
 
 type
   TFrameDetector = class(TFrame)
@@ -190,47 +190,36 @@ begin
 {$IFDEF ANDROID}
   if Not FIsDead then
   begin
-    PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.ACCESS_COARSE_LOCATION'],
-      procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
+    TThread.CreateAnonymousThread(
+      procedure
       begin
-        if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
-        begin
-          TThread.CreateAnonymousThread(
-            procedure
+        // ScanNetworks;    // по WIFI
+
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            FArtDistance := Round(ScanDistanceToArtefacts);
+
+            if FArtDistance <= Person.Detector.Radius then
             begin
-              // ScanNetworks;    // по WIFI
-
-              TThread.Synchronize(nil,
-                procedure
-                begin
-                  FArtDistance := Round(ScanDistanceToArtefacts);
-
-                  if FArtDistance <= Person.Detector.Radius then
-                  begin
-                    case FArtDistance of
-                      0 .. 2:
-                        TimerSensor.Interval := 200;
-                      3 .. 5:
-                        TimerSensor.Interval := 800;
-                      6 .. 9:
-                        TimerSensor.Interval := 1500;
-                      10 .. 15:
-                        TimerSensor.Interval := 2200;
-                    else
-                      TimerSensor.Interval := 5000;
-                    end;
-                    TimerSensor.Enabled := true;
-                  end
-                  else
-                    TimerSensor.Enabled := false;
-                end);
-            end).Start;
-        end
-        else
-        begin
-          // Label1.Text := 'Необходимы разрешения для сканирования Wi-Fi';
-        end;
-      end);
+              case FArtDistance of
+                0 .. 2:
+                  TimerSensor.Interval := 200;
+                3 .. 5:
+                  TimerSensor.Interval := 800;
+                6 .. 9:
+                  TimerSensor.Interval := 1500;
+                10 .. 15:
+                  TimerSensor.Interval := 2200;
+              else
+                TimerSensor.Interval := 5000;
+              end;
+              TimerSensor.Enabled := true;
+            end
+            else
+              TimerSensor.Enabled := false;
+          end);
+      end).Start;
   end;
 {$ENDIF}
 end;

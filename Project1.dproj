@@ -5,11 +5,10 @@
         <FrameworkType>FMX</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <Platform Condition="'$(Platform)'==''">Android</Platform>
         <TargetedPlatforms>693267</TargetedPlatforms>
         <AppType>Application</AppType>
         <MainSource>Project1.dpr</MainSource>
-        <ProjectName Condition="'$(ProjectName)'==''">Project1</ProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -316,11 +315,6 @@
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="uScanerWiFi.pas"/>
-        <DCCReference Include="uFrameQRScaner.pas">
-            <Form>FrameQRScanner</Form>
-            <FormType>fmx</FormType>
-            <DesignClass>TFrame</DesignClass>
-        </DCCReference>
         <DCCReference Include="uFrameIssuies.pas">
             <Form>FrameIssuies</Form>
             <FormType>fmx</FormType>
@@ -329,11 +323,6 @@
         <DCCReference Include="controls.item.pas"/>
         <DCCReference Include="controls.listitem.pas"/>
         <DCCReference Include="uFrameBag.pas"/>
-        <DCCReference Include="uFrameBagSection.pas">
-            <Form>FrameBagSection</Form>
-            <FormType>fmx</FormType>
-            <DesignClass>TFrame</DesignClass>
-        </DCCReference>
         <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.BarcodeFormat.pas"/>
         <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Filtering\ZXing.BaseLuminanceSource.pas"/>
         <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Filtering\ZXing.Binarizer.pas"/>
@@ -411,6 +400,9 @@
         <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\ZXing.ScanManager.pas"/>
         <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.StringUtils.pas"/>
         <DCCReference Include="..\ZXing.Delphi-3.10.0\DelphiZXingQRCode-master\Source\DelphiZXIngQRCode.pas"/>
+        <DCCReference Include="classes\classes.sell.pas"/>
+        <DCCReference Include="classes\classes.send.pas"/>
+        <DCCReference Include="classes\classes.action.pas"/>
         <RcItem Include="Resources\font\lcd.ttf">
             <ResourceType>FONT</ResourceType>
             <ResourceId>1</ResourceId>
