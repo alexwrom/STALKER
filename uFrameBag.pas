@@ -11,7 +11,7 @@ uses
 
 type
   TFrameBag = class(TFrame)
-    VertScrollBox1: TVertScrollBox;
+    VertScrollBox: TVertScrollBox;
     imgList63x63: TImageList;
     imgList63x126: TImageList;
     imgList126x189: TImageList;
@@ -157,7 +157,6 @@ type
     Rectangle27: TRectangle;
     InnerGlowEffect16: TInnerGlowEffect;
     imgQR: TImage;
-    timerScanner: TTimer;
     recCost: TRectangle;
     InnerGlowEffect12: TInnerGlowEffect;
     labElementCost: TLabel;
@@ -204,7 +203,6 @@ type
     Layout14: TLayout;
     Image24: TImage;
     Image26: TImage;
-    procedure FramePainting(Sender: TObject; Canvas: TCanvas; const ARect: TRectF);
     procedure SwitchStyleSwitch(Sender: TObject);
     procedure btnCloseInfoClick(Sender: TObject);
     procedure btnAddArmorClick(Sender: TObject);
@@ -214,7 +212,6 @@ type
     procedure btnChooseArtClick(Sender: TObject);
     procedure bntSellsClick(Sender: TObject);
     procedure btnCloseQRClick(Sender: TObject);
-    procedure timerScannerTimer(Sender: TObject);
   private
     FArtsList: TList<TPerc>;
 
@@ -261,8 +258,6 @@ procedure TFrameBag.CreateBagBackground;
 var
   i: integer;
 begin
-  SetLayBagHeight;
-
   for i := 1 to Trunc(layBag.Width / 63) * Trunc(layBag.Height / 63) do
   begin
     CreateFreeCell(flBackground);
@@ -281,10 +276,10 @@ begin
       if (flElements.Controls[i] as TImage).Position.Y + (flElements.Controls[i] as TImage).Height > vMaxHeight then
         vMaxHeight := (flElements.Controls[i] as TImage).Position.Y + (flElements.Controls[i] as TImage).Height;
 
-  if vMaxHeight > Self.Height - layTopBorder.Height - recCash.Height then
+  if vMaxHeight > VertScrollBox.Height then
     layBag.Height := vMaxHeight
   else
-    layBag.Height := Self.Height - layTopBorder.Height - recCash.Height;
+    layBag.Height := VertScrollBox.Height;
 end;
 
 procedure TFrameBag.SwitchStyleSwitch(Sender: TObject);
@@ -473,24 +468,6 @@ begin
     end;
 end;
 
-procedure TFrameBag.timerScannerTimer(Sender: TObject);
-begin
-{$IFDEF ANDROID}
-  TThread.CreateAnonymousThread(
-    procedure
-    begin
-      laySells.Visible := ConnectToMerchatZone; // Поиск зоны торговли
-      ActiveScaner(laySells.Visible);
-    end).Start;
-{$ENDIF}
-end;
-
-procedure TFrameBag.FramePainting(Sender: TObject; Canvas: TCanvas; const ARect: TRectF);
-begin
-  if flBackground.ChildrenCount = 0 then
-    CreateBagBackground;
-end;
-
 procedure TFrameBag.bntSellsClick(Sender: TObject);
 var
   vSend: TSend;
@@ -512,9 +489,9 @@ begin
   FActiveAction.JSONObject := TJson.ObjectToJsonString(vSell);
 
   vSend := TSend.Create;
-  {$IFDEF ANDROID}
+{$IFDEF ANDROID}
   vSend.Ip := GetMyIP;
-  {$ENDIF}
+{$ENDIF}
   GenerateQRCode(TJson.ObjectToJsonString(vSend), imgQR);
 end;
 
@@ -819,6 +796,8 @@ begin
       SetLayBagHeight;
     end;
 
+  if flBackground.ChildrenCount = 0 then
+    CreateBagBackground;
 end;
 
 procedure TFrameBag.OnClickElement(Sender: TObject);

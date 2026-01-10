@@ -94,7 +94,8 @@ uses
   DelphiZXIngQRCode in '..\ZXing.Delphi-3.10.0\DelphiZXingQRCode-master\Source\DelphiZXIngQRCode.pas',
   classes.sell in 'classes\classes.sell.pas',
   classes.send in 'classes\classes.send.pas',
-  classes.action in 'classes\classes.action.pas';
+  classes.action in 'classes\classes.action.pas',
+  uFrameQRScaner in 'uFrameQRScaner.pas' {FrameQRScanner: TFrame};
 
 {$R *.res}
 

@@ -13,7 +13,7 @@ uses
   FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys,
   FireDAC.FMXUI.Wait, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
   FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client, uGlobal, uFrameDetector,
-  uFrameQRScaner, uFrameIssuies, uFrameBag, classes.sell, classes.action, Rest.Json, IdGlobal,
+  uFrameQRScaner, uFrameIssuies, uFrameBag, Classes.sell, Classes.action, Rest.Json, IdGlobal, StrUtils,
 {$IFDEF ANDROID}
   Androidapi.JNI.JavaTypes, // Для JString
   Androidapi.JNI.GraphicsContentViewText,
@@ -23,7 +23,7 @@ uses
   Androidapi.JNI.Os,
   FMX.Platform.Android,
 {$ENDIF}
-  uScanerWiFi, FMX.Ani, FMX.Effects, IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer;
+  uScanerWiFi, FMX.Ani, FMX.Effects, IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer, IdTCPConnection, IdTCPClient;
 
 type
 
@@ -43,7 +43,6 @@ type
     ImgBtnPercs: TImage;
     imgBtnBag: TImage;
     imgBtnIssuies: TImage;
-    Image6: TImage;
     Image7: TImage;
     Image9: TImage;
     Image12: TImage;
@@ -67,6 +66,9 @@ type
     TabIssueis: TTabItem;
     TabBag: TTabItem;
     IdTCPServer: TIdTCPServer;
+    timerScannerWifiMerchant: TTimer;
+    recBackgroudMenu: TRectangle;
+    InnerGlowEffect3: TInnerGlowEffect;
     procedure FormCreate(Sender: TObject);
     procedure btnToMapClick(Sender: TObject);
     procedure btnToPercsClick(Sender: TObject);
@@ -75,11 +77,14 @@ type
     procedure btnToQRScannerClick(Sender: TObject);
     procedure btnToIssuiesClick(Sender: TObject);
     procedure IdTCPServerExecute(AContext: TIdContext);
+    procedure timerScannerWifiMerchantTimer(Sender: TObject);
+    procedure FormActivate(Sender: TObject);
   private
 
     procedure LoadArtefacts;
     procedure LoadPlaces;
     procedure LoadBag;
+    procedure StartApp;
 
   public
     { Public declarations }
@@ -103,6 +108,12 @@ implementation
 
 uses
   System.Permissions;
+
+procedure TMainForm.FormActivate(Sender: TObject);
+begin
+  CreateBagFrame;
+  timerScannerWifiMerchant.Enabled := true;
+end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
@@ -244,11 +255,41 @@ end;
 
 procedure TMainForm.FormShow(Sender: TObject);
 begin
-  Person := TPerson.Create;
-  Person.UserId := 1; // Получить ID при логировании
-  Person.GroupId := 1;
-  Person.CountContener := -1;
+  ExeExec('select user_id, group_id  from users limit 1;', exActive, FDQuery);
+  try
+    if FDQuery.RecordCount = 1 then
+    begin
+      Person := TPerson.Create;
+      Person.UserId := FDQuery.FieldByName('user_id').AsInteger;
+      Person.GroupId := FDQuery.FieldByName('group_id').AsInteger;
+      Person.CountContener := -1;
 
+      StartApp;
+    end
+    else
+    begin
+      PermissionsService.RequestPermissions(['android.permission.CAMERA'],
+        procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
+        begin
+          if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
+          begin
+            FFrameQRScanner := TFrameQRScanner.Create(TabQRScanner);
+            FFrameQRScanner.Parent := TabQRScanner;
+            btnToQRScannerClick(nil);
+          end
+          else
+          begin
+            Showmessage('Необходимы разрешения для камеры');
+          end;
+        end);
+    end;
+  finally
+    FreeQueryAndConn(FDQuery);
+  end;
+end;
+
+procedure TMainForm.StartApp;
+begin
   LoadArtefacts;
   LoadIsuies;
   LoadPlaces;
@@ -261,9 +302,6 @@ begin
 
   FFrameDetector := TFrameDetector.Create(TabDetector);
   FFrameDetector.Parent := TabDetector;
-
-  FFrameQRScanner := TFrameQRScanner.Create(TabQRScanner);
-  FFrameQRScanner.Parent := TabQRScanner;
 
   FFrameIssuies := TFrameIssuies.Create(TabIssueis);
   FFrameIssuies.Parent := TabIssueis;
@@ -298,11 +336,11 @@ begin
             vSell := TSell.Create;
             vSell := TJson.JsonToObject<TSell>(FFrameBag.FActiveAction.JSONObject);
 
-            if vAnswerText.ToInteger - vSell.Cost >= 0 then
+            if TJson.JsonToObject<TPerson>(vAnswerText).Cash - vSell.Cost >= 0 then
             begin
               ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''' + vSell.TableName + ''' and row_id = ' + vSell.RowID.ToString + ' and health = ' + vSell.Health.ToString + ' limit 1);', exExecute, FDQuery);
               Person.Cash := Person.Cash + vSell.Cost;
-              AContext.Connection.Socket.WriteLn(TJson.ObjectToJsonString(FFrameBag.FActiveAction), IndyUTF8Encoding(True));
+              AContext.Connection.Socket.WriteLn(TJson.ObjectToJsonString(FFrameBag.FActiveAction), IndyUTF8Encoding(true));
               AContext.Connection.Disconnect;
 
             end
@@ -310,7 +348,7 @@ begin
             begin
               FFrameBag.FActiveAction.SendType := stCancelSell;
               FFrameBag.FActiveAction.JSONObject := '0';
-              AContext.Connection.Socket.WriteLn(TJson.ObjectToJsonString(FFrameBag.FActiveAction), IndyUTF8Encoding(True));
+              AContext.Connection.Socket.WriteLn(TJson.ObjectToJsonString(FFrameBag.FActiveAction), IndyUTF8Encoding(true));
               AContext.Connection.Disconnect;
             end;
           end;
@@ -339,21 +377,22 @@ end;
 procedure TMainForm.CreateBagFrame;
 begin
   if Assigned(FFrameBag) then
-    begin
-      FFrameBag.Parent := nil;
-      FFrameBag.Visible := false;
-      FreeAndNil(FFrameBag);
-    end;
+  begin
+    FFrameBag.Parent := nil;
+    FFrameBag.Visible := false;
+    FreeAndNil(FFrameBag);
+  end;
 
-    FFrameBag := TFrameBag.Create(TabBag);
+  FFrameBag := TFrameBag.Create(TabBag);
+  FFrameBag.Parent := TabBag;
+  FFrameBag.layBag.Height := FFrameBag.Height - FFrameBag.layTopBorder.Height - FFrameBag.recCash.Height + 63;
+  FFrameBag.layBag.Width := FFrameBag.Width;
+  FFrameBag.CreateElements;
 
-    FFrameBag.CreateElements;
-    FFrameBag.Parent := TabBag;
-    FFrameBag.LoadBagElements;
+  FFrameBag.LoadBagElements;
 
-    FFrameBag.SwitchStyle.IsChecked := Person.IsClassicBag;
-    FFrameBag.BringToFront;
-    FFrameBag.timerScanner.Enabled := true;
+  FFrameBag.SwitchStyle.IsChecked := Person.IsClassicBag;
+  FFrameBag.BringToFront;
 
   Person.Cash := Person.Cash;
 end;
@@ -369,12 +408,6 @@ begin
   imgPersonHealth.Visible := true;
   FFrameIssuies.btnToActiveClick(nil);
   FFrameIssuies.ClearSelection;
-
-  if Assigned(FFrameBag) then
-    FFrameBag.timerScanner.Enabled := false;
-
-  // if Assigned(FFrameBagSection) then
-  // FFrameBagSection.timerScanner.Enabled := false;
 end;
 
 procedure TMainForm.btnToMapClick(Sender: TObject);
@@ -386,12 +419,6 @@ begin
   FFrameQRScanner.StopScan;
   StopDetector;
   imgPersonHealth.Visible := true;
-
-  if Assigned(FFrameBag) then
-    FFrameBag.timerScanner.Enabled := false;
-
-  // if Assigned(FFrameBagSection) then
-  // FFrameBagSection.timerScanner.Enabled := false;
 end;
 
 procedure TMainForm.btnToPercsClick(Sender: TObject);
@@ -402,12 +429,6 @@ begin
   FFrameQRScanner.StopScan;
   StopDetector;
   imgPersonHealth.Visible := false;
-
-  if Assigned(FFrameBag) then
-    FFrameBag.timerScanner.Enabled := false;
-
-  // if Assigned(FFrameBagSection) then
-  // FFrameBagSection.timerScanner.Enabled := false;
 end;
 
 procedure TMainForm.btnToQRScannerClick(Sender: TObject);
@@ -417,12 +438,6 @@ begin
   FFrameQRScanner.StartScan;
   StopDetector;
   imgPersonHealth.Visible := true;
-
-  if Assigned(FFrameBag) then
-    FFrameBag.timerScanner.Enabled := false;
-
-  // if Assigned(FFrameBagSection) then
-  // FFrameBagSection.timerScanner.Enabled := false;
 end;
 
 procedure TMainForm.StopDetector;
@@ -436,6 +451,19 @@ begin
       FFrameDetector.timerScannerArtefacts.Enabled := false;
       FFrameDetector.TimerSensor.Enabled := false;
     end;
+end;
+
+procedure TMainForm.timerScannerWifiMerchantTimer(Sender: TObject);
+begin
+{$IFDEF ANDROID}
+  TThread.CreateAnonymousThread(
+    procedure
+    begin
+      ConnectToMerchatZone; // Поиск зоны торговли
+      FFrameBag.laySells.Visible := FIsMerchantZone;
+      ActiveScaner(FFrameBag.laySells.Visible);
+    end).Start;
+{$ENDIF}
 end;
 
 end.

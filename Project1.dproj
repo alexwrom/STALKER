@@ -403,6 +403,11 @@
         <DCCReference Include="classes\classes.sell.pas"/>
         <DCCReference Include="classes\classes.send.pas"/>
         <DCCReference Include="classes\classes.action.pas"/>
+        <DCCReference Include="uFrameQRScaner.pas">
+            <Form>FrameQRScanner</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
         <RcItem Include="Resources\font\lcd.ttf">
             <ResourceType>FONT</ResourceType>
             <ResourceId>1</ResourceId>

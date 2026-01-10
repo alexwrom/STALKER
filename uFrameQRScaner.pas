@@ -10,14 +10,15 @@ uses
   ZXing.ReadResult,
   ZXing.ScanManager, FMX.Platform, Permissions, FMX.Controls.Presentation,
   uGlobal, Classes.sell, Rest.Json, Classes.send, FireDAC.Comp.Client, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient,
-  IdGlobal, Classes.action, StrUtils;
+  IdGlobal, Classes.action, StrUtils, FMX.Effects;
 
 type
   TFrameQRScanner = class(TFrame)
     Camera: TCameraComponent;
     imgCamera: TImage;
-    Image9: TImage;
     IdTCPClient: TIdTCPClient;
+    Rectangle1: TRectangle;
+    InnerGlowEffect1: TInnerGlowEffect;
   private
     fScanInProgress: Boolean;
     fFrameTake: Integer;
@@ -146,7 +147,7 @@ begin
 
               IdTCPClient.Connect;
               try
-                IdTCPClient.IOHandler.WriteLn(Person.Cash.ToString, IndyUTF8Encoding(True));
+                IdTCPClient.IOHandler.WriteLn(TJson.ObjectToJsonString(Person), IndyUTF8Encoding(True));
 
                 vAnswer := IdTCPClient.IOHandler.ReadLn(IndyUTF8Encoding(True));
                 vAction := TJson.JsonToObject<TAction>(vAnswer);
@@ -164,8 +165,19 @@ begin
                     Person.Cash := Person.Cash - vSell.Cost;
                     ReloadBag;
                   end;
+
                 stCancelSell:
-                  Showmessage('Недостаточно средств');
+                  ShowMessage('Недостаточно средств');
+
+                stUpdateData:
+                  begin
+
+                  end;
+
+                stUserExists:
+                  begin
+
+                  end;
               end;
 
             end;

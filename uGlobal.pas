@@ -24,7 +24,7 @@ type
   TMarkerType = (mtPoint, mtRad, mtAnomaly, mtBag, mtIssue, mtBase, mtSafe);
   TAnomalyType = (atElectro, atFire, atPhisic, atRadiation, atChimishe, atPSI);
   TBagType = (btMedical, btArmor, btWeapon, btArt, btDetector);
-  TSendType = (stSell, stIssue, stAnswerSell, stCancelSell);
+  TSendType = (stSell, stIssue, stAnswerSell, stCancelSell, stUpdateData, stUserExists);
 
   TMarkerData = record
     Marker: TImage;
@@ -132,6 +132,7 @@ type
     FCountContener: integer;
     FArmorId: integer;
     FWeaponId: integer;
+    FUserName: string;
     procedure SetHealth(const Value: double);
     procedure SetHealthArmor(AValue: double);
     procedure SetHealthWeapon(AValue: double);
@@ -141,6 +142,7 @@ type
   public
     constructor Create;
     property UserId: integer read FUserId write FUserId;
+    property UserName: string read FUserName write FUserName;
     property GroupId: integer read FGroupId write FGroupId;
     property Health: double read FHealth write SetHealth;
     property ArmorId: integer read FArmorId write FArmorId;
@@ -182,6 +184,7 @@ var
   FPlacesList: TList<TPlaceData>;
   FBagList: TList<TBagData>;
   FIsDead: boolean;
+  FIsMerchantZone : boolean;
 
 implementation
 
