@@ -1,0 +1,17 @@
+program StalkerAdmin;
+
+uses
+  System.StartUpCopy,
+  FMX.Forms,
+  uMainForm in 'uMainForm.pas' {Form1},
+  uGlobal in 'uGlobal.pas',
+  classes.action in '..\classes\classes.action.pas',
+  uGenericBaseData in 'uGenericBaseData.pas';
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.CreateForm(TForm1, Form1);
+  Application.Run;
+end.
