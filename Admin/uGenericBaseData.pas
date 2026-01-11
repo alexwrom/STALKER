@@ -4,9 +4,9 @@ interface
 
 uses
   uGlobal, System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  Generics.Collections, FireDAC.Comp.Client, StrUtils, FMX.Graphics;
+  Generics.Collections, FireDAC.Comp.Client, StrUtils, FMX.Graphics, Classes.action;
 
-function GoGenericBaseData(AUserID: integer): TList<UnicodeString>;
+function GoGenericBaseData(AUserID: integer; var APageCount: integer): UnicodeString;
 
 implementation
 
@@ -36,7 +36,7 @@ begin
   end;
 end;
 
-function GenerateTableInsert(ATable: string): TList<UnicodeString>;
+procedure GenerateTableInsert(ATable: string; var AStrData: string; var APageCount: integer);
 var
   FDQuery: TFDQuery;
   FDQueryCol: TFDQuery;
@@ -47,7 +47,6 @@ var
   vColValue: UnicodeString;
   vBitmap: TBitmap;
 begin
-  Result := TList<UnicodeString>.Create;
   vColumns := TList<TColumn>.Create;
   try
     ExeExec('PRAGMA Table_Info(' + QuotedStr(ATable) + ')', exActive, FDQueryCol);
@@ -91,7 +90,8 @@ begin
             end;
           end;
 
-          Result.Add('insert into ' + ATable + ' (' + vColName + ') values (' + vColValue + ');');
+          AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + 'insert into ' + ATable + ' (' + vColName + ') values (' + vColValue + ');';
+          APageCount := APageCount + 1;
           FDQuery.Next;
         end;
 
@@ -107,24 +107,24 @@ begin
 
 end;
 
-function GoGenericBaseData(AUserID: integer): TList<UnicodeString>;
+function GoGenericBaseData(AUserID: integer; var APageCount: integer): UnicodeString;
 begin
-  Result := TList<UnicodeString>.Create;
   // Порядок важен
-  Result.AddRange(GenerateTableInsert('statuses'));
-  Result.AddRange(GenerateTableInsert('armors'));
-  Result.AddRange(GenerateTableInsert('anomaly_types'));
-  Result.AddRange(GenerateTableInsert('anomalies'));
-  Result.AddRange(GenerateTableInsert('arts'));
-  Result.AddRange(GenerateTableInsert('critical_issuies'));
-  Result.AddRange(GenerateTableInsert('detectors'));
-  Result.AddRange(GenerateTableInsert('groups'));
-  Result.AddRange(GenerateTableInsert('issuies_block'));
-  Result.AddRange(GenerateTableInsert('issuies'));
-  Result.AddRange(GenerateTableInsert('medical'));
-  Result.AddRange(GenerateTableInsert('notifications'));
-  Result.AddRange(GenerateTableInsert('places'));
-  Result.AddRange(GenerateTableInsert('weapons'));
+  GenerateTableInsert('statuses', Result, APageCount);
+
+  GenerateTableInsert('armors', Result, APageCount);
+  GenerateTableInsert('anomaly_types', Result, APageCount);
+  GenerateTableInsert('anomalies', Result, APageCount);
+  GenerateTableInsert('arts', Result, APageCount);
+  GenerateTableInsert('critical_issuies', Result, APageCount);
+  GenerateTableInsert('detectors', Result, APageCount);
+  GenerateTableInsert('groups', Result, APageCount);
+  GenerateTableInsert('issuies_block', Result, APageCount);
+  GenerateTableInsert('issuies', Result, APageCount);
+  GenerateTableInsert('medical', Result, APageCount);
+  GenerateTableInsert('notifications', Result, APageCount);
+  GenerateTableInsert('places', Result, APageCount);
+  GenerateTableInsert('weapons', Result, APageCount);
 end;
 
 end.
