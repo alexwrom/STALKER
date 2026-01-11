@@ -280,6 +280,8 @@
         <DCCReference Include="uGlobal.pas"/>
         <DCCReference Include="..\classes\classes.action.pas"/>
         <DCCReference Include="uGenericBaseData.pas"/>
+        <DCCReference Include="..\..\ZXing.Delphi-3.10.0\DelphiZXingQRCode-master\Source\DelphiZXIngQRCode.pas"/>
+        <DCCReference Include="..\classes\classes.send.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

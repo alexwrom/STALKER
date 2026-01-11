@@ -46,6 +46,7 @@ var
   vColName: string;
   vColValue: UnicodeString;
   vBitmap: TBitmap;
+  vStr: string;
 begin
   vColumns := TList<TColumn>.Create;
   try
@@ -85,12 +86,32 @@ begin
             else if vColumns[i].TypeCol = 'BLOB' then
             begin
               vBitmap := TBitmap.Create;
-              vBitmap.Assign(FDQuery.FieldByName(vColumns[i].Name));
-              vColValue := vColValue + IfThen(i = 0, '', ',') + 'X' + QuotedStr(BitmapToHexString(vBitmap));
+              try
+                vBitmap.Assign(FDQuery.FieldByName(vColumns[i].Name));
+                vColValue := vColValue + IfThen(i = 0, '', ',') + 'X' + QuotedStr(BitmapToHexString(vBitmap));
+              except
+                vColValue := vColValue + IfThen(i = 0, '', ',') + 'NULL'
+              end;
+
             end;
           end;
 
-          AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + 'insert into ' + ATable + ' (' + vColName + ') values (' + vColValue + ');';
+          vStr := 'insert into ' + ATable + ' (' + vColName + ') values (' + vColValue + ');';
+
+          if Length(vStr) > 5000 then
+          begin
+            AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + Copy(vStr, 1, 5000);
+            Delete(vStr, 1, 5000);
+
+            while Length(vStr) > 5000 do
+            begin
+              AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + IfThen(AStrData = '', '', '~') + Copy(vStr, 1, 5000);
+              Delete(vStr, 1, 5000);
+            end;
+            AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + '~' + vStr;
+          end
+          else
+            AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + vStr;
           APageCount := APageCount + 1;
           FDQuery.Next;
         end;
@@ -111,11 +132,11 @@ function GoGenericBaseData(AUserID: integer; var APageCount: integer): UnicodeSt
 begin
   // Порядок важен
   GenerateTableInsert('statuses', Result, APageCount);
-
   GenerateTableInsert('armors', Result, APageCount);
   GenerateTableInsert('anomaly_types', Result, APageCount);
   GenerateTableInsert('anomalies', Result, APageCount);
   GenerateTableInsert('arts', Result, APageCount);
+  GenerateTableInsert('arts_to_map', Result, APageCount);
   GenerateTableInsert('critical_issuies', Result, APageCount);
   GenerateTableInsert('detectors', Result, APageCount);
   GenerateTableInsert('groups', Result, APageCount);
@@ -124,6 +145,7 @@ begin
   GenerateTableInsert('medical', Result, APageCount);
   GenerateTableInsert('notifications', Result, APageCount);
   GenerateTableInsert('places', Result, APageCount);
+  GenerateTableInsert('bag', Result, APageCount);
   GenerateTableInsert('weapons', Result, APageCount);
 end;
 

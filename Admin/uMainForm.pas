@@ -7,13 +7,15 @@ uses
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, IdContext,
   IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer, IdGlobal,
   FMX.Memo.Types, FMX.Controls.Presentation, FMX.ScrollBox, FMX.Memo, uGlobal, Rest.Json, Classes.action,
-  FireDAC.Comp.Client, FMX.StdCtrls, Generics.Collections, uGenericBaseData, StrUtils;
+  FireDAC.Comp.Client, FMX.StdCtrls, Generics.Collections, uGenericBaseData, StrUtils, Classes.send,
+  FMX.Objects;
 
 type
   TForm1 = class(TForm)
     IdTCPServer: TIdTCPServer;
-    Memo1: TMemo;
     Button1: TButton;
+    ImgQR: TImage;
+    Memo1: TMemo;
     procedure IdTCPServerExecute(AContext: TIdContext);
     procedure Button1Click(Sender: TObject);
   private
@@ -31,13 +33,20 @@ implementation
 
 procedure TForm1.Button1Click(Sender: TObject);
 var
-  StrData: string;
+  vSend: TSend;
   vPageCount: Integer;
+  I: Integer;
+  s:string;
 begin
-  vPageCount := 0;
-  StrData := GoGenericBaseData(1, vPageCount);
-  Memo1.Lines.Add('Count: ' + vPageCount.ToString);
-  Memo1.Lines.Add(StrData);
+memo1.Text := GoGenericBaseData(1, vPageCount);
+
+ { vSend := TSend.Create;
+  try
+    vSend.Ip := GetLocalIP;
+    GenerateQRCode(TJson.ObjectToJsonString(vSend), ImgQR);
+  finally
+    FreeAndNil(vSend);
+  end;     }
 end;
 
 procedure TForm1.IdTCPServerExecute(AContext: TIdContext);
@@ -60,12 +69,12 @@ begin
   begin
     FreeQueryAndConn(FDQuery);
 
-    ExeExec('insert into users(nickname) values (' + QuotedStr(vPerson.UserName) + ');', exActive, FDQuery);
+    ExeExec('insert into users (nickname) values (' + QuotedStr(vPerson.UserName) + ');', exExecute, FDQuery);
     vAnswer := TAction.Create;
     vAnswer.SendType := stUpdateData;
     vPageCount := 0;
     StrData := GoGenericBaseData(1, vPageCount);
-    StrData := 'insert into users(nickname) values (' + QuotedStr(vPerson.UserName) + ');' + #13#10 + StrData;
+    StrData := 'insert into users (nickname) values (' + QuotedStr(vPerson.UserName) + ');' + #13#10 + StrData;
     vAnswer.PageCount := vPageCount + 2;
   end
   else
@@ -84,7 +93,7 @@ begin
     end;
   end;
 
-  AContext.Connection.Socket.WriteLn(TJson.ObjectToJsonString(vAnswer) + IfThen(StrData = '', '', #13#10 + StrData), IndyUTF8Encoding(true));
+  AContext.Connection.Socket.WriteLn(TJson.ObjectToJsonString(vAnswer) + #13#10 + StrData, IndyUTF8Encoding(true));
   AContext.Connection.Disconnect;
 
 end;
