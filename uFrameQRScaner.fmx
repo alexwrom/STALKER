@@ -24,6 +24,13 @@ object FrameQRScanner: TFrameQRScanner
     Size.Width = 890.000000000000000000
     Size.Height = 460.000000000000000000
     Size.PlatformDefault = False
+    object ProgressBar: TProgressBar
+      Align = Top
+      Orientation = Horizontal
+      Size.Width = 890.000000000000000000
+      Size.Height = 20.000000000000000000
+      Size.PlatformDefault = False
+    end
   end
   object Camera: TCameraComponent
     Kind = FrontCamera
