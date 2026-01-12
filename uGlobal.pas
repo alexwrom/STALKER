@@ -260,22 +260,24 @@ var
   FDQuery: TFDQuery;
 begin
   FGroupId := Value;
-  ExeExec('select skin from groups wjere group_id = ' + Value.ToString, exActive, FDQuery);
-  try
-    if FDQuery.RecordCount = 1 then
-    begin
-      MainForm.FFramePercs.recSkin1.Fill.Bitmap.Bitmap.Assign(FDQuery.FieldByName('skin'));
-      MainForm.FFramePercs.recSkin2.Fill.Bitmap.Bitmap.Assign(FDQuery.FieldByName('skin'));
-      MainForm.FFramePercs.recSkin3.Fill.Bitmap.Bitmap.Assign(FDQuery.FieldByName('skin'));
-      MainForm.FFramePercs.recSkin3.Fill.Kind := TBrushKind.Bitmap;
-    end
-    else
-    begin
-      MainForm.FFramePercs.recSkin3.Fill.Color := $FF111611;
-      MainForm.FFramePercs.recSkin3.Fill.Kind := TBrushKind.Solid;
+
+  if Assigned(MainForm.FFramePercs) then
+  begin
+    ExeExec('select skin from groups where group_id = ' + Value.ToString, exActive, FDQuery);
+    try
+      if FDQuery.RecordCount = 1 then
+      begin
+        MainForm.FFramePercs.recSkin.Fill.Bitmap.Bitmap.Assign(FDQuery.FieldByName('skin'));
+        MainForm.FFramePercs.recSkin.Fill.Kind := TBrushKind.Bitmap;
+      end
+      else
+      begin
+        MainForm.FFramePercs.recSkin.Fill.Color := $FF111611;
+        MainForm.FFramePercs.recSkin.Fill.Kind := TBrushKind.Solid;
+      end;
+    finally
+      FreeQueryAndConn(FDQuery);
     end;
-  finally
-    FreeQueryAndConn(FDQuery);
   end;
 end;
 

@@ -19,7 +19,7 @@ type
   TFramePercs = class(TFrame)
     layLeftBlock: TLayout;
     LeftRicghtBlock: TLayout;
-    Rectangle1: TRectangle;
+    recSkin: TRectangle;
     layDetector: TLayout;
     GridPanelLayout1: TGridPanelLayout;
     laySlot1: TLayout;
@@ -305,6 +305,7 @@ begin
   infoLabChimishe.TextSettings.Font.Family := 'lcd';
 
   btnCloseInfo.TextSettings.Font.Family := 'lcd';
+
   ReloadPercs;
 end;
 

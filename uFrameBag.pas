@@ -659,7 +659,7 @@ procedure TFrameBag.btnChooseArtClick(Sender: TObject);
 var
   vQuery: TFDQuery;
 begin
-  ExeExec('update belt set art_id = ' + FBagList[layInfo.Tag].RowID.ToString + ' where slot = ' + igfSelect.Tag.ToString +';', exExecute, vQuery);
+  ExeExec('update belt set art_id = ' + FBagList[layInfo.Tag].RowID.ToString + ' where slot = ' + igfSelect.Tag.ToString + ';', exExecute, vQuery);
   ExeExec('insert into bag (table_name, row_id, health) values (''arts'',' + FArtsList[igfSelect.Tag - 1].ID.ToString + ', 100);', exExecute, vQuery);
   ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''arts'' and row_id = ' + FBagList[layInfo.Tag].RowID.ToString + ' limit 1);', exExecute, vQuery);
   ReloadPercs;
@@ -755,6 +755,10 @@ begin
       begin
         Parent := vImgBack;
         Align := TAlignLayout.Client;
+        Margins.Left := 5;
+        Margins.Top := 5;
+        Margins.Bottom := 5;
+        Margins.Right := 5;
         Bitmap.Assign(FBagList[i].Icon);
         HitTest := false;
       end;

@@ -19,6 +19,20 @@ type
     IdTCPClient: TIdTCPClient;
     Rectangle1: TRectangle;
     InnerGlowEffect1: TInnerGlowEffect;
+    layInfo: TLayout;
+    Rectangle8: TRectangle;
+    layPanel: TLayout;
+    Image10: TImage;
+    Image11: TImage;
+    Image13: TImage;
+    Image8: TImage;
+    Layout4: TLayout;
+    Image3: TImage;
+    btnYes: TCornerButton;
+    Rectangle5: TRectangle;
+    InnerGlowEffect2: TInnerGlowEffect;
+    Label1: TLabel;
+    procedure btnYesClick(Sender: TObject);
   private
     fScanInProgress: Boolean;
     fFrameTake: Integer;
@@ -53,6 +67,11 @@ begin
 
 end;
 
+procedure TFrameQRScanner.btnYesClick(Sender: TObject);
+begin
+  StartScan;
+end;
+
 procedure TFrameQRScanner.CameraPermissionRequestResult(Sender: TObject; const APermissions: TClassicStringDynArray; const AGrantResults: TClassicPermissionStatusDynArray);
 begin
   if (Length(AGrantResults) = 1) and (AGrantResults[0] = TPermissionStatus.Granted) then
@@ -66,6 +85,7 @@ end;
 
 procedure TFrameQRScanner.StartScan;
 begin
+  layInfo.Visible := False;
   fFrameTake := 0;
   fScanBitmap := nil;
   Camera.OnSampleBufferReady := CameraSampleBufferReady;
@@ -75,6 +95,7 @@ end;
 procedure TFrameQRScanner.StopScan;
 begin
   Camera.Active := false;
+  layInfo.Visible := True;
 end;
 
 procedure TFrameQRScanner.CameraSampleBufferReady(Sender: TObject; const ATime: TMediaTime);
@@ -158,7 +179,7 @@ begin
                   2: // Смена группировки
                     begin
                       Person.GroupId := vSend.Code.ToInteger;
-                      ExeExec('update users set group_id = ' + vSend.Code, exExecute, FDQuery);
+                      ExeExec(Format('update users set group_id = %d where user_id = %d;', [vSend.Code, Person.UserId]), exExecute, FDQuery);
                     end;
                   5: // Добавление в сумку
                     begin

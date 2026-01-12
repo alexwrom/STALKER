@@ -289,7 +289,7 @@ procedure TMainForm.FormShow(Sender: TObject);
 var
   vUserExists: boolean;
 begin
-  ExeExec('select user_id, group_id  from users limit 1;', exActive, FDQuery);
+  ExeExec('select user_id  from users limit 1;', exActive, FDQuery);
   vUserExists := FDQuery.RecordCount = 1;
   FreeQueryAndConn(FDQuery);
 
@@ -301,7 +301,7 @@ begin
   begin
     Person := TPerson.Create;
     Person.UserId := -1;
-    Person.GroupId := 0;
+    Person.GroupId := -1;
     Person.CountContener := -1;
     layEnterName.Visible := true;
   end;
@@ -328,6 +328,7 @@ begin
 
   FFramePercs := TFramePercs.Create(TabPercs);
   FFramePercs.Parent := TabPercs;
+  Person.GroupId := Person.GroupId;
 
   FFrameDetector := TFrameDetector.Create(TabDetector);
   FFrameDetector.Parent := TabDetector;
@@ -589,6 +590,7 @@ begin
   FFrameQRScanner.StopScan;
   StopDetector;
   imgPersonHealth.Visible := false;
+  Person.GroupId := Person.GroupId;
 end;
 
 procedure TMainForm.btnToQRScannerClick(Sender: TObject);
