@@ -301,7 +301,7 @@ begin
   begin
     Person := TPerson.Create;
     Person.UserId := -1;
-    Person.GroupId := -1;
+    Person.GroupId := 0;
     Person.CountContener := -1;
     layEnterName.Visible := true;
   end;

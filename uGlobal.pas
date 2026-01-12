@@ -138,12 +138,13 @@ type
     procedure SetHealthWeapon(AValue: double);
     procedure SetCash(const Value: Extended);
     procedure SetIsClassicBag(const Value: boolean);
+    procedure SetGroupId(const Value: integer);
 
   public
     constructor Create;
     property UserId: integer read FUserId write FUserId;
     property UserName: string read FUserName write FUserName;
-    property GroupId: integer read FGroupId write FGroupId;
+    property GroupId: integer read FGroupId write SetGroupId;
     property Health: double read FHealth write SetHealth;
     property ArmorId: integer read FArmorId write FArmorId;
     property ArmorHealth: double read FArmorHealth write FArmorHealth;
@@ -252,6 +253,30 @@ begin
     MainForm.FFrameBag.labCash.Text := Format('%.0n', [FCash]);
 
   ExeExec(Format('update users set cash = %d where user_id = %d;', [Round(FCash), Person.UserId]), exExecute, FDQuery);
+end;
+
+procedure TPerson.SetGroupId(const Value: integer);
+var
+  FDQuery: TFDQuery;
+begin
+  FGroupId := Value;
+  ExeExec('select skin from groups wjere group_id = ' + Value.ToString, exActive, FDQuery);
+  try
+    if FDQuery.RecordCount = 1 then
+    begin
+      MainForm.FFramePercs.recSkin1.Fill.Bitmap.Bitmap.Assign(FDQuery.FieldByName('skin'));
+      MainForm.FFramePercs.recSkin2.Fill.Bitmap.Bitmap.Assign(FDQuery.FieldByName('skin'));
+      MainForm.FFramePercs.recSkin3.Fill.Bitmap.Bitmap.Assign(FDQuery.FieldByName('skin'));
+      MainForm.FFramePercs.recSkin3.Fill.Kind := TBrushKind.Bitmap;
+    end
+    else
+    begin
+      MainForm.FFramePercs.recSkin3.Fill.Color := $FF111611;
+      MainForm.FFramePercs.recSkin3.Fill.Kind := TBrushKind.Solid;
+    end;
+  finally
+    FreeQueryAndConn(FDQuery);
+  end;
 end;
 
 procedure TPerson.SetHealth(const Value: double);

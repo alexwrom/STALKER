@@ -154,16 +154,30 @@ begin
 
               if vSend.Code <> '' then
               begin
-                case Copy(vSend.Code,1,2).ToInteger of
-                  1:vTableName := 'armors';
-                  2:vTableName := 'arts';
-                  3:vTableName := 'medical';
-                  4:vTableName := 'weapons';
+                case Length(vSend.Code) of
+                  2: // Смена группировки
+                    begin
+                      Person.GroupId := vSend.Code.ToInteger;
+                      ExeExec('update users set group_id = ' + vSend.Code, exExecute, FDQuery);
+                    end;
+                  5: // Добавление в сумку
+                    begin
+                      case Copy(vSend.Code, 1, 2).ToInteger of
+                        1:
+                          vTableName := 'armors';
+                        2:
+                          vTableName := 'arts';
+                        3:
+                          vTableName := 'medical';
+                        4:
+                          vTableName := 'weapons';
+                      end;
+
+                      vRowID := Copy(vSend.Code, 3, 3).ToInteger;
+
+                      ExeExec(Format('insert into bag (table_name, row_id, health) values(''%s'', %d, 100);', [vTableName, vRowID]), exExecute, FDQuery);
+                    end
                 end;
-
-                vRowID := Copy(vSend.Code,3,3).ToInteger;
-
-                ExeExec(Format('insert into bag (table_name, row_id, health) values(''%s'', %d, 100);', [vTableName, vRowID]), exExecute, FDQuery);
               end
               else
               begin
