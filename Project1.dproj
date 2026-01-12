@@ -412,7 +412,7 @@
             <ResourceType>FONT</ResourceType>
             <ResourceId>1</ResourceId>
         </RcItem>
-        <RcItem Include="Resources\font\STALKER.TTF">
+        <RcItem Include="Resources\font\montblancctt.ttf">
             <ResourceType>FONT</ResourceType>
             <ResourceId>2</ResourceId>
         </RcItem>
@@ -921,36 +921,36 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="Resources\font\STALKER.TTF" Configuration="Debug" Class="ProjectFile">
-                    <Platform Name="Android">
-                        <RemoteDir>.\assets\internal\</RemoteDir>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Resources\font\STALKER.TTF" Configuration="Debug" Class="ProjectFile">
                     <Platform Name="Android64">
                         <RemoteDir>.\assets\internal\</RemoteDir>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Resources\font\STALKER.TTF" Configuration="Debug" Class="ProjectFile">
+                <DeployFile LocalName="Resources\font\lcd.ttf" Configuration="Debug" Class="ProjectFile">
+                    <Platform Name="Android">
+                        <RemoteDir>.\assets\internal\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Resources\font\lcd.ttf" Configuration="Debug" Class="ProjectFile">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets\internal\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Resources\font\lcd.ttf" Configuration="Debug" Class="ProjectFile">
                     <Platform Name="Win32">
                         <RemoteDir>.\</RemoteDir>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Resources\font\lcd.ttf" Configuration="Debug" Class="ProjectFile">
+                <DeployFile LocalName="Resources\font\montblancctt.ttf" Configuration="Debug" Class="ProjectFile">
                     <Platform Name="Android">
                         <RemoteDir>.\assets\internal\</RemoteDir>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Resources\font\lcd.ttf" Configuration="Debug" Class="ProjectFile">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\</RemoteDir>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Resources\font\lcd.ttf" Configuration="Debug" Class="ProjectFile">
+                <DeployFile LocalName="Resources\font\montblancctt.ttf" Configuration="Debug" Class="ProjectFile">
                     <Platform Name="Win32">
                         <RemoteDir>.\</RemoteDir>
                         <Overwrite>true</Overwrite>

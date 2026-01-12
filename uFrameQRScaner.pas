@@ -10,7 +10,7 @@ uses
   ZXing.ReadResult,
   ZXing.ScanManager, FMX.Platform, Permissions, FMX.Controls.Presentation,
   uGlobal, Classes.sell, Rest.Json, Classes.send, FireDAC.Comp.Client, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient,
-  IdGlobal, Classes.action, StrUtils, FMX.Effects, FMX.Memo, FMX.Memo.Types, FMX.ScrollBox;
+  IdGlobal, Classes.action, StrUtils, FMX.Effects, FMX.Memo, FMX.Memo.Types, FMX.ScrollBox, FMX.Edit, FMX.Layouts, Generics.Collections;
 
 type
   TFrameQRScanner = class(TFrame)
@@ -19,7 +19,6 @@ type
     IdTCPClient: TIdTCPClient;
     Rectangle1: TRectangle;
     InnerGlowEffect1: TInnerGlowEffect;
-    ProgressBar: TProgressBar;
   private
     fScanInProgress: Boolean;
     fFrameTake: Integer;
@@ -33,6 +32,7 @@ type
     procedure StartScan;
     procedure StopScan;
     destructor Destroy; override;
+    constructor Create(AObject: TFmxObject);
   end;
 
 implementation
@@ -46,6 +46,12 @@ uses
   FMX.DialogService;
 
 {$R *.fmx}
+
+constructor TFrameQRScanner.Create(AObject: TFmxObject);
+begin
+  inherited Create(AObject);
+
+end;
 
 procedure TFrameQRScanner.CameraPermissionRequestResult(Sender: TObject; const APermissions: TClassicStringDynArray; const AGrantResults: TClassicPermissionStatusDynArray);
 begin
@@ -111,7 +117,6 @@ end;
 
 procedure TFrameQRScanner.ParseImage();
 begin
-
   TThread.CreateAnonymousThread(
     procedure
     var
@@ -120,7 +125,6 @@ begin
     begin
       fScanInProgress := True;
       ScanManager := TScanManager.Create(TBarcodeFormat.Auto, nil);
-
       try
 
         try
@@ -136,83 +140,89 @@ begin
             vSend: TSend;
             vAction: TAction;
             vSell: TSell;
-            vStringData: TStringList;
+            vStringData: TList<UnicodeString>;
             I: Integer;
+            Page, vRowID: Integer;
+            vStr, vTableName: string;
           begin
             if (ReadResult <> nil) then
             begin
+              StopScan;
 
               vSend := TSend.Create;
               vSend := TJson.JsonToObject<TSend>(ReadResult.Text);
 
-              IdTCPClient.Host := vSend.Ip;
-              IdTCPClient.Port := 2026;
-
-              IdTCPClient.Connect;
-              try
-                IdTCPClient.IOHandler.WriteLn(TJson.ObjectToJsonString(Person), IndyUTF8Encoding(True));
-                vStringData := TStringList.Create;
-                try
-
-                  vAction := TJson.JsonToObject<TAction>(IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(True)));
-                  ProgressBar.Value := 1;
-
-                  if vAction.PageCount > 1 then
-                  begin
-                    ProgressBar.Max := vAction.PageCount;
-
-                    while ProgressBar.Value <> ProgressBar.Max do
-                    begin
-                      vStringData.Add(IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(True)));
-                      ProgressBar.Value := ProgressBar.Value + 1;
-                    end;
-                  end;
-
-                  case vAction.SendType of
-                    stSell:
-                      begin
-                        vSell := TSell.Create;
-                        vSell := TJson.JsonToObject<TSell>(vAction.JSONObject);
-
-                        ExeExec(Format('insert into bag (table_name, row_id, health) values(''%s'', %d, %d);', [vSell.TableName, vSell.RowID, Round(vSell.Health)]), exExecute, FDQuery);
-                        Person.Cash := Person.Cash - vSell.Cost;
-                        ReloadBag;
-                      end;
-
-                    stCancelSell:
-                      ShowMessage('Недостаточно средств');
-
-                    stUpdateData:
-                      begin
-                        ProgressBar.Value := 1;
-
-                        for I := 0 to vStringData.Count - 1 do
-                        begin
-                          TThread.CreateAnonymousThread(
-                            procedure
-                            begin
-                              ExeExec(vStringData[I], exExecute, FDQuery);
-
-                              TThread.Synchronize(TThread.CurrentThread,
-                                procedure
-                                begin
-                                  ProgressBar.Value := ProgressBar.Value + 1;
-                                end);
-                            end);
-                        end;
-                      end;
-
-                    stUserExists:
-                      begin
-
-                      end;
-                  end;
-                finally
-                  FreeAndNil(vStringData);
+              if vSend.Code <> '' then
+              begin
+                case Copy(vSend.Code,1,2).ToInteger of
+                  1:vTableName := 'armors';
+                  2:vTableName := 'arts';
+                  3:vTableName := 'medical';
+                  4:vTableName := 'weapons';
                 end;
 
-              finally
-                IdTCPClient.Disconnect;
+                vRowID := Copy(vSend.Code,3,3).ToInteger;
+
+                ExeExec(Format('insert into bag (table_name, row_id, health) values(''%s'', %d, 100);', [vTableName, vRowID]), exExecute, FDQuery);
+              end
+              else
+              begin
+                IdTCPClient.Host := vSend.Ip;
+                IdTCPClient.Port := 2026;
+
+                IdTCPClient.Connect;
+                try
+                  IdTCPClient.IOHandler.WriteLn(TJson.ObjectToJsonString(Person), IndyUTF8Encoding(True));
+                  vStringData := TList<UnicodeString>.Create;
+                  try
+
+                    vAction := TJson.JsonToObject<TAction>(IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(True)));
+                    Page := 1;
+
+                    if vAction.PageCount > 1 then
+                    begin
+                      while Page <> vAction.PageCount do
+                      begin
+                        vStr := IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(True));
+
+                        if vStr[1] = '~' then
+                        begin
+                          vStringData[vStringData.Count - 1] := vStringData[vStringData.Count - 1] + Copy(vStr, 2, Length(vStr) - 1);
+                          Dec(Page);
+                        end
+                        else
+                          vStringData.Add(vStr);
+
+                        inc(Page);
+                      end;
+                    end;
+
+                    case vAction.SendType of
+                      stSell:
+                        begin
+                          vSell := TSell.Create;
+                          vSell := TJson.JsonToObject<TSell>(vAction.JSONObject);
+
+                          ExeExec(Format('insert into bag (table_name, row_id, health) values(''%s'', %d, %d);', [vSell.TableName, vSell.RowID, Round(vSell.Health)]), exExecute, FDQuery);
+                          Person.Cash := Person.Cash - vSell.Cost;
+                          ReloadBag;
+                        end;
+
+                      stCancelSell:
+                        ShowMessage('Недостаточно средств');
+
+                      stLoadArmor:
+                        begin
+
+                        end;
+                    end;
+                  finally
+                    FreeAndNil(vStringData);
+                  end;
+
+                finally
+                  IdTCPClient.Disconnect;
+                end;
               end;
             end;
           end);

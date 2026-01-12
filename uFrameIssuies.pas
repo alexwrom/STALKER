@@ -106,7 +106,7 @@ begin
   else
     FAllIssueList := TList<TIssueData>.Create;
 
-  ExeExec('select * from all_issuies where user_id = ' + Person.UserId.ToString + ';', exActive, vQuery);
+  ExeExec('select * from all_issuies;', exActive, vQuery);
   vQuery.First;
 
   while Not vQuery.Eof do
@@ -198,17 +198,21 @@ begin
     FNotificationsList := TList<TNotificationData>.Create;
 
   ExeExec('select * from notifications_for_me where group_id = ' + Person.GroupId.ToString + ';', exActive, vQuery);
-  vQuery.First;
 
-  while Not vQuery.Eof do
+  if vQuery.RecordCount > 0 then
   begin
-    vNotifItem.ID := vQuery.FieldByName('notification_id').AsInteger;
-    vNotifItem.Name := vQuery.FieldByName('name').AsString;
-    vNotifItem.MessageText := vQuery.FieldByName('message').AsString;
-    vNotifItem.IsOpen := vQuery.FieldByName('is_open').AsBoolean;
-    vNotifItem.LoadData := vQuery.FieldByName('load_data').AsString;
-    FNotificationsList.Add(vNotifItem);
-    vQuery.Next;
+    vQuery.First;
+
+    while Not vQuery.Eof do
+    begin
+      vNotifItem.ID := vQuery.FieldByName('notification_id').AsInteger;
+      vNotifItem.Name := vQuery.FieldByName('name').AsString;
+      vNotifItem.MessageText := vQuery.FieldByName('message').AsString;
+      vNotifItem.IsOpen := vQuery.FieldByName('is_open').AsBoolean;
+      vNotifItem.LoadData := vQuery.FieldByName('load_data').AsString;
+      FNotificationsList.Add(vNotifItem);
+      vQuery.Next;
+    end;
   end;
 
   FreeQueryAndConn(vQuery);

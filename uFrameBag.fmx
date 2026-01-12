@@ -9,7 +9,7 @@ object FrameBag: TFrameBag
     Size.Height = 237.000000000000000000
     Size.PlatformDefault = False
     TabIndex = 0
-    TabOrder = 10
+    TabOrder = 7
     TabPosition = None
     Sizes = (
       424s

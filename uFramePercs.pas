@@ -103,11 +103,11 @@ type
     Image14: TImage;
     btnArmorInfo: TSpeedButton;
     InnerGlowEffect3: TInnerGlowEffect;
-    Rectangle2: TRectangle;
+    recSkin1: TRectangle;
     InnerGlowEffect4: TInnerGlowEffect;
-    Rectangle3: TRectangle;
+    recSkin3: TRectangle;
     InnerGlowEffect1: TInnerGlowEffect;
-    Rectangle4: TRectangle;
+    recSkin2: TRectangle;
     Rectangle5: TRectangle;
     InnerGlowEffect2: TInnerGlowEffect;
     layClearArmorWeapon: TLayout;
@@ -203,9 +203,9 @@ var
 begin
   if layInfo.Tag = 0 then
   begin
-    ExeExec('insert into bag (table_name, row_id, health) select ''arts'', art_id, 100 from user_belt;', exExecute, vQuery);
+    ExeExec('insert into bag (table_name, row_id, health) select ''arts'', art_id, 100 from belt;', exExecute, vQuery);
     ExeExec('update users set armor_id = NULL, armor_health = 0 where user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
-    ExeExec('delete from user_belt where user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
+    ExeExec('delete from belt;', exExecute, vQuery);
     ExeExec('insert into bag (table_name, row_id, health) values (''armors'',' + Person.ArmorId.ToString + ',' + Person.ArmorHealth.ToString + ');', exExecute, vQuery);
   end
   else
@@ -221,8 +221,8 @@ procedure TFramePercs.btnClearArtClick(Sender: TObject);
 var
   vQuery: TFDQuery;
 begin
-  ExeExec('delete from user_belt where slot = ' + layInfo.Tag.ToString + ' and user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
-  ExeExec('update user_belt set slot = slot - 1 where slot > ' + layInfo.Tag.ToString + ' and user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
+  ExeExec('delete from belt where slot = ' + layInfo.Tag.ToString + ';', exExecute, vQuery);
+  ExeExec('update belt set slot = slot - 1 where slot > ' + layInfo.Tag.ToString + ';', exExecute, vQuery);
   ExeExec('insert into bag (table_name, row_id, health) values (''arts'',' + FArtsList[layInfo.Tag - 1].ID.ToString + ', 100);', exExecute, vQuery);
   ReloadPercs;
   layInfo.Visible := false;
@@ -313,8 +313,7 @@ var
   vQuery: TFDQuery;
 begin
   ReloadArmor;
-  ExeExec('select health, armor_health, weapon_health, weapon_icon, detector_id, level, radius, chimishe, electro, fire, phisic, psi, radiation, cash, armor_id, weapon_id, is_classic_bag  from user_info where user_id = ' + Person.UserId.ToString +
-    ';', exActive, vQuery);
+  ExeExec('select health, armor_health, weapon_health, weapon_icon, detector_id, level, radius, chimishe, electro, fire, phisic, psi, radiation, cash, armor_id, weapon_id, is_classic_bag  from user_info;', exActive, vQuery);
   Person.Health := vQuery.FieldByName('health').AsFloat;
   Person.Cash := vQuery.FieldByName('cash').AsInteger;
   Person.ArmorId := vQuery.FieldByName('armor_id').AsInteger;
@@ -339,7 +338,7 @@ procedure TFramePercs.ReloadArmor;
 var
   vQuery: TFDQuery;
 begin
-  ExeExec('select * from armors_data where user_id = ' + Person.UserId.ToString + ';', exActive, vQuery);
+  ExeExec('select * from armors_data;', exActive, vQuery);
 
   if vQuery.RecordCount <> 0 then
   begin
@@ -386,7 +385,7 @@ begin
   for i := 1 to Person.CountContener do
     (FindComponent('imgGlass' + i.ToString) as TImage).Bitmap := nil;
 
-  ExeExec('select a.chimishe, a.electro, a.fire, a.phisic, a.psi, a.radiation, a.icon, ub.slot, a.art_id from arts a join user_belt ub on ub.art_id = a.art_id where user_id = ' + Person.UserId.ToString + ' order by slot;', exActive, vQuery);
+  ExeExec('select a.chimishe, a.electro, a.fire, a.phisic, a.psi, a.radiation, a.icon, ub.slot, a.art_id from belt ub join arts a on ub.art_id = a.art_id order by slot;', exActive, vQuery);
 
   while not vQuery.Eof do
   begin
@@ -408,7 +407,7 @@ begin
       FArtsList.Add(vPerc);
     end
     else
-      ExeExec('delete from user_belt where slot = ' + vSlot.ToString + ' and user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery2);
+      ExeExec('delete from belt where slot = ' + vSlot.ToString + ';', exExecute, vQuery2);
 
     vQuery.Next;
   end;

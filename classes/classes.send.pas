@@ -7,13 +7,12 @@ uses uGlobal;
 type
   TSend = class
   private
-    //FSendType: TSendType;
+    FCode: string;
     FIp: string;
-    //FJSONObject: string;
+
   published
-    //property SendType: TSendType read FSendType write FSendType;
     property Ip: string read FIp write FIp;
-    //property JSONObject: string read FJSONObject write FJSONObject;
+    property Code: string read FCode write FCode;
   end;
 
 implementation

@@ -24,7 +24,7 @@ type
   TMarkerType = (mtPoint, mtRad, mtAnomaly, mtBag, mtIssue, mtBase, mtSafe);
   TAnomalyType = (atElectro, atFire, atPhisic, atRadiation, atChimishe, atPSI);
   TBagType = (btMedical, btArmor, btWeapon, btArt, btDetector);
-  TSendType = (stSell, stIssue, stAnswerSell, stCancelSell, stUpdateData, stUserExists);
+  TSendType = (stSell, stIssue, stAnswerSell, stCancelSell, stUpdateData, stUserExists, stLoadArmor);
 
   TMarkerData = record
     Marker: TImage;
@@ -163,7 +163,7 @@ type
 
 function GetUserAppPath: string;
 procedure GoToDetector;
-function ExeExec(Str: string; Typ: TExecType; var AQuery: TFDQuery): boolean;
+function ExeExec(Str: UnicodeString; Typ: TExecType; var AQuery: TFDQuery): boolean;
 function CalculateFastDistance(const Lat1, Lon1, Lat2, Lon2: double): double;
 procedure FreeQueryAndConn(var AQuery: TFDQuery);
 procedure SetHealthProgress(AHealthProgress: TRectangle; AValue: double);
@@ -175,6 +175,7 @@ procedure ReloadBag;
 procedure ReloadPercs;
 function IsFullBelt: boolean;
 procedure ActiveScaner(AValue: boolean);
+procedure StartApp;
 
 var
   Person: TPerson;
@@ -184,7 +185,7 @@ var
   FPlacesList: TList<TPlaceData>;
   FBagList: TList<TBagData>;
   FIsDead: boolean;
-  FIsMerchantZone : boolean;
+  FIsMerchantZone: boolean;
 
 implementation
 
@@ -225,15 +226,17 @@ var
   vQuery: TFDQuery;
 begin
   FIsClassicBag := Value;
-  ExeExec('update users set is_classic_bag = ' + FIsClassicBag.ToString + ' where user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
+
+  if Person.UserId <> -1 then
+    ExeExec('update users set is_classic_bag = ' + FIsClassicBag.ToString + ';', exExecute, vQuery);
 end;
 
 procedure CancelingAllIssuies;
 var
   vQuery: TFDQuery;
 begin
-  ExeExec('update issuies set status_id = 2 where status_id = 0 and issue_block_id in (select issue_block_id from user_issuies_block where user_id = ' + Person.UserId.ToString + ');', exExecute, vQuery);
-  ExeExec('update issuies_block set status_id = 2 where status_id = 0 and issue_block_id in (select issue_block_id from user_issuies_block where user_id = ' + Person.UserId.ToString + ');', exExecute, vQuery);
+  ExeExec('update issuies set status_id = 2 where status_id = 0);', exExecute, vQuery);
+  ExeExec('update issuies_block set status_id = 2 where status_id = 0);', exExecute, vQuery);
 
   ReloadIssuies;
   MainForm.FFrameMap.UpdateIssue;
@@ -363,7 +366,7 @@ begin
 {$ENDIF}
 end;
 
-function ExeExec(Str: string; Typ: TExecType; var AQuery: TFDQuery): boolean;
+function ExeExec(Str: UnicodeString; Typ: TExecType; var AQuery: TFDQuery): boolean;
 var
   FDConn: TFDConnection;
   FilePath: string;
@@ -518,7 +521,7 @@ function IsFullBelt: boolean;
 var
   vQuery: TFDQuery;
 begin
-  ExeExec('select count(1) as cnt from user_belt where user_id =  ' + Person.UserId.ToString + ';', exActive, vQuery);
+  ExeExec('select count(1) as cnt from belt;', exActive, vQuery);
   result := vQuery.FieldByName('cnt').AsInteger = Person.CountContener;
   FreeQueryAndConn(vQuery);
 end;
@@ -527,6 +530,11 @@ procedure ActiveScaner(AValue: boolean);
 begin
   MainForm.imgBtnQRScanner.Enabled := AValue;
   MainForm.imgBtnQRScanner.Opacity := IfThen(AValue, 1, 0.5);
+end;
+
+procedure StartApp;
+begin
+  MainForm.StartApp;
 end;
 
 end.

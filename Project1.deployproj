@@ -4,16 +4,16 @@
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
     <PropertyGroup>
-        <DeviceId Condition="'$(Platform)'=='Android'">222ca14c0411</DeviceId>
-        <DeviceId Condition="'$(Platform)'=='Android64'"/>
+        <DeviceId Condition="'$(Platform)'=='Android'">0123456789ABCDEF</DeviceId>
+        <DeviceId Condition="'$(Platform)'=='Android64'">222ca14c0411</DeviceId>
         <DeviceId Condition="'$(Platform)'=='iOSDevice64'"/>
         <DeviceId Condition="'$(Platform)'=='iOSSimARM64'"/>
     </PropertyGroup>
     <ItemGroup Condition="'$(Platform)'=='OSX64'"/>
     <ItemGroup Condition="'$(Platform)'=='Win32'">
-        <DeployFile Include="Resources\font\STALKER.TTF" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="Resources\font\montblancctt.ttf" Condition="'$(Config)'=='Debug'">
             <RemoteDir>Project1\</RemoteDir>
-            <RemoteName>STALKER.TTF</RemoteName>
+            <RemoteName>montblancctt.ttf</RemoteName>
             <DeployClass>ProjectFile</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -383,6 +383,15 @@
             <RemoteName>ic_launcher.png</RemoteName>
             <DeployClass>Android_LauncherIcon72</DeployClass>
             <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="Resources\font\montblancctt.ttf" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>Project1\assets\internal\</RemoteDir>
+            <RemoteName>montblancctt.ttf</RemoteName>
+            <DeployClass>ProjectFile</DeployClass>
+            <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -842,15 +851,6 @@
             <RemoteDir>Project1\assets\internal\</RemoteDir>
             <RemoteName>damage.mp3</RemoteName>
             <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="Resources\font\STALKER.TTF" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>Project1\assets\internal\</RemoteDir>
-            <RemoteName>STALKER.TTF</RemoteName>
-            <DeployClass>ProjectFile</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>

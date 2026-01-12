@@ -558,7 +558,8 @@ begin
   else
   begin
     ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''arts'' and row_id = ' + FBagList[vIndex].RowID.ToString + ' limit 1);', exExecute, vQuery);
-    ExeExec('insert into user_belt (art_id, slot, user_id) values (' + FBagList[vIndex].RowID.ToString + ', (select count(1) + 1 from user_belt where user_id = ' + Person.UserId.ToString + '), ' + Person.UserId.ToString + ');', exExecute, vQuery);
+    ExeExec('insert into belt (art_id, slot) values (' + FBagList[vIndex].RowID.ToString + ', (select count(1) + 1 from belt));', exExecute, vQuery);
+    ReloadPercs;
     ReloadBag;
   end;
   layInfo.Visible := false;
@@ -584,7 +585,7 @@ begin
   for i := 1 to Person.CountContener do
     (FindComponent('imgGlass' + i.ToString) as TImage).Bitmap := nil;
 
-  ExeExec('select a.chimishe, a.electro, a.fire, a.phisic, a.psi, a.radiation, a.icon, ub.slot, a.art_id from arts a join user_belt ub on ub.art_id = a.art_id where user_id = ' + Person.UserId.ToString + ' order by slot;', exActive, vQuery);
+  ExeExec('select a.chimishe, a.electro, a.fire, a.phisic, a.psi, a.radiation, a.icon, ub.slot, a.art_id from arts a join belt ub on ub.art_id = a.art_id order by slot;', exActive, vQuery);
 
   while not vQuery.Eof do
   begin
@@ -607,7 +608,7 @@ begin
       FArtsList.Add(vPerc);
     end
     else
-      ExeExec('delete from user_belt where slot = ' + vSlot.ToString + ' and user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery2);
+      ExeExec('delete from belt where slot = ' + vSlot.ToString + ';', exExecute, vQuery2);
 
     vQuery.Next;
   end;
@@ -658,7 +659,7 @@ procedure TFrameBag.btnChooseArtClick(Sender: TObject);
 var
   vQuery: TFDQuery;
 begin
-  ExeExec('update user_belt set art_id = ' + FBagList[layInfo.Tag].RowID.ToString + ' where slot = ' + igfSelect.Tag.ToString + ' and user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
+  ExeExec('update belt set art_id = ' + FBagList[layInfo.Tag].RowID.ToString + ' where slot = ' + igfSelect.Tag.ToString +';', exExecute, vQuery);
   ExeExec('insert into bag (table_name, row_id, health) values (''arts'',' + FArtsList[igfSelect.Tag - 1].ID.ToString + ', 100);', exExecute, vQuery);
   ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''arts'' and row_id = ' + FBagList[layInfo.Tag].RowID.ToString + ' limit 1);', exExecute, vQuery);
   ReloadPercs;
