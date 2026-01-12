@@ -306,6 +306,9 @@ begin
   FFrameIssuies := TFrameIssuies.Create(TabIssueis);
   FFrameIssuies.Parent := TabIssueis;
 
+  FFrameQRScanner := TFrameQRScanner.Create(TabQRScanner);
+  FFrameQRScanner.Parent := TabQRScanner;
+
   PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.ACCESS_COARSE_LOCATION', 'android.permission.CHANGE_WIFI_STATE', 'android.permission.CAMERA'],
     procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
     begin
@@ -336,13 +339,15 @@ begin
             vSell := TSell.Create;
             vSell := TJson.JsonToObject<TSell>(FFrameBag.FActiveAction.JSONObject);
 
+            FFrameBag.FActiveAction.PageCount := 1;
+
             if TJson.JsonToObject<TPerson>(vAnswerText).Cash - vSell.Cost >= 0 then
             begin
               ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''' + vSell.TableName + ''' and row_id = ' + vSell.RowID.ToString + ' and health = ' + vSell.Health.ToString + ' limit 1);', exExecute, FDQuery);
               Person.Cash := Person.Cash + vSell.Cost;
+
               AContext.Connection.Socket.WriteLn(TJson.ObjectToJsonString(FFrameBag.FActiveAction), IndyUTF8Encoding(true));
               AContext.Connection.Disconnect;
-
             end
             else
             begin
