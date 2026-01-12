@@ -145,8 +145,8 @@ begin
   GenerateTableInsert('medical', Result, APageCount);
   GenerateTableInsert('notifications', Result, APageCount);
   GenerateTableInsert('places', Result, APageCount);
-  GenerateTableInsert('bag', Result, APageCount);
   GenerateTableInsert('weapons', Result, APageCount);
+  GenerateTableInsert('bag', Result, APageCount);
 end;
 
 end.
