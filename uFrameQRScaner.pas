@@ -17,7 +17,7 @@ type
     Camera: TCameraComponent;
     imgCamera: TImage;
     IdTCPClient: TIdTCPClient;
-    Rectangle1: TRectangle;
+    recSkin: TRectangle;
     InnerGlowEffect1: TInnerGlowEffect;
     layInfo: TLayout;
     Rectangle8: TRectangle;
@@ -32,6 +32,8 @@ type
     Rectangle5: TRectangle;
     InnerGlowEffect2: TInnerGlowEffect;
     Label1: TLabel;
+    recSkin1: TRectangle;
+    InnerGlowEffect3: TInnerGlowEffect;
     procedure btnYesClick(Sender: TObject);
   private
     fScanInProgress: Boolean;
@@ -179,7 +181,7 @@ begin
                   2: // Смена группировки
                     begin
                       Person.GroupId := vSend.Code.ToInteger;
-                      ExeExec(Format('update users set group_id = %d where user_id = %d;', [vSend.Code, Person.UserId]), exExecute, FDQuery);
+                      ExeExec(Format('update users set group_id = %d where user_id = %d;', [vSend.Code.ToInteger(), Person.UserId]), exExecute, FDQuery);
                     end;
                   5: // Добавление в сумку
                     begin

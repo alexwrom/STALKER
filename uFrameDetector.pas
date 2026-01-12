@@ -31,8 +31,9 @@ type
     imgDetectorVilka: TImage;
     recBackForIndicatorVilka: TRectangle;
     labDisplayVilka: TLabel;
-    Rectangle1: TRectangle;
+    recSkin: TRectangle;
     InnerGlowEffect1: TInnerGlowEffect;
+    ShadowEffect1: TShadowEffect;
     procedure TimerSensorTimer(Sender: TObject);
     procedure timerScannerArtefactsTimer(Sender: TObject);
     procedure FrameResize(Sender: TObject);

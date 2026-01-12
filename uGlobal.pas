@@ -187,6 +187,7 @@ var
   FBagList: TList<TBagData>;
   FIsDead: boolean;
   FIsMerchantZone: boolean;
+  FArmorPerc: TPerc;
 
 implementation
 
@@ -258,26 +259,65 @@ end;
 procedure TPerson.SetGroupId(const Value: integer);
 var
   FDQuery: TFDQuery;
+  IsExistsSkin: boolean;
+
+  procedure SetSkin(ARec: TRectangle);
+  begin
+    if IsExistsSkin then
+    begin
+      ARec.Fill.Bitmap.Bitmap.Assign(FDQuery.FieldByName('skin'));
+      ARec.Fill.Kind := TBrushKind.Bitmap;
+    end
+    else
+    begin
+      ARec.Fill.Color := $FF111611;
+      ARec.Fill.Kind := TBrushKind.Solid;
+    end;
+  end;
+
 begin
   FGroupId := Value;
 
-  if Assigned(MainForm.FFramePercs) then
-  begin
-    ExeExec('select skin from groups where group_id = ' + Value.ToString, exActive, FDQuery);
-    try
-      if FDQuery.RecordCount = 1 then
-      begin
-        MainForm.FFramePercs.recSkin.Fill.Bitmap.Bitmap.Assign(FDQuery.FieldByName('skin'));
-        MainForm.FFramePercs.recSkin.Fill.Kind := TBrushKind.Bitmap;
-      end
-      else
-      begin
-        MainForm.FFramePercs.recSkin.Fill.Color := $FF111611;
-        MainForm.FFramePercs.recSkin.Fill.Kind := TBrushKind.Solid;
-      end;
-    finally
-      FreeQueryAndConn(FDQuery);
+  ExeExec('select skin from groups where group_id = ' + Value.ToString, exActive, FDQuery);
+  try
+    IsExistsSkin := FDQuery.RecordCount = 1;
+
+    if Assigned(MainForm.FFramePercs) then
+    begin
+      SetSkin(MainForm.FFramePercs.recSkin);
+      SetSkin(MainForm.FFramePercs.recSkin1);
     end;
+
+    if Assigned(MainForm.FFrameDetector) then
+      SetSkin(MainForm.FFrameDetector.recSkin);
+
+    if Assigned(MainForm.FFrameQRScanner) then
+    begin
+      SetSkin(MainForm.FFrameQRScanner.recSkin);
+      SetSkin(MainForm.FFrameQRScanner.recSkin1);
+    end;
+
+    if Assigned(MainForm.FFrameIssuies) then
+    begin
+      SetSkin(MainForm.FFrameIssuies.recSkin);
+      SetSkin(MainForm.FFrameIssuies.recSkin1);
+      SetSkin(MainForm.FFrameIssuies.recSkin2);
+    end;
+
+    if Assigned(MainForm.FFrameBag) then
+    begin
+      SetSkin(MainForm.FFrameBag.recSkin);
+      SetSkin(MainForm.FFrameBag.recSkin1);
+      SetSkin(MainForm.FFrameBag.recSkin2);
+      SetSkin(MainForm.FFrameBag.recSkin3);
+      SetSkin(MainForm.FFrameBag.recSkin4);
+      SetSkin(MainForm.FFrameBag.recSkin5);
+    end;
+
+    SetSkin(MainForm.recSkin);
+    SetSkin(MainForm.recSkin1);
+  finally
+    FreeQueryAndConn(FDQuery);
   end;
 end;
 
@@ -556,7 +596,7 @@ end;
 procedure ActiveScaner(AValue: boolean);
 begin
   MainForm.imgBtnQRScanner.Enabled := AValue;
-  MainForm.imgBtnQRScanner.Opacity := IfThen(AValue, 1, 0.5);
+  MainForm.imgBtnQRScanner.Opacity := IfThen(AValue, 0.7, 0.4);
 end;
 
 procedure StartApp;

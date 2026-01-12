@@ -67,7 +67,7 @@ type
     TabBag: TTabItem;
     IdTCPServer: TIdTCPServer;
     timerScannerWifiMerchant: TTimer;
-    recBackgroudMenu: TRectangle;
+    recSkin1: TRectangle;
     InnerGlowEffect3: TInnerGlowEffect;
     layEnterName: TLayout;
     Rectangle8: TRectangle;
@@ -92,6 +92,12 @@ type
     Label4: TLabel;
     Label5: TLabel;
     InnerGlowEffect1: TInnerGlowEffect;
+    recSkin: TRectangle;
+    InnerGlowEffect2: TInnerGlowEffect;
+    InnerGlowEffect4: TInnerGlowEffect;
+    InnerGlowEffect5: TInnerGlowEffect;
+    InnerGlowEffect6: TInnerGlowEffect;
+    InnerGlowEffect7: TInnerGlowEffect;
     procedure FormCreate(Sender: TObject);
     procedure btnToMapClick(Sender: TObject);
     procedure btnToPercsClick(Sender: TObject);
@@ -540,6 +546,7 @@ begin
   FFrameBag.BringToFront;
 
   Person.Cash := Person.Cash;
+  Person.GroupId := Person.GroupId;
 end;
 
 procedure TMainForm.eNickNameEnter(Sender: TObject);
@@ -569,6 +576,7 @@ begin
   imgPersonHealth.Visible := true;
   FFrameIssuies.btnToActiveClick(nil);
   FFrameIssuies.ClearSelection;
+  Person.GroupId := Person.GroupId;
 end;
 
 procedure TMainForm.btnToMapClick(Sender: TObject);
@@ -600,6 +608,7 @@ begin
   FFrameQRScanner.StartScan;
   StopDetector;
   imgPersonHealth.Visible := true;
+  Person.GroupId := Person.GroupId;
 end;
 
 procedure TMainForm.StopDetector;

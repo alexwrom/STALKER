@@ -21,15 +21,12 @@ type
     flElements: TFlowLayout;
     layBag: TLayout;
     layInfo: TLayout;
-    Rectangle8: TRectangle;
+    recBackground: TRectangle;
     layPanel: TLayout;
     imgBottom: TImage;
     imgTop: TImage;
     Image13: TImage;
     Image8: TImage;
-    layBtnClose: TLayout;
-    Image3: TImage;
-    btnCloseInfo: TCornerButton;
     imgPercs: TImage;
     infoRadiation: TRectangle;
     infoChimishe: TRectangle;
@@ -56,7 +53,6 @@ type
     Label2: TLabel;
     labCountSlots: TLabel;
     recHealth: TRectangle;
-    InnerGlowEffect5: TInnerGlowEffect;
     ImgHealth: TImage;
     HealthProgress: TRectangle;
     recHealthRestore: TRectangle;
@@ -71,10 +67,7 @@ type
     Image12: TImage;
     Image14: TImage;
     Image15: TImage;
-    Layout5: TLayout;
-    Image16: TImage;
-    btnCloseChangeSlot: TCornerButton;
-    Image17: TImage;
+    ImgPercsArt: TImage;
     recRadiationArt: TRectangle;
     recChimisheArt: TRectangle;
     recElectroArt: TRectangle;
@@ -145,18 +138,6 @@ type
     laySells: TLayout;
     Image18: TImage;
     bntSells: TCornerButton;
-    Rectangle4: TRectangle;
-    InnerGlowEffect9: TInnerGlowEffect;
-    Rectangle6: TRectangle;
-    InnerGlowEffect11: TInnerGlowEffect;
-    laySellQR: TLayout;
-    Rectangle7: TRectangle;
-    Layout9: TLayout;
-    Image25: TImage;
-    btnCloseQR: TCornerButton;
-    Rectangle27: TRectangle;
-    InnerGlowEffect16: TInnerGlowEffect;
-    imgQR: TImage;
     recCost: TRectangle;
     InnerGlowEffect12: TInnerGlowEffect;
     labElementCost: TLabel;
@@ -164,9 +145,6 @@ type
     TabControl: TTabControl;
     TabClassic: TTabItem;
     TabSection: TTabItem;
-    Rectangle1: TRectangle;
-    InnerGlowEffect1: TInnerGlowEffect;
-    Rectangle9: TRectangle;
     InnerGlowEffect13: TInnerGlowEffect;
     VertScrollBox2: TVertScrollBox;
     Image10: TImage;
@@ -203,6 +181,33 @@ type
     Layout14: TLayout;
     Image24: TImage;
     Image26: TImage;
+    recSkin: TRectangle;
+    recSkin1: TRectangle;
+    InnerGlowEffect14: TInnerGlowEffect;
+    Image27: TImage;
+    recSkin2: TRectangle;
+    Layout2: TLayout;
+    Rectangle2: TRectangle;
+    InnerGlowEffect15: TInnerGlowEffect;
+    Image29: TImage;
+    recSkin3: TRectangle;
+    recSkin4: TRectangle;
+    Layout15: TLayout;
+    Image30: TImage;
+    laySellQR: TLayout;
+    recSkin5: TRectangle;
+    InnerGlowEffect16: TInnerGlowEffect;
+    imgQR: TImage;
+    btnCloseChangeSlot: TSpeedButton;
+    InnerGlowEffect1: TInnerGlowEffect;
+    btnCloseInfo: TSpeedButton;
+    InnerGlowEffect5: TInnerGlowEffect;
+    btnCloseQR: TSpeedButton;
+    InnerGlowEffect9: TInnerGlowEffect;
+    InnerGlowEffect11: TInnerGlowEffect;
+    InnerGlowEffect17: TInnerGlowEffect;
+    Layout5: TLayout;
+    Layout9: TLayout;
     procedure SwitchStyleSwitch(Sender: TObject);
     procedure btnCloseInfoClick(Sender: TObject);
     procedure btnAddArmorClick(Sender: TObject);
@@ -224,6 +229,7 @@ type
     procedure CreateBagBackgroundSection;
     procedure CreateElementsSection;
     procedure ClearElementsSection;
+    procedure Compare(AOld, AChange: TRectangle);
 
     { Private declarations }
   public
@@ -335,6 +341,7 @@ begin
     Height := 63;
     Bitmap.Assign(imgList63x63.Source[1].MultiResBitmap[0].Bitmap);
     HitTest := false;
+    Opacity := 0.95;
   end;
 end;
 
@@ -419,6 +426,7 @@ begin
             end;
         end;
 
+        Opacity := 0.95;
         HitTest := false;
       end;
 
@@ -473,8 +481,8 @@ var
   vSend: TSend;
   vSell: TSell;
 begin
-  laySellQR.Visible := True;
   layInfo.Visible := false;
+  laySellQR.Visible := true;
 
   if not Assigned(FActiveAction) then
     FActiveAction := TAction.Create;
@@ -509,6 +517,9 @@ begin
 
         ExeExec('update users set armor_id = ' + FBagList[vIndex].RowID.ToString + ', armor_health = ' + FBagList[vIndex].Health.ToString + ' where user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
         ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''armors'' and row_id = ' + FBagList[vIndex].RowID.ToString + ' and health = ' + FBagList[vIndex].Health.ToString + ' limit 1);', exExecute, vQuery);
+
+        ExeExec('insert into bag (table_name, row_id, health) select ''arts'', art_id, 100 from belt where slot > ' + labCountSlots.Text + ';', exExecute, vQuery);
+        ExeExec('delete from belt where slot > ' + labCountSlots.Text + ';', exExecute, vQuery);
       end;
     btWeapon:
       begin
@@ -616,23 +627,23 @@ begin
   FreeQueryAndConn(vQuery);
 end;
 
-procedure TFrameBag.btnArtClick(Sender: TObject);
-  procedure Compare(AArt, AChangeArt: TRectangle);
+procedure TFrameBag.Compare(AOld, AChange: TRectangle);
+begin
+  if AChange.Width > AOld.Width then
   begin
-    if AChangeArt.Width > AArt.Width then
-    begin
-      AArt.BringToFront;
-      AChangeArt.Fill.Color := cWorseColor;
-      AArt.Fill.Color := cEgualColor;
-    end
-    else
-    begin
-      AChangeArt.BringToFront;
-      AChangeArt.Fill.Color := cEgualColor;
-      AArt.Fill.Color := cBetterColor;
-    end
-  end;
+    AOld.BringToFront;
+    AChange.Fill.Color := cWorseColor;
+    AOld.Fill.Color := cEgualColor;
+  end
+  else
+  begin
+    AChange.BringToFront;
+    AChange.Fill.Color := cEgualColor;
+    AOld.Fill.Color := cBetterColor;
+  end
+end;
 
+procedure TFrameBag.btnArtClick(Sender: TObject);
 begin
   if FArtsList.Count >= (Sender as TSpeedButton).Tag then
   begin
@@ -652,6 +663,8 @@ begin
     Compare(recPsiArt, recPsiChangeArt);
     Compare(recPhisicArt, recPhisicChangeArt);
     Compare(recFireArt, recFireChangeArt);
+
+    btnChooseArt.Enabled := true;
   end;
 end;
 
@@ -659,6 +672,7 @@ procedure TFrameBag.btnChooseArtClick(Sender: TObject);
 var
   vQuery: TFDQuery;
 begin
+  btnChooseArt.Enabled := false;
   ExeExec('update belt set art_id = ' + FBagList[layInfo.Tag].RowID.ToString + ' where slot = ' + igfSelect.Tag.ToString + ';', exExecute, vQuery);
   ExeExec('insert into bag (table_name, row_id, health) values (''arts'',' + FArtsList[igfSelect.Tag - 1].ID.ToString + ', 100);', exExecute, vQuery);
   ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''arts'' and row_id = ' + FBagList[layInfo.Tag].RowID.ToString + ' limit 1);', exExecute, vQuery);
@@ -747,6 +761,7 @@ begin
             end;
         end;
 
+        Opacity := 0.95;
         HitTest := false;
       end;
 
@@ -823,7 +838,7 @@ begin
         layUse.Visible := True;
         layAddArt.Visible := false;
         layAddArmor.Visible := false;
-        layPanel.Height := layUse.Height + laySells.Height + recCost.Height + layBtnClose.Height + imgBottom.Height + imgTop.Height;
+        layPanel.Height := layUse.Height + laySells.Height + imgBottom.Height + imgTop.Height;
         layInfo.Visible := True;
       end;
 
@@ -860,7 +875,7 @@ begin
         layAddArmor.Visible := false;
         layAddArt.Visible := True;
         layUse.Visible := false;
-        layPanel.Height := imgPercs.Height + recCost.Height + layBtnClose.Height + imgBottom.Height + imgTop.Height;
+        layPanel.Height := imgPercs.Height + 25 + imgBottom.Height + imgTop.Height;
         layInfo.Visible := True;
       end;
 
@@ -874,12 +889,38 @@ begin
         infoPhisic.Width := infoPhisic.Tag * FBagList[vIndex].Percs.PhisicArmor / 100;
         infoFire.Width := infoFire.Tag * FBagList[vIndex].Percs.FireArmor / 100;
 
-        infoRadiationFullArmor.Width := infoRadiationFullArmor.Tag * FBagList[vIndex].Percs.RadiationArmor / FBagList[vIndex].Health;
-        infoChimisheFullArmor.Width := infoChimisheFullArmor.Tag * FBagList[vIndex].Percs.ChimisheArmor / FBagList[vIndex].Health;
-        infoElectroFullArmor.Width := infoElectroFullArmor.Tag * FBagList[vIndex].Percs.ElectroArmor / FBagList[vIndex].Health;
-        infoPsiFullArmor.Width := infoPsiFullArmor.Tag * FBagList[vIndex].Percs.PsiArmor / FBagList[vIndex].Health;
-        infoPhisicFullArmor.Width := infoPhisicFullArmor.Tag * FBagList[vIndex].Percs.PhisicArmor / FBagList[vIndex].Health;
-        infoFireFullArmor.Width := infoFireFullArmor.Tag * FBagList[vIndex].Percs.FireArmor / FBagList[vIndex].Health;
+        if Person.ArmorId > 0 then
+        begin
+          infoRadiationFullArmor.Width := infoRadiationFullArmor.Tag * FArmorPerc.RadiationArmor / FBagList[vIndex].Health;
+          infoChimisheFullArmor.Width := infoChimisheFullArmor.Tag * FArmorPerc.ChimisheArmor / FBagList[vIndex].Health;
+          infoElectroFullArmor.Width := infoElectroFullArmor.Tag * FArmorPerc.ElectroArmor / FBagList[vIndex].Health;
+          infoPsiFullArmor.Width := infoPsiFullArmor.Tag * FArmorPerc.PsiArmor / FBagList[vIndex].Health;
+          infoPhisicFullArmor.Width := infoPhisicFullArmor.Tag * FArmorPerc.PhisicArmor / FBagList[vIndex].Health;
+          infoFireFullArmor.Width := infoFireFullArmor.Tag * FArmorPerc.FireArmor / FBagList[vIndex].Health;
+
+          Compare(infoRadiation, infoRadiationFullArmor);
+          Compare(infoChimishe, infoChimisheFullArmor);
+          Compare(infoElectro, infoElectroFullArmor);
+          Compare(infoPsi, infoPsiFullArmor);
+          Compare(infoPhisic, infoPhisicFullArmor);
+          Compare(infoFire, infoFireFullArmor);
+        end
+        else
+        begin
+          infoRadiationFullArmor.Width := infoRadiationFullArmor.Tag * FBagList[vIndex].Percs.RadiationArmor / FBagList[vIndex].Health;
+          infoChimisheFullArmor.Width := infoChimisheFullArmor.Tag * FBagList[vIndex].Percs.ChimisheArmor / FBagList[vIndex].Health;
+          infoElectroFullArmor.Width := infoElectroFullArmor.Tag * FBagList[vIndex].Percs.ElectroArmor / FBagList[vIndex].Health;
+          infoPsiFullArmor.Width := infoPsiFullArmor.Tag * FBagList[vIndex].Percs.PsiArmor / FBagList[vIndex].Health;
+          infoPhisicFullArmor.Width := infoPhisicFullArmor.Tag * FBagList[vIndex].Percs.PhisicArmor / FBagList[vIndex].Health;
+          infoFireFullArmor.Width := infoFireFullArmor.Tag * FBagList[vIndex].Percs.FireArmor / FBagList[vIndex].Health;
+
+          infoRadiationFullArmor.Fill.Color := $5AC98826;
+          infoChimisheFullArmor.Fill.Color := $5AC98826;
+          infoElectroFullArmor.Fill.Color := $5AC98826;
+          infoPsiFullArmor.Fill.Color := $5AC98826;
+          infoPhisicFullArmor.Fill.Color := $5AC98826;
+          infoFireFullArmor.Fill.Color := $5AC98826;
+        end;
 
         infoLabradiation.Text := IfThen(FBagList[vIndex].Percs.RadiationArmor = 0, '', FBagList[vIndex].Percs.RadiationArmor.ToString + ' %');
         infoLabChimishe.Text := IfThen(FBagList[vIndex].Percs.ChimisheArmor = 0, '', FBagList[vIndex].Percs.ChimisheArmor.ToString + ' %');
@@ -899,7 +940,7 @@ begin
         layAddArmor.Visible := True;
         layAddArt.Visible := false;
         layUse.Visible := false;
-        layPanel.Height := imgPercs.Height + recCountSlots.Height + recHealth.Height + recCost.Height + layBtnClose.Height + imgBottom.Height + imgTop.Height;
+        layPanel.Height := imgPercs.Height + recCountSlots.Height + recHealth.Height + 25 + imgBottom.Height + imgTop.Height;
         layInfo.Visible := True;
       end;
 
@@ -916,7 +957,7 @@ begin
         layAddArmor.Visible := True;
         layAddArt.Visible := false;
         layUse.Visible := false;
-        layPanel.Height := layAddArmor.Height + laySells.Height + recCost.Height + layBtnClose.Height + imgBottom.Height + imgTop.Height;
+        layPanel.Height := layAddArmor.Height + laySells.Height + imgBottom.Height + imgTop.Height;
         layInfo.Visible := True;
       end;
   end;

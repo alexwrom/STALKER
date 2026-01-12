@@ -59,12 +59,10 @@ type
     layInfo: TLayout;
     Rectangle8: TRectangle;
     layPanel: TLayout;
-    Image10: TImage;
-    Image11: TImage;
+    ImgBottom: TImage;
+    ImgTop: TImage;
     Image13: TImage;
     Image8: TImage;
-    Layout4: TLayout;
-    Image3: TImage;
     imgPercs: TImage;
     infoRadiation: TRectangle;
     infoChimishe: TRectangle;
@@ -77,7 +75,6 @@ type
     btnSlot3Info: TSpeedButton;
     btnSlot4Info: TSpeedButton;
     btnSlot5Info: TSpeedButton;
-    btnCloseInfo: TCornerButton;
     ImgArmorHealth: TImage;
     ArmorHealthProgress: TRectangle;
     Layout1: TLayout;
@@ -103,11 +100,11 @@ type
     Image14: TImage;
     btnArmorInfo: TSpeedButton;
     InnerGlowEffect3: TInnerGlowEffect;
-    recSkin1: TRectangle;
+    recDetector: TRectangle;
     InnerGlowEffect4: TInnerGlowEffect;
-    recSkin3: TRectangle;
+    recArmor: TRectangle;
     InnerGlowEffect1: TInnerGlowEffect;
-    recSkin2: TRectangle;
+    recWeapon: TRectangle;
     Rectangle5: TRectangle;
     InnerGlowEffect2: TInnerGlowEffect;
     layClearArmorWeapon: TLayout;
@@ -131,6 +128,10 @@ type
     infoRadiationFullArmor: TRectangle;
     infoPhisicFullArmor: TRectangle;
     infoPsiFullArmor: TRectangle;
+    recSkin1: TRectangle;
+    InnerGlowEffect5: TInnerGlowEffect;
+    btnCloseInfo: TSpeedButton;
+    InnerGlowEffect6: TInnerGlowEffect;
     procedure btnInfoClick(Sender: TObject);
     procedure btnCloseInfoClick(Sender: TObject);
     procedure btnArmorInfoClick(Sender: TObject);
@@ -141,7 +142,6 @@ type
   private
     { Private declarations }
     FArtsList: TList<TPerc>;
-    FArmorPerc: TPerc;
     procedure ReloadArmor;
 
   public
@@ -191,7 +191,7 @@ begin
   layRestoreArmorWeapon.Visible := true;
   btnRestoreArmorWeapon.Enabled := Person.ArmorHealth < 100;
   layClearArt.Visible := false;
-  layPanel.Height := 54 + layClearArmorWeapon.Height + layRestoreArmorWeapon.Height + imgPercs.Height;
+  layPanel.Height := ImgBottom.Height + ImgTop.Height + layClearArmorWeapon.Height + layRestoreArmorWeapon.Height + imgPercs.Height;
   layInfo.Tag := 0;
   imgPercs.Visible := true;
   layInfo.Visible := true;
@@ -263,7 +263,7 @@ begin
     layClearArmorWeapon.Visible := false;
     layRestoreArmorWeapon.Visible := false;
     imgPercs.Visible := true;
-    layPanel.Height := 54 + layClearArt.Height + imgPercs.Height;
+    layPanel.Height := ImgBottom.Height + ImgTop.Height + layClearArt.Height + imgPercs.Height;
     layInfo.Visible := true;
   end;
 end;
@@ -281,7 +281,7 @@ begin
   layClearArmorWeapon.Visible := true;
   layRestoreArmorWeapon.Visible := true;
   btnRestoreArmorWeapon.Enabled := Person.WeaponHealth < 100;
-  layPanel.Height := 54 + layClearArmorWeapon.Height + layRestoreArmorWeapon.Height;
+  layPanel.Height := layClearArmorWeapon.Height + layRestoreArmorWeapon.Height + ImgBottom.Height + ImgTop.Height;
   layInfo.Visible := true;
 end;
 

@@ -21,7 +21,6 @@ type
     ZoomLayout: TLayout;
     btnZoomIn: TButton;
     btnZoomOut: TButton;
-    btnResetZoom: TButton;
     GestureManager: TGestureManager;
     LocationMarker: TLayout;
     LayMapControls: TLayout;
@@ -910,7 +909,6 @@ begin
   // Обновляем состояние кнопок
   btnZoomIn.Enabled := FCurrentScale < FMaxScale;
   btnZoomOut.Enabled := FCurrentScale > FMinScale;
-  btnResetZoom.Enabled := Abs(FCurrentScale - 1.0) > 0.01;
 end;
 
 procedure TFrameMap.UpdateMapBounds;
