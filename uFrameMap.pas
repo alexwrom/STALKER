@@ -65,7 +65,12 @@ type
     Layout3: TLayout;
     Layout4: TLayout;
     Layout5: TLayout;
-    Layout6: TLayout;
+    timerCheckCritical: TTimer;
+    timerCritical: TTimer;
+    MediaPlayerStartCritical: TMediaPlayer;
+    MediaPlayerNotificationCritical: TMediaPlayer;
+    MediaPlayerStopCritical: TMediaPlayer;
+    CheckBox1: TCheckBox;
     procedure MapImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure btnZoomInClick(Sender: TObject);
     procedure btnZoomOutClick(Sender: TObject);
@@ -77,6 +82,8 @@ type
     procedure btnDeleteNoClick(Sender: TObject);
     procedure btnDeleteYesClick(Sender: TObject);
     procedure TimerSensorTimer(Sender: TObject);
+    procedure timerCriticalTimer(Sender: TObject);
+    procedure timerCheckCriticalTimer(Sender: TObject);
   private
     FMapLoaded: Boolean;
     FOriginalMapWidth: Double;
@@ -119,6 +126,7 @@ type
     procedure UpdateBaseSafeDead;
     procedure ScanBaseSafeDead;
     procedure LoadAnomalies;
+    procedure ScanInnerCritical;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -181,6 +189,9 @@ begin
   MediaPlayerAnomaly.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'detector.mp3');
   MediaPlayerDead.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'zvuk-smerti.mp3');
   MediaPlayerDamage.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'damage.mp3');
+  MediaPlayerStartCritical.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'start_critical.mp3');
+  MediaPlayerNotificationCritical.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'notification_critical.mp3');
+  MediaPlayerStopCritical.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'barmen_after_surge.mp3');
 end;
 
 procedure TFrameMap.LoadAnomalies;
@@ -318,8 +329,47 @@ begin
 
     if vDistance <= FPlacesList[I].Radius then
     begin
-      Person.Health := Person.Health + 20.1;
+      Person.Health := Person.Health + 20;
     end;
+  end;
+end;
+
+procedure TFrameMap.ScanInnerCritical;
+var
+  I: integer;
+  vDistance: Double;
+  vIsInnerCritical: Boolean;
+begin
+  vIsInnerCritical := True;
+
+  for I := 0 to FPlacesList.Count - 1 do
+  begin
+
+    vDistance := CalculateFastDistance(FLocation.Latitude, FLocation.Longitude, FPlacesList[I].Coords.Latitude, FPlacesList[I].Coords.Longitude);
+
+    if vDistance <= FPlacesList[I].Radius then
+    begin
+      vIsInnerCritical := False;
+      break;
+    end;
+  end;
+
+  if vIsInnerCritical and CheckBox1.ischecked then
+  begin
+    if (FSecondBeforeStartDamage <= 0) and (NOT FIsDead) then
+    begin
+      MediaPlayerDamage.CurrentTime := 0;
+      MediaPlayerDamage.Play;
+      StartDamageGlow;
+      Person.Health := Person.Health - 2;
+    end;
+  end
+  else
+  begin
+    MediaPlayerDamage.Stop;
+    MediaPlayerDamage.CurrentTime := 0;
+    MediaPlayerNotificationCritical.Stop;
+    MediaPlayerNotificationCritical.CurrentTime := 0;
   end;
 end;
 
@@ -449,13 +499,6 @@ begin
       end;
 
       Person.Health := Person.Health - FAnomalyList[I].Power * (vDistance / FAnomalyList[I].Radius) * ((100 - vBlockDamage) / 100);
-
-      if Person.Health <= 0 then
-      begin
-        MediaPlayerDead.CurrentTime := 0;
-        MediaPlayerDead.Volume := vDistance / FAnomalyList[I].Radius * 100;
-        MediaPlayerDead.Play;
-      end;
     end
     else if vDistance <= 40 then
     begin
@@ -649,8 +692,7 @@ begin
     ScrollBox.ViewportPosition := TPointF.Create(0, 0);
 
     // Получаем позицию центра маркера относительно MapLayout
-    MarkerCenter := (TPointF.Create((LocationMarker.LocalToAbsolute(TPointF.Zero).X + LocationMarker.Width / 2) * MapLayout.Scale.X,
-      (LocationMarker.LocalToAbsolute(TPointF.Zero).Y + LocationMarker.Height / 2)) * MapLayout.Scale.Y);
+    MarkerCenter := (TPointF.Create((LocationMarker.LocalToAbsolute(TPointF.Zero).X + LocationMarker.Width / 2) * MapLayout.Scale.X, (LocationMarker.LocalToAbsolute(TPointF.Zero).Y + LocationMarker.Height / 2)) * MapLayout.Scale.Y);
     MarkerCenter := ScrollBox.AbsoluteToLocal(MarkerCenter);
 
     // Вычисляем целевую позицию прокрутки для центрирования маркера
@@ -851,6 +893,63 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TFrameMap.timerCheckCriticalTimer(Sender: TObject);
+var
+  I: integer;
+  a: tdatetime;
+begin
+  if Assigned(FCritical) then
+  begin
+    if Not FIsCriticalStart then
+    begin
+
+      for I := 0 to FCritical.Count - 1 do
+        if FormatDateTime('h:n', Time()) = FormatDateTime('h:n', FCritical[I].TimeStart) then
+        begin
+          FCurrentCritical := FCritical[I];
+          FSecondBeforeStartDamage := FCurrentCritical.MinuteBeforeStartDamage * 60;
+          timerCritical.Enabled := True;
+          FIsCriticalStart := True;
+          Exit;
+        end;
+    end
+    else
+    begin
+      if FormatDateTime('h:n', Time()) = FormatDateTime('h:n', FCurrentCritical.TimeStop) then
+      begin
+        FIsCriticalStart := False;
+        MediaPlayerStartCritical.Stop;
+        MediaPlayerStopCritical.CurrentTime := 0;
+        MediaPlayerStopCritical.Play;
+      end;
+    end;
+  end;
+end;
+
+procedure TFrameMap.timerCriticalTimer(Sender: TObject);
+begin
+  if FIsCriticalStart then
+    if FSecondBeforeStartDamage > 0 then
+    begin
+      MediaPlayerNotificationCritical.Play;
+      ScanInnerCritical;
+      Dec(FSecondBeforeStartDamage);
+
+      if MediaPlayerNotificationCritical.CurrentTime = MediaPlayerNotificationCritical.Duration then
+        MediaPlayerNotificationCritical.CurrentTime := 0;
+    end
+    else
+    begin
+      ScanInnerCritical;
+      MediaPlayerNotificationCritical.Stop;
+      MediaPlayerNotificationCritical.CurrentTime := 0;
+      MediaPlayerStartCritical.Play;
+
+      if MediaPlayerStartCritical.CurrentTime = MediaPlayerStartCritical.Duration then
+        MediaPlayerStartCritical.CurrentTime := 0;
+    end;
 end;
 
 procedure TFrameMap.TimerSensorTimer(Sender: TObject);

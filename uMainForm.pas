@@ -23,7 +23,7 @@ uses
   Androidapi.JNI.Os,
   FMX.Platform.Android,
 {$ENDIF}
-  uScanerWiFi, FMX.Ani, FMX.Effects, IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer, IdTCPConnection, IdTCPClient, FMX.Edit;
+  uScanerWiFi, FMX.Ani, FMX.Effects, IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer, IdTCPConnection, IdTCPClient, FMX.Edit, FMX.Media;
 
 type
 
@@ -98,6 +98,9 @@ type
     InnerGlowEffect5: TInnerGlowEffect;
     InnerGlowEffect6: TInnerGlowEffect;
     InnerGlowEffect7: TInnerGlowEffect;
+    layPersonHealth: TLayout;
+    recBack: TRectangle;
+    MediaPlayer: TMediaPlayer;
     procedure FormCreate(Sender: TObject);
     procedure btnToMapClick(Sender: TObject);
     procedure btnToPercsClick(Sender: TObject);
@@ -118,6 +121,7 @@ type
     procedure LoadPlaces;
     procedure LoadBag;
     procedure GetData;
+    procedure LoadCritical;
 
   public
     { Public declarations }
@@ -263,6 +267,28 @@ begin
   FreeQueryAndConn(vQuery);
 end;
 
+procedure TMainForm.LoadCritical;
+var
+  vQuery: TFDQuery;
+  FCriticalItem: TCritical;
+begin
+  FCritical:= TList<TCritical>.Create;
+  ExeExec('select * from critical_issuies;', exActive, vQuery);
+  vQuery.First;
+
+  while Not vQuery.Eof do
+  begin
+    FCriticalItem.Name := vQuery.FieldByName('name').AsString;
+    FCriticalItem.TimeStart := vQuery.FieldByName('time_start').AsDateTime;
+    FCriticalItem.TimeStop := vQuery.FieldByName('time_stop').AsDateTime;
+    FCriticalItem.MinuteBeforeStartDamage := vQuery.FieldByName('minute_before_start_damage').AsInteger;
+    FCritical.Add(FCriticalItem);
+    vQuery.Next;
+  end;
+
+  FreeQueryAndConn(vQuery);
+end;
+
 procedure TMainForm.LoadPlaces;
 var
   vQuery: TFDQuery;
@@ -328,6 +354,7 @@ begin
   LoadArtefacts;
   LoadIsuies;
   LoadPlaces;
+  LoadCritical;
 
   FFrameMap := TFrameMap.Create(TabMap);
   FFrameMap.Parent := TabMap;
@@ -519,7 +546,7 @@ begin
   FFrameDetector.TimerSensor.Enabled := false;
   FFrameQRScanner.StopScan;
   StopDetector;
-  imgPersonHealth.Visible := false;
+  layPersonHealth.Visible := false;
 
   CreateBagFrame;
   TabControl.ActiveTab := TabBag;
@@ -538,7 +565,7 @@ begin
   FFrameBag.Parent := TabBag;
   FFrameBag.layBag.Height := FFrameBag.Height - FFrameBag.layTopBorder.Height - FFrameBag.recCash.Height + 63;
   FFrameBag.layBag.Width := FFrameBag.Width;
-  FFrameBag.CreateElements;
+  FFrameBag.CreateElements(True);
 
   FFrameBag.LoadBagElements;
 
@@ -573,7 +600,7 @@ begin
   FFrameDetector.TimerSensor.Enabled := false;
   FFrameQRScanner.StopScan;
   StopDetector;
-  imgPersonHealth.Visible := true;
+  layPersonHealth.Visible := true;
   FFrameIssuies.btnToActiveClick(nil);
   FFrameIssuies.ClearSelection;
   Person.GroupId := Person.GroupId;
@@ -587,7 +614,7 @@ begin
   FFrameDetector.TimerSensor.Enabled := false;
   FFrameQRScanner.StopScan;
   StopDetector;
-  imgPersonHealth.Visible := true;
+  layPersonHealth.Visible := true;
 end;
 
 procedure TMainForm.btnToPercsClick(Sender: TObject);
@@ -597,7 +624,7 @@ begin
   recSelect.Parent := ImgBtnPercs;
   FFrameQRScanner.StopScan;
   StopDetector;
-  imgPersonHealth.Visible := false;
+  layPersonHealth.Visible := false;
   Person.GroupId := Person.GroupId;
 end;
 
@@ -607,7 +634,7 @@ begin
   recSelect.Parent := imgBtnQRScanner;
   FFrameQRScanner.StartScan;
   StopDetector;
-  imgPersonHealth.Visible := true;
+  layPersonHealth.Visible := true;
   Person.GroupId := Person.GroupId;
 end;
 

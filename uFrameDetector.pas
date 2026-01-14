@@ -79,10 +79,8 @@ begin
         layOtklik.Visible := false;
       end;
   end;
-{$IFDEF ANDROID}
   MediaPlayer.FileName := TPath.Combine(GetUserAppPath, 'detector_art.mp3');
   labDisplayVilka.TextSettings.Font.Family := 'lcd';
-{$ENDIF}
 end;
 
 procedure TFrameDetector.TimerSensorTimer(Sender: TObject);

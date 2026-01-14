@@ -12,9 +12,9 @@ uses
   Generics.Collections, DelphiZXingQRCode, FMX.Graphics, System.UITypes, System.Types, FMX.Layouts, Math;
 
 const
-  cCriticalColor = $32F92F2F;
-  cNormalColor = $86C98826;
-  cFullColor = $6422FC1A;
+  cCriticalColor = $FF890000;
+  cNormalColor = $FFC98826;
+  cFullColor = $FF067501;
 
   cWorseColor = $FFA31010;
   cEgualColor = $FFC98826;
@@ -32,6 +32,13 @@ type
     LabelText: string;
     LabelDetail: string;
     MarkerType: TMarkerType;
+  end;
+
+  TCritical = record
+    Name: string;
+    TimeStart: TDateTime;
+    TimeStop: TDateTime;
+    MinuteBeforeStartDamage: integer; // ћинуты от начала выброса до начала урона
   end;
 
   TAnomalyData = record
@@ -188,6 +195,10 @@ var
   FIsDead: boolean;
   FIsMerchantZone: boolean;
   FArmorPerc: TPerc;
+  FCritical: TList<TCritical>;
+  FIsCriticalStart: boolean;
+  FSecondBeforeStartDamage: integer;
+  FCurrentCritical: TCritical;
 
 implementation
 
@@ -334,7 +345,7 @@ begin
     MainForm.layMenu.Enabled := true;
 
     if MainForm.TabControl.ActiveTab <> MainForm.TabPercs then
-      MainForm.imgPersonHealth.Visible := true;
+      MainForm.layPersonHealth.Visible := true;
 
     FIsDead := false;
 
@@ -383,7 +394,12 @@ begin
       MainForm.FFramePercs.ReloadPercs;
     end;
 
-    if FHealth = 0 then
+  end
+  else
+  begin
+    SetHealthProgress(MainForm.HealthProgress, FHealth);
+
+    if FHealth <= 0 then
     begin
       CancelingAllIssuies;
       FIsDead := true;
@@ -395,13 +411,15 @@ begin
       MainForm.layMenu.Enabled := false;
       MainForm.TabControl.ActiveTab := MainForm.TabMap;
       MainForm.StopDetector;
-      MainForm.FFrameMap.MediaPlayerRad.Stop;
-      MainForm.FFrameMap.MediaPlayerAnomaly.Stop;
+
+      if Assigned(MainForm.FFrameMap) then
+      begin
+        MainForm.FFrameMap.MediaPlayerDead.CurrentTime := 0;
+        MainForm.FFrameMap.MediaPlayerDead.Play;
+        MainForm.FFrameMap.MediaPlayerRad.Stop;
+        MainForm.FFrameMap.MediaPlayerAnomaly.Stop;
+      end;
     end;
-  end
-  else
-  begin
-    SetHealthProgress(MainForm.HealthProgress, FHealth);
 
     if Assigned(MainForm.FFramePercs) then
       SetHealthProgress(MainForm.FFramePercs.HealthProgress, FHealth);
@@ -421,6 +439,8 @@ begin
     AHealthProgress.Fill.Color := cNormalColor
   else
     AHealthProgress.Fill.Color := cFullColor;
+
+  MainForm.imgPersonHealth.BringToFront;
 end;
 
 function GetUserAppPath: string;
@@ -483,7 +503,7 @@ procedure GoToDetector;
 begin
   MainForm.TabControl.ActiveTab := MainForm.TabDetector;
   MainForm.FFrameDetector.timerScannerArtefacts.Enabled := true;
-  MainForm.imgPersonHealth.Visible := true;
+  MainForm.layPersonHealth.Visible := true;
   MainForm.recSelect.Parent := nil;
 end;
 

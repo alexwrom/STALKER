@@ -27,7 +27,7 @@ type
     imgTop: TImage;
     Image13: TImage;
     Image8: TImage;
-    imgPercs: TImage;
+    imgPercsInfo: TImage;
     infoRadiation: TRectangle;
     infoChimishe: TRectangle;
     infoElectro: TRectangle;
@@ -184,7 +184,6 @@ type
     recSkin: TRectangle;
     recSkin1: TRectangle;
     InnerGlowEffect14: TInnerGlowEffect;
-    Image27: TImage;
     recSkin2: TRectangle;
     Layout2: TLayout;
     Rectangle2: TRectangle;
@@ -199,15 +198,17 @@ type
     InnerGlowEffect16: TInnerGlowEffect;
     imgQR: TImage;
     btnCloseChangeSlot: TSpeedButton;
-    InnerGlowEffect1: TInnerGlowEffect;
     btnCloseInfo: TSpeedButton;
-    InnerGlowEffect5: TInnerGlowEffect;
     btnCloseQR: TSpeedButton;
     InnerGlowEffect9: TInnerGlowEffect;
     InnerGlowEffect11: TInnerGlowEffect;
     InnerGlowEffect17: TInnerGlowEffect;
     Layout5: TLayout;
     Layout9: TLayout;
+    Layout16: TLayout;
+    recBackArt: TRectangle;
+    layPercs: TLayout;
+    recBackInfo: TRectangle;
     procedure SwitchStyleSwitch(Sender: TObject);
     procedure btnCloseInfoClick(Sender: TObject);
     procedure btnAddArmorClick(Sender: TObject);
@@ -227,7 +228,6 @@ type
     procedure btnArtClick(Sender: TObject);
 
     procedure CreateBagBackgroundSection;
-    procedure CreateElementsSection;
     procedure ClearElementsSection;
     procedure Compare(AOld, AChange: TRectangle);
 
@@ -236,7 +236,7 @@ type
     { Public declarations }
     FActiveAction: TAction;
     procedure LoadBagElements;
-    procedure CreateElements;
+    procedure CreateElements(AIsClassicBag: boolean);
     procedure CreateBagBackground;
     constructor Create(AObject: TFmxObject);
   end;
@@ -301,7 +301,7 @@ end;
 procedure TFrameBag.LoadBagElements;
 begin
   CreateBagBackgroundSection;
-  CreateElementsSection;
+  CreateElements(False);
 end;
 
 procedure TFrameBag.CreateBagBackgroundSection;
@@ -340,7 +340,7 @@ begin
     Width := 63;
     Height := 63;
     Bitmap.Assign(imgList63x63.Source[1].MultiResBitmap[0].Bitmap);
-    HitTest := false;
+    HitTest := False;
     Opacity := 0.95;
   end;
 end;
@@ -351,129 +351,27 @@ var
 begin
   for i := 0 to flMedical.ChildrenCount - 1 do
   begin
-    (flMedical.Children[0] as TImage).Visible := false;
+    (flMedical.Children[0] as TImage).Visible := False;
     FreeAndNil(flMedical.Children[0]);
   end;
 
   for i := 0 to flWeapons.ChildrenCount - 1 do
   begin
-    (flWeapons.Children[0] as TImage).Visible := false;
+    (flWeapons.Children[0] as TImage).Visible := False;
     FreeAndNil(flWeapons.Children[0]);
   end;
 
   for i := 0 to flArmors.ChildrenCount - 1 do
   begin
-    (flArmors.Children[0] as TImage).Visible := false;
+    (flArmors.Children[0] as TImage).Visible := False;
     FreeAndNil(flArmors.Children[0]);
   end;
 
   for i := 0 to flArts.ChildrenCount - 1 do
   begin
-    (flArts.Children[0] as TImage).Visible := false;
+    (flArts.Children[0] as TImage).Visible := False;
     FreeAndNil(flArts.Children[0]);
   end;
-end;
-
-procedure TFrameBag.CreateElementsSection;
-var
-  i: integer;
-  vImgBack, vImgElement: TImage;
-  vLabCount: TLabel;
-  vBtn: TSpeedButton;
-begin
-  ClearElementsSection;
-
-  if Assigned(FBagList) and (FBagList.Count > 0) then
-    for i := 0 to FBagList.Count - 1 do
-    begin
-      vImgBack := TImage.Create(nil);
-      with vImgBack do
-      begin
-        case FBagList[i].BagType of
-          btMedical:
-            begin
-              Parent := flMedical;
-              Width := 63;
-              Height := 63;
-              Bitmap.Assign(imgList63x63.Source[0].MultiResBitmap[0].Bitmap);
-            end;
-
-          btArt:
-            begin
-              Parent := flArts;
-              Width := 63;
-              Height := 63;
-              Bitmap.Assign(imgList63x63.Source[0].MultiResBitmap[0].Bitmap);
-              flArts.Width := flArts.ChildrenCount * 63;
-            end;
-
-          btArmor:
-            begin
-              Parent := flArmors;
-              Width := 126;
-              Height := 189;
-              Bitmap.Assign(imgList126x189.Source[0].MultiResBitmap[0].Bitmap);
-              flArmors.Width := flArmors.ChildrenCount * 126;
-            end;
-
-          btWeapon:
-            begin
-              Parent := flWeapons;
-              Width := 189;
-              Height := 126;
-              Bitmap.Assign(imgList189x126.Source[0].MultiResBitmap[0].Bitmap);
-              flWeapons.Width := flWeapons.ChildrenCount * 189;
-            end;
-        end;
-
-        Opacity := 0.95;
-        HitTest := false;
-      end;
-
-      vImgElement := TImage.Create(nil);
-      with vImgElement do
-      begin
-        Parent := vImgBack;
-        Align := TAlignLayout.Client;
-        Bitmap.Assign(FBagList[i].Icon);
-        HitTest := false;
-      end;
-
-      vLabCount := TLabel.Create(nil);
-      with vLabCount do
-      begin
-        Align := TAlignLayout.Client;
-        Parent := vImgElement;
-        StyledSettings := [];
-        TextSettings.Font.Family := 'YouTube Sans Dark';
-        TextSettings.Font.Size := 16;
-        TextSettings.Font.Style := [TFontStyle.fsBold];
-        TextSettings.HorzAlign := TtextAlign.Trailing;
-        TextSettings.VertAlign := TtextAlign.Trailing;
-        TextSettings.FontColor := TAlphaColors.Darkgray;
-
-        if FBagList[i].Count > 1 then
-          Text := FBagList[i].Count.ToString
-        else
-          Text := '';
-
-        Margins.Bottom := 5;
-        Margins.Top := 5;
-        Margins.Left := 5;
-        Margins.Right := 5;
-        HitTest := false;
-      end;
-
-      vBtn := TSpeedButton.Create(nil);
-      with vBtn do
-      begin
-        Parent := vLabCount;
-        Align := TAlignLayout.Client;
-        StyleLookup := 'transparentcirclebuttonstyle';
-        OnClick := OnClickElement;
-        Tag := i;
-      end;
-    end;
 end;
 
 procedure TFrameBag.bntSellsClick(Sender: TObject);
@@ -481,7 +379,7 @@ var
   vSend: TSend;
   vSell: TSell;
 begin
-  layInfo.Visible := false;
+  layInfo.Visible := False;
   laySellQR.Visible := true;
 
   if not Assigned(FActiveAction) then
@@ -530,9 +428,12 @@ begin
         ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''weapons'' and row_id = ' + FBagList[vIndex].RowID.ToString + ' and health = ' + FBagList[vIndex].Health.ToString + ' limit 1);', exExecute, vQuery);
       end;
   end;
-  layInfo.Visible := false;
+  layInfo.Visible := False;
   ReloadPercs;
-  ReloadBag;
+  try
+    ReloadBag;
+  finally
+  end;
 end;
 
 procedure TFrameBag.btnAddArtClick(Sender: TObject);
@@ -563,8 +464,10 @@ begin
     recPhisicChangeArt.Width := 0;
     recFireChangeArt.Width := 0;
 
+    ImgPercsArt.BringToFront;
+
     ReloadArts;
-    layChangeSlot.Visible := True;
+    layChangeSlot.Visible := true;
   end
   else
   begin
@@ -573,7 +476,7 @@ begin
     ReloadPercs;
     ReloadBag;
   end;
-  layInfo.Visible := false;
+  layInfo.Visible := False;
 end;
 
 procedure TFrameBag.ReloadArts;
@@ -590,7 +493,7 @@ begin
   begin
     (FindComponent('imgGlass' + i.ToString) as TImage).Bitmap.Assign(GlassList.Source[0].MultiResBitmap[0].Bitmap);
     (FindComponent('imgSlot' + i.ToString) as TImage).Bitmap := nil;
-    (FindComponent('btnSlot' + i.ToString + 'Info') as TSpeedButton).Visible := false;
+    (FindComponent('btnSlot' + i.ToString + 'Info') as TSpeedButton).Visible := False;
   end;
 
   for i := 1 to Person.CountContener do
@@ -604,7 +507,7 @@ begin
 
     if vSlot <= Person.CountContener then
     begin
-      (FindComponent('btnSlot' + vSlot.ToString + 'Info') as TSpeedButton).Visible := True;
+      (FindComponent('btnSlot' + vSlot.ToString + 'Info') as TSpeedButton).Visible := true;
       (FindComponent('btnSlot' + vSlot.ToString + 'Info') as TSpeedButton).OnClick := btnArtClick;
       (FindComponent('btnSlot' + vSlot.ToString + 'Info') as TSpeedButton).Tag := vSlot;
       (FindComponent('imgGlass' + vSlot.ToString) as TImage).Bitmap.Assign(GlassList.Source[1].MultiResBitmap[0].Bitmap);
@@ -647,7 +550,7 @@ procedure TFrameBag.btnArtClick(Sender: TObject);
 begin
   if FArtsList.Count >= (Sender as TSpeedButton).Tag then
   begin
-    igfSelect.Enabled := True;
+    igfSelect.Enabled := true;
     igfSelect.Parent := (FindComponent('imgGlass' + (Sender as TSpeedButton).Tag.ToString) as TImage);
     igfSelect.Tag := (Sender as TSpeedButton).Tag;
     recRadiationChangeArt.Width := recRadiationChangeArt.Tag * FArtsList[(Sender as TSpeedButton).Tag - 1].RadiationArmor / 100;
@@ -664,6 +567,8 @@ begin
     Compare(recPhisicArt, recPhisicChangeArt);
     Compare(recFireArt, recFireChangeArt);
 
+    ImgPercsArt.BringToFront;
+
     btnChooseArt.Enabled := true;
   end;
 end;
@@ -672,7 +577,7 @@ procedure TFrameBag.btnChooseArtClick(Sender: TObject);
 var
   vQuery: TFDQuery;
 begin
-  btnChooseArt.Enabled := false;
+  btnChooseArt.Enabled := False;
   ExeExec('update belt set art_id = ' + FBagList[layInfo.Tag].RowID.ToString + ' where slot = ' + igfSelect.Tag.ToString + ';', exExecute, vQuery);
   ExeExec('insert into bag (table_name, row_id, health) values (''arts'',' + FArtsList[igfSelect.Tag - 1].ID.ToString + ', 100);', exExecute, vQuery);
   ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''arts'' and row_id = ' + FBagList[layInfo.Tag].RowID.ToString + ' limit 1);', exExecute, vQuery);
@@ -683,12 +588,12 @@ end;
 procedure TFrameBag.btnCloseChangeSlotClick(Sender: TObject);
 begin
   igfSelect.Parent := nil;
-  layChangeSlot.Visible := false;
+  layChangeSlot.Visible := False;
 end;
 
 procedure TFrameBag.btnCloseInfoClick(Sender: TObject);
 begin
-  layInfo.Visible := false;
+  layInfo.Visible := False;
 end;
 
 procedure TFrameBag.btnUseClick(Sender: TObject);
@@ -705,35 +610,56 @@ begin
       end;
   end;
 
-  layInfo.Visible := false;
+  layInfo.Visible := False;
   ReloadPercs;
   ReloadBag;
 end;
 
 procedure TFrameBag.btnCloseQRClick(Sender: TObject);
 begin
-  laySellQR.Visible := false;
+  laySellQR.Visible := False;
 end;
 
-procedure TFrameBag.CreateElements;
+procedure TFrameBag.CreateElements(AIsClassicBag: boolean);
 var
   i: integer;
   vImgBack, vImgElement: TImage;
   vLabCount: TLabel;
   vBtn: TSpeedButton;
+  vLayHealth: TLayout;
+  vCircleHealth: TCircle;
+
+  procedure SetFill;
+  begin
+    if FBagList[i].Health < 33 then
+      vCircleHealth.Fill.Color := cCriticalColor
+    else if FBagList[i].Health < 66 then
+      vCircleHealth.Fill.Color := cNormalColor
+    else
+      vCircleHealth.Fill.Color := cFullColor;
+  end;
+
 begin
+  if NOT AIsClassicBag then
+    ClearElementsSection;
+
   if Assigned(FBagList) and (FBagList.Count > 0) then
     for i := 0 to FBagList.Count - 1 do
     begin
       vImgBack := TImage.Create(nil);
       with vImgBack do
       begin
-        Parent := flElements;
+        if AIsClassicBag then
+          Parent := flElements;
+
         BringToFront;
 
         case FBagList[i].BagType of
           btMedical:
             begin
+              if NOT AIsClassicBag then
+                Parent := flMedical;
+
               Width := 63;
               Height := 63;
               Bitmap.Assign(imgList63x63.Source[0].MultiResBitmap[0].Bitmap);
@@ -741,6 +667,12 @@ begin
 
           btArt:
             begin
+              if NOT AIsClassicBag then
+              begin
+                Parent := flArts;
+                flArts.Width := flArts.ChildrenCount * 63;
+              end;
+
               Width := 63;
               Height := 63;
               Bitmap.Assign(imgList63x63.Source[0].MultiResBitmap[0].Bitmap);
@@ -748,6 +680,12 @@ begin
 
           btArmor:
             begin
+              if NOT AIsClassicBag then
+              begin
+                Parent := flArmors;
+                flArmors.Width := flArmors.ChildrenCount * 126;
+              end;
+
               Width := 126;
               Height := 189;
               Bitmap.Assign(imgList126x189.Source[0].MultiResBitmap[0].Bitmap);
@@ -755,6 +693,12 @@ begin
 
           btWeapon:
             begin
+              if NOT AIsClassicBag then
+              begin
+                Parent := flWeapons;
+                flWeapons.Width := flWeapons.ChildrenCount * 189;
+              end;
+
               Width := 189;
               Height := 126;
               Bitmap.Assign(imgList189x126.Source[0].MultiResBitmap[0].Bitmap);
@@ -762,26 +706,26 @@ begin
         end;
 
         Opacity := 0.95;
-        HitTest := false;
+        HitTest := False;
       end;
 
       vImgElement := TImage.Create(nil);
       with vImgElement do
       begin
         Parent := vImgBack;
-        Align := TAlignLayout.Client;
+        Align := TAlignLayout.Contents;
         Margins.Left := 5;
         Margins.Top := 5;
         Margins.Bottom := 5;
         Margins.Right := 5;
         Bitmap.Assign(FBagList[i].Icon);
-        HitTest := false;
+        HitTest := False;
       end;
 
       vLabCount := TLabel.Create(nil);
       with vLabCount do
       begin
-        Align := TAlignLayout.Client;
+        Align := TAlignLayout.Contents;
         Parent := vImgElement;
         StyledSettings := [];
         TextSettings.Font.Family := 'YouTube Sans Dark';
@@ -800,7 +744,7 @@ begin
         Margins.Top := 5;
         Margins.Left := 5;
         Margins.Right := 5;
-        HitTest := false;
+        HitTest := False;
       end;
 
       vBtn := TSpeedButton.Create(nil);
@@ -813,11 +757,41 @@ begin
         Tag := i;
       end;
 
-      SetLayBagHeight;
+      case FBagList[i].BagType of
+        btArmor, btWeapon:
+          begin
+            vLayHealth := TLayout.Create(nil);
+            with vLayHealth do
+            begin
+              Parent := vImgElement;
+              Align := TAlignLayout.Bottom;
+              Margins.Left := 5;
+              Margins.Bottom := 5;
+              Height := 20;
+              HitTest := False;
+              BringToFront;
+            end;
+
+            vCircleHealth := TCircle.Create(nil);
+            with vCircleHealth do
+            begin
+              Parent := vLayHealth;
+              Align := TAlignLayout.Left;
+              SetFill;
+              Width := vLayHealth.Height;
+              HitTest := False;
+              Opacity := 0.6;
+            end;
+          end;
+      end;
+
+      if AIsClassicBag then
+        SetLayBagHeight;
     end;
 
-  if flBackground.ChildrenCount = 0 then
-    CreateBagBackground;
+  if AIsClassicBag then
+    if flBackground.ChildrenCount = 0 then
+      CreateBagBackground;
 end;
 
 procedure TFrameBag.OnClickElement(Sender: TObject);
@@ -828,18 +802,18 @@ begin
   case FBagList[vIndex].BagType of
     btMedical:
       begin
-        recHealth.Visible := false;
+        recHealth.Visible := False;
         labHealthRestore.Text := FBagList[vIndex].HealthRestore.ToString;
         labElementCost.Text := Format('%.0n', [FBagList[vIndex].Cost]);
-        recCountSlots.Visible := false;
+        recCountSlots.Visible := False;
         layInfo.Tag := (Sender as TSpeedButton).Tag;
-        recHealthRestore.Visible := True;
-        imgPercs.Visible := false;
-        layUse.Visible := True;
-        layAddArt.Visible := false;
-        layAddArmor.Visible := false;
+        recHealthRestore.Visible := true;
+        layPercs.Visible := False;
+        layUse.Visible := true;
+        layAddArt.Visible := False;
+        layAddArmor.Visible := False;
         layPanel.Height := layUse.Height + laySells.Height + imgBottom.Height + imgTop.Height;
-        layInfo.Visible := True;
+        layInfo.Visible := true;
       end;
 
     btArt:
@@ -868,15 +842,15 @@ begin
 
         layInfo.Tag := (Sender as TSpeedButton).Tag;
 
-        recHealthRestore.Visible := false;
-        imgPercs.Visible := True;
-        recCountSlots.Visible := false;
-        recHealth.Visible := false;
-        layAddArmor.Visible := false;
-        layAddArt.Visible := True;
-        layUse.Visible := false;
-        layPanel.Height := imgPercs.Height + 25 + imgBottom.Height + imgTop.Height;
-        layInfo.Visible := True;
+        recHealthRestore.Visible := False;
+        layPercs.Visible := true;
+        recCountSlots.Visible := False;
+        recHealth.Visible := False;
+        layAddArmor.Visible := False;
+        layAddArt.Visible := true;
+        layUse.Visible := False;
+        layPanel.Height := layPercs.Height + 25 + imgBottom.Height + imgTop.Height;
+        layInfo.Visible := true;
       end;
 
     btArmor:
@@ -891,12 +865,12 @@ begin
 
         if Person.ArmorId > 0 then
         begin
-          infoRadiationFullArmor.Width := infoRadiationFullArmor.Tag * FArmorPerc.RadiationArmor / FBagList[vIndex].Health;
-          infoChimisheFullArmor.Width := infoChimisheFullArmor.Tag * FArmorPerc.ChimisheArmor / FBagList[vIndex].Health;
-          infoElectroFullArmor.Width := infoElectroFullArmor.Tag * FArmorPerc.ElectroArmor / FBagList[vIndex].Health;
-          infoPsiFullArmor.Width := infoPsiFullArmor.Tag * FArmorPerc.PsiArmor / FBagList[vIndex].Health;
-          infoPhisicFullArmor.Width := infoPhisicFullArmor.Tag * FArmorPerc.PhisicArmor / FBagList[vIndex].Health;
-          infoFireFullArmor.Width := infoFireFullArmor.Tag * FArmorPerc.FireArmor / FBagList[vIndex].Health;
+          infoRadiationFullArmor.Width := infoRadiationFullArmor.Tag * FArmorPerc.RadiationArmor / 100;
+          infoChimisheFullArmor.Width := infoChimisheFullArmor.Tag * FArmorPerc.ChimisheArmor / 100;
+          infoElectroFullArmor.Width := infoElectroFullArmor.Tag * FArmorPerc.ElectroArmor / 100;
+          infoPsiFullArmor.Width := infoPsiFullArmor.Tag * FArmorPerc.PsiArmor / 100;
+          infoPhisicFullArmor.Width := infoPhisicFullArmor.Tag * FArmorPerc.PhisicArmor / 100;
+          infoFireFullArmor.Width := infoFireFullArmor.Tag * FArmorPerc.FireArmor / 100;
 
           Compare(infoRadiation, infoRadiationFullArmor);
           Compare(infoChimishe, infoChimisheFullArmor);
@@ -929,40 +903,41 @@ begin
         infoLabPhisic.Text := IfThen(FBagList[vIndex].Percs.PhisicArmor = 0, '', FBagList[vIndex].Percs.PhisicArmor.ToString + ' %');
         infoLabFire.Text := IfThen(FBagList[vIndex].Percs.FireArmor = 0, '', FBagList[vIndex].Percs.FireArmor.ToString + ' %');
 
-        HealthProgress.Width := HealthProgress.Tag * FBagList[vIndex].Health / 100;
+        SetHealthProgress(HealthProgress, FBagList[vIndex].Health);
         labCountSlots.Text := FBagList[vIndex].CountSlots.ToString;
         layInfo.Tag := (Sender as TSpeedButton).Tag;
 
-        recHealthRestore.Visible := false;
-        imgPercs.Visible := True;
-        recHealth.Visible := True;
-        recCountSlots.Visible := True;
-        layAddArmor.Visible := True;
-        layAddArt.Visible := false;
-        layUse.Visible := false;
-        layPanel.Height := imgPercs.Height + recCountSlots.Height + recHealth.Height + 25 + imgBottom.Height + imgTop.Height;
-        layInfo.Visible := True;
+        recHealthRestore.Visible := False;
+        layPercs.Visible := true;
+        recHealth.Visible := true;
+        recCountSlots.Visible := true;
+        layAddArmor.Visible := true;
+        layAddArt.Visible := False;
+        layUse.Visible := False;
+        layPanel.Height := layPercs.Height + recCountSlots.Height + recHealth.Height + 25 + imgBottom.Height + imgTop.Height;
+        layInfo.Visible := true;
       end;
 
     btWeapon:
       begin
         labElementCost.Text := Format('%.0n', [FBagList[vIndex].Cost]);
-        recHealth.Visible := True;
-        HealthProgress.Width := HealthProgress.Tag * FBagList[vIndex].Health / 100;
-        recCountSlots.Visible := false;
+        recHealth.Visible := true;
+        SetHealthProgress(HealthProgress, FBagList[vIndex].Health);
+        recCountSlots.Visible := False;
         layInfo.Tag := (Sender as TSpeedButton).Tag;
 
-        recHealthRestore.Visible := false;
-        imgPercs.Visible := false;
-        layAddArmor.Visible := True;
-        layAddArt.Visible := false;
-        layUse.Visible := false;
+        recHealthRestore.Visible := False;
+        layPercs.Visible := False;
+        layAddArmor.Visible := true;
+        layAddArt.Visible := False;
+        layUse.Visible := False;
         layPanel.Height := layAddArmor.Height + laySells.Height + imgBottom.Height + imgTop.Height;
-        layInfo.Visible := True;
+        layInfo.Visible := true;
       end;
   end;
 
-  layInfo.Visible := True;
+  imgPercsInfo.BringToFront;
+  layInfo.Visible := true;
 end;
 
 end.
