@@ -14,8 +14,8 @@ type
   TForm1 = class(TForm)
     IdTCPServer: TIdTCPServer;
     Button1: TButton;
-    ImgQR: TImage;
     Memo1: TMemo;
+    ImgQR: TImage;
     procedure IdTCPServerExecute(AContext: TIdContext);
     procedure Button1Click(Sender: TObject);
   private
@@ -69,12 +69,12 @@ begin
   begin
     FreeQueryAndConn(FDQuery);
 
-    ExeExec('insert into users (nickname) values (' + QuotedStr(vPerson.UserName) + ');', exExecute, FDQuery);
+    ExeExec('insert into users (nickname, group_id) values (' + QuotedStr(vPerson.UserName) + ', 1);', exExecute, FDQuery);
     vAnswer := TAction.Create;
     vAnswer.SendType := stUpdateData;
     vPageCount := 0;
     StrData := GoGenericBaseData(1, vPageCount);
-    StrData := 'insert into users (nickname) values (' + QuotedStr(vPerson.UserName) + ');' + #13#10 + StrData;
+    StrData := 'insert into users (nickname, group_id) values (' + QuotedStr(vPerson.UserName) + ', 1);' + #13#10 + StrData;
     vAnswer.PageCount := vPageCount + 2;
   end
   else
