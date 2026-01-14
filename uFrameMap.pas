@@ -61,16 +61,21 @@ type
     InnerGlowEffect4: TInnerGlowEffect;
     MediaPlayerDead: TMediaPlayer;
     MediaPlayerDamage: TMediaPlayer;
-    Layout2: TLayout;
-    Layout3: TLayout;
-    Layout4: TLayout;
-    Layout5: TLayout;
+    LayClient: TLayout;
     timerCheckCritical: TTimer;
     timerCritical: TTimer;
     MediaPlayerStartCritical: TMediaPlayer;
     MediaPlayerNotificationCritical: TMediaPlayer;
     MediaPlayerStopCritical: TMediaPlayer;
     CheckBox1: TCheckBox;
+    layCritical: TLayout;
+    Image1: TImage;
+    Rectangle4: TRectangle;
+    labCritical: TLabel;
+    imgArrowMan: TImage;
+    Layout7: TLayout;
+    layPersonHealth: TLayout;
+    ShadowEffect1: TShadowEffect;
     procedure MapImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure btnZoomInClick(Sender: TObject);
     procedure btnZoomOutClick(Sender: TObject);
@@ -84,6 +89,7 @@ type
     procedure TimerSensorTimer(Sender: TObject);
     procedure timerCriticalTimer(Sender: TObject);
     procedure timerCheckCriticalTimer(Sender: TObject);
+    procedure ScrollBoxViewportPositionChange(Sender: TObject; const OldViewportPosition, NewViewportPosition: TPointF; const ContentSizeChanged: Boolean);
   private
     FMapLoaded: Boolean;
     FOriginalMapWidth: Double;
@@ -120,13 +126,13 @@ type
     procedure OnMarkerClick(Sender: TObject);
     procedure OnMarkerIssueClick(Sender: TObject);
     function GetNumberMarker(AMarker: TImage): integer;
-    procedure ScrollToImageAdvanced(ScrollBox: TScrollBox; Image: TImage; Center: Boolean = True; Animate: Boolean = False);
     procedure ScanAnomalies;
     procedure ScanIssuies;
     procedure UpdateBaseSafeDead;
     procedure ScanBaseSafeDead;
     procedure LoadAnomalies;
     procedure ScanInnerCritical;
+    procedure SetArrows(AArrow: TImage; ATarget: TControl);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -237,25 +243,32 @@ var
   AMarker: TMarkerData;
   I: integer;
 begin
-  for I := 0 to FMarkerIssue.Count - 1 do
+  for I := FMarkerIssue.Count - 1 downto 0 do
   begin
+    FMarkerIssue[I].Marker.Parent := nil;
     FMarkerIssue[I].Marker.Visible := False;
-    FreeAndNil(FMarkerIssue[I].Marker);
-  end;
 
-  FMarkerIssue.Clear;
+    if Assigned(FMarkerIssue[I].Arrow) then
+    begin
+      FMarkerIssue[I].Arrow.Parent := nil;
+      FMarkerIssue[I].Arrow.Visible := False;
+    end;
+
+    FMarkerIssue.Delete(I);
+  end;
 
   for I := 0 to FIssueList.Count - 1 do
-  begin
-    FCoords := FIssueList[I].Coords;
-    AMarker.Coords := FCoords;
-    AMarker.MarkerType := mtIssue;
+    if FIssueList[I].Visible then
+    begin
+      FCoords := FIssueList[I].Coords;
+      AMarker.Coords := FCoords;
+      AMarker.MarkerType := mtIssue;
 
-    AMarker.LabelText := FIssueList[I].Name;
-    AMarker.LabelDetail := FIssueList[I].Detail;
+      AMarker.LabelText := FIssueList[I].Name;
+      AMarker.LabelDetail := FIssueList[I].Detail;
 
-    CreateMarker(AMarker);
-  end;
+      CreateMarker(AMarker);
+    end;
 end;
 
 procedure TFrameMap.UpdateBaseSafeDead;
@@ -318,6 +331,86 @@ begin
   end;
 end;
 
+procedure TFrameMap.ScrollBoxViewportPositionChange(Sender: TObject; const OldViewportPosition, NewViewportPosition: TPointF; const ContentSizeChanged: Boolean);
+var
+  I: integer;
+begin
+  SetArrows(imgArrowMan, LocationMarker);
+
+  for I := 0 to FMarkerIssue.Count - 1 do
+  begin
+    SetArrows(FMarkerIssue[I].Arrow, FMarkerIssue[I].Marker);
+  end;
+end;
+
+procedure TFrameMap.SetArrows(AArrow: TImage; ATarget: TControl);
+var
+  vLoc: TPointF;
+begin
+  if ATarget.Visible then
+  begin
+    vLoc := ATarget.LocalToAbsolute(TPointF.Zero);
+
+    AArrow.Visible := (vLoc.Y > ScrollBox.Height) or (vLoc.X < 0) or (vLoc.X > ScrollBox.Width) or (vLoc.Y < 0);
+
+    if vLoc.Y > ScrollBox.Height then // Bottom
+    begin
+      AArrow.Position.X := IfThen(vLoc.X + AArrow.Width > ScrollBox.Width, ScrollBox.Width - AArrow.Width, Max(layPersonHealth.Width, vLoc.X));
+      AArrow.Position.Y := ScrollBox.Height - AArrow.Height;
+      AArrow.RotationAngle := 0;
+    end;
+
+    if vLoc.Y < 0 then // Top
+    begin
+      AArrow.Position.X := IfThen(vLoc.X + AArrow.Width > ScrollBox.Width, ScrollBox.Width - AArrow.Width, Max(0, vLoc.X));
+      AArrow.Position.Y := 0;
+      AArrow.RotationAngle := -180;
+    end;
+
+    if vLoc.X < 0 then // Left
+    begin
+      AArrow.Position.Y := IfThen(vLoc.Y + AArrow.Height > ScrollBox.Height, ScrollBox.Height - AArrow.Height, Max(0, vLoc.Y));
+      AArrow.Position.X := IfThen(AArrow.Position.Y + AArrow.Height > layPersonHealth.Position.Y, layPersonHealth.Width, 0);
+      AArrow.RotationAngle := 90;
+    end;
+
+    if vLoc.X > ScrollBox.Width then // Right
+    begin
+      AArrow.Position.Y := IfThen(vLoc.Y + AArrow.Height > ScrollBox.Height, ScrollBox.Height - AArrow.Height, Max(0, vLoc.Y));
+      AArrow.Position.X := ScrollBox.Width - AArrow.Width;
+      AArrow.RotationAngle := 270;
+    end;
+
+    if (vLoc.Y > ScrollBox.Height) and (vLoc.X > ScrollBox.Width) then // Bottom-Right
+    begin
+      AArrow.Position.X := ScrollBox.Width - AArrow.Width;
+      AArrow.Position.Y := ScrollBox.Height - AArrow.Height;
+      AArrow.RotationAngle := -45;
+    end;
+
+    if (vLoc.Y > ScrollBox.Height) and (vLoc.X < 0) then // Bottom-Left
+    begin
+      AArrow.Position.X := layPersonHealth.Width;
+      AArrow.Position.Y := ScrollBox.Height - AArrow.Height;
+      AArrow.RotationAngle := 45;
+    end;
+
+    if (vLoc.Y < 0) and (vLoc.X > ScrollBox.Width) then // Top-Right
+    begin
+      AArrow.Position.X := ScrollBox.Width - AArrow.Width;
+      AArrow.Position.Y := 0;
+      AArrow.RotationAngle := 225;
+    end;
+
+    if (vLoc.Y < 0) and (vLoc.X < 0) then // Top-Left
+    begin
+      AArrow.Position.X := 0;
+      AArrow.Position.Y := 0;
+      AArrow.RotationAngle := -225;
+    end;
+  end;
+end;
+
 procedure TFrameMap.ScanBaseSafeDead;
 var
   I: integer;
@@ -358,18 +451,16 @@ begin
   begin
     if (FSecondBeforeStartDamage <= 0) and (NOT FIsDead) then
     begin
-      MediaPlayerDamage.CurrentTime := 0;
-      MediaPlayerDamage.Play;
       StartDamageGlow;
       Person.Health := Person.Health - 2;
+      MediaPlayerDamage.CurrentTime := 0;
+      MediaPlayerDamage.Play;
     end;
   end
   else
   begin
     MediaPlayerDamage.Stop;
     MediaPlayerDamage.CurrentTime := 0;
-    MediaPlayerNotificationCritical.Stop;
-    MediaPlayerNotificationCritical.CurrentTime := 0;
   end;
 end;
 
@@ -565,8 +656,11 @@ begin
   // Позиционируем маркер
   LocationMarker.Position.X := Point.X - LocationMarker.Width / 2;
   LocationMarker.Position.Y := Point.Y - LocationMarker.Height / 2;
+
   LocationMarker.Visible := True;
   LocationMarker.BringToFront;
+
+  SetArrows(imgArrowMan, LocationMarker);
 end;
 
 function TFrameMap.CoordinatesToPixels(Lat, Lon: Double): TPointF;
@@ -719,47 +813,6 @@ begin
   (Sender as TImage).BringToFront;
 end;
 
-procedure TFrameMap.ScrollToImageAdvanced(ScrollBox: TScrollBox; Image: TImage; Center: Boolean = True; Animate: Boolean = False);
-var
-  ImageAbsolutePos: TPointF;
-  ImageViewportPos: TPointF;
-  NewViewportX, NewViewportY: Single;
-begin
-  // Получаем абсолютную позицию изображения
-  ImageAbsolutePos := Image.LocalToAbsolute(TPointF.Zero);
-
-  // Преобразуем в координаты Viewport
-  ImageViewportPos := ScrollBox.AbsoluteToLocal(ImageAbsolutePos);
-
-  if Center then
-  begin
-    // Центрируем изображение в ScrollBox
-    NewViewportX := ImageViewportPos.X - (ScrollBox.Width - Image.Width) / 2;
-    NewViewportY := ImageViewportPos.Y - (ScrollBox.Height - Image.Height) / 2;
-  end
-  else
-  begin
-    // Просто прокручиваем чтобы изображение было видно
-    NewViewportX := ImageViewportPos.X;
-    NewViewportY := ImageViewportPos.Y;
-  end;
-
-  // Ограничиваем значения в пределах допустимой прокрутки
-  NewViewportX := Max(0, Min(NewViewportX, ScrollBox.ContentBounds.Width - ScrollBox.Width));
-  NewViewportY := Max(0, Min(NewViewportY, ScrollBox.ContentBounds.Height - ScrollBox.Height));
-
-  if Animate then
-  begin
-    // Анимированная прокрутка (если нужна анимация)
-    // AnimateScrollTo(ScrollBox, NewViewportX, NewViewportY);
-  end
-  else
-  begin
-    // Мгновенная прокрутка
-    ScrollBox.ViewportPosition := TPointF.Create(NewViewportX, NewViewportY);
-  end;
-end;
-
 procedure TFrameMap.OnMarkerIssueClick(Sender: TObject);
 begin
   layDetailIssue.Parent := (Sender as TImage);
@@ -813,6 +866,15 @@ begin
     mtIssue:
       begin
         AMarker.Marker.Bitmap.Assign(ImageList.Source[4].MultiResBitmap[0].Bitmap);
+
+        AMarker.Arrow := TImage.Create(LayClient);
+        AMarker.Arrow.Width := 22;
+        AMarker.Arrow.Height := AMarker.Arrow.Width;
+        AMarker.Arrow.Bitmap.Assign(ImageList.Source[7].MultiResBitmap[0].Bitmap);
+        AMarker.Arrow.Parent := LayClient;
+
+        TShadowEffect.Create(AMarker.Arrow).Parent := AMarker.Arrow;
+
         AMarker.Marker.OnClick := OnMarkerIssueClick;
       end;
     mtBase:
@@ -899,6 +961,7 @@ procedure TFrameMap.timerCheckCriticalTimer(Sender: TObject);
 var
   I: integer;
   a: tdatetime;
+  vIssue: TIssueData;
 begin
   if Assigned(FCritical) then
   begin
@@ -912,8 +975,36 @@ begin
           FSecondBeforeStartDamage := FCurrentCritical.MinuteBeforeStartDamage * 60;
           timerCritical.Enabled := True;
           FIsCriticalStart := True;
-          Exit;
+          labCritical.Text := 'Приближается выброс';
+          break;
         end;
+
+      if FIsCriticalStart then
+      begin
+        for I := 0 to FIssueList.Count - 1 do
+        begin
+          vIssue := FIssueList[I];
+          vIssue.Visible := False;
+          FIssueList[I] := vIssue;
+        end;
+
+        for I := 0 to FPlacesList.Count - 1 do
+        begin
+          vIssue.Coords := FPlacesList[I].Coords;
+          vIssue.Name := 'Укрыться от выброса';
+          vIssue.Detail := 'Найти убежище и переждать выброс';
+          vIssue.Cost := 0;
+          vIssue.RadiusIN := FPlacesList[I].Radius;
+          vIssue.CompleteAfterIN := True;
+          vIssue.CompleteAfterOUT := False;
+          vIssue.BlockDetail := 'critical';
+          vIssue.Visible := True;
+          FIssueList.Add(vIssue);
+        end;
+
+        UpdateIssue;
+      end;
+
     end
     else
     begin
@@ -923,25 +1014,53 @@ begin
         MediaPlayerStartCritical.Stop;
         MediaPlayerStopCritical.CurrentTime := 0;
         MediaPlayerStopCritical.Play;
+
+        for I := FIssueList.Count - 1 downto 0 do
+        begin
+          if FIssueList[I].BlockDetail = 'critical' then
+          begin
+            FIssueList.Delete(I);
+          end
+          else
+          begin
+            vIssue := FIssueList[I];
+            vIssue.Visible := True;
+            FIssueList[I] := vIssue;
+          end;
+        end;
+
+        UpdateIssue;
       end;
     end;
   end;
+
+  layCritical.Visible := FIsCriticalStart;
 end;
 
 procedure TFrameMap.timerCriticalTimer(Sender: TObject);
 begin
   if FIsCriticalStart then
+  begin
     if FSecondBeforeStartDamage > 0 then
     begin
-      MediaPlayerNotificationCritical.Play;
+      if FSecondBeforeStartDamage < 30 then
+        labCritical.Text := 'Выброс скоро начнется';
+
+      if FSecondBeforeStartDamage mod 20 = 0 then
+      begin
+        MediaPlayerNotificationCritical.CurrentTime := 0;
+        MediaPlayerNotificationCritical.Play;
+      end;
+
       ScanInnerCritical;
       Dec(FSecondBeforeStartDamage);
 
       if MediaPlayerNotificationCritical.CurrentTime = MediaPlayerNotificationCritical.Duration then
-        MediaPlayerNotificationCritical.CurrentTime := 0;
+        MediaPlayerNotificationCritical.Stop;
     end
     else
     begin
+      labCritical.Text := 'Начался выброс';
       ScanInnerCritical;
       MediaPlayerNotificationCritical.Stop;
       MediaPlayerNotificationCritical.CurrentTime := 0;
@@ -950,6 +1069,8 @@ begin
       if MediaPlayerStartCritical.CurrentTime = MediaPlayerStartCritical.Duration then
         MediaPlayerStartCritical.CurrentTime := 0;
     end;
+
+  end;
 end;
 
 procedure TFrameMap.TimerSensorTimer(Sender: TObject);

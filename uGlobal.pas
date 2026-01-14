@@ -32,6 +32,7 @@ type
     LabelText: string;
     LabelDetail: string;
     MarkerType: TMarkerType;
+    Arrow: TImage;
   end;
 
   TCritical = record
@@ -105,6 +106,7 @@ type
     StatusID: integer;
     BlockStatusID: integer;
     BlockDetail: string;
+    Visible: boolean;
   end;
 
   TWiFiNetwork = record
@@ -289,7 +291,7 @@ var
 begin
   FGroupId := Value;
 
-  ExeExec('select skin from groups where group_id = ' + Value.ToString, exActive, FDQuery);
+  ExeExec('select skin from groups where group_id = ' + Value.ToString + ';', exActive, FDQuery);
   try
     IsExistsSkin := FDQuery.RecordCount = 1;
 

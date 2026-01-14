@@ -6228,7 +6228,7 @@ object MainForm: TMainForm
     Size.Width = 789.000000000000000000
     Size.Height = 489.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 13
+    TabOrder = 16
     object igeDeadGlow: TInnerGlowEffect
       Softness = 9.000000000000000000
       GlowColor = claDarkred
@@ -11427,16 +11427,16 @@ object MainForm: TMainForm
   object layEnterName: TLayout
     Align = Contents
     Margins.Left = -1.000000000000000000
-    Size.Width = 829.000000000000000000
-    Size.Height = 527.000000000000000000
+    Size.Width = 810.000000000000000000
+    Size.Height = 509.000000000000000000
     Size.PlatformDefault = False
     Visible = False
     TabOrder = 4
     object Rectangle8: TRectangle
       Align = Contents
       Fill.Color = xFF111611
-      Size.Width = 829.000000000000000000
-      Size.Height = 527.000000000000000000
+      Size.Width = 810.000000000000000000
+      Size.Height = 509.000000000000000000
       Size.PlatformDefault = False
       Stroke.Kind = None
     end
@@ -15165,7 +15165,7 @@ object MainForm: TMainForm
         Size.PlatformDefault = False
         Stroke.Kind = None
         object InnerGlowEffect9: TInnerGlowEffect
-          Softness = 3.000000000000000000
+          Softness = 1.000000000000000000
           GlowColor = xFF060606
           Opacity = 1.000000000000000000
         end
@@ -15175,7 +15175,6 @@ object MainForm: TMainForm
           Size.Width = 558.000000000000000000
           Size.Height = 53.000000000000000000
           Size.PlatformDefault = False
-          Visible = False
           TabOrder = 6
           object Image4: TImage
             MultiResBitmap.Height = 63
@@ -15384,8 +15383,11 @@ object MainForm: TMainForm
           TextSettings.Font.StyleExt = {00070000000000000004000000}
           TextSettings.FontColor = claCadetblue
           TextSettings.HorzAlign = Center
+          Position.X = 20.000000000000000000
           Position.Y = 177.000000000000000000
-          Size.Width = 558.000000000000000000
+          Margins.Left = 20.000000000000000000
+          Margins.Right = 20.000000000000000000
+          Size.Width = 518.000000000000000000
           Size.Height = 49.000000000000000000
           Size.PlatformDefault = False
           TextPrompt = #1042#1074#1077#1076#1080#1090#1077' '#1074#1072#1096#1077' '#1080#1084#1103
@@ -15448,7 +15450,7 @@ object MainForm: TMainForm
         object labNotConnect: TLabel
           Align = Bottom
           StyledSettings = [Style]
-          Position.Y = 235.000000000000000000
+          Position.Y = 182.000000000000000000
           Size.Width = 558.000000000000000000
           Size.Height = 54.000000000000000000
           Size.PlatformDefault = False
@@ -15459,6 +15461,7 @@ object MainForm: TMainForm
           Text = 
             #1044#1083#1103' '#1088#1077#1075#1080#1089#1090#1088#1072#1094#1080#1080' '#1074' '#1089#1077#1090#1080' '#1085#1091#1078#1085#1086' '#1085#1072#1093#1086#1076#1080#1090#1089#1103' '#1074' '#1088#1072#1076#1080#1091#1089#1077' '#1076#1077#1081'c'#1090#1074#1080#1103' '#1089#1077#1090#1080' "' +
             'Merchant"'
+          Visible = False
           TabOrder = 1
         end
         object Label5: TLabel

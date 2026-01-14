@@ -239,6 +239,7 @@ begin
     vIssueList.RadiusOUT := vQuery.FieldByName('radius_out').AsInteger;
     vIssueList.CompleteAfterOUT := vQuery.FieldByName('complete_after_out').AsBoolean;
     vIssueList.CompleteAfterIN := vQuery.FieldByName('complete_after_in').AsBoolean;
+    vIssueList.Visible := true;
     FIssueList.Add(vIssueList);
     vQuery.Next;
   end;
@@ -272,7 +273,7 @@ var
   vQuery: TFDQuery;
   FCriticalItem: TCritical;
 begin
-  FCritical:= TList<TCritical>.Create;
+  FCritical := TList<TCritical>.Create;
   ExeExec('select * from critical_issuies;', exActive, vQuery);
   vQuery.First;
 
@@ -344,7 +345,7 @@ begin
   layEnterName.Visible := false;
   layMenu.Enabled := true;
 
-  ExeExec('select user_id, group_id  from users limit 1;', exActive, FDQuery);
+  ExeExec('select user_id, group_id from users limit 1;', exActive, FDQuery);
   Person := TPerson.Create;
   Person.UserId := FDQuery.FieldByName('user_id').AsInteger;
   Person.GroupId := FDQuery.FieldByName('group_id').AsInteger;
@@ -432,15 +433,19 @@ end;
 
 procedure TMainForm.btnConfirmNameClick(Sender: TObject);
 begin
-  Person.UserName := eNickName.Text;
-  layEnterName.Visible := false;
-  recLoading.Visible := true;
-  GetData;
+  if eNickName.Text = '' then
+    Showmessage('Введите ваше имя')
+  else
+  begin
+    Person.UserName := eNickName.Text;
+    layEnterName.Visible := false;
+    recLoading.Visible := true;
+    GetData;
+  end;
 end;
 
 procedure TMainForm.GetData;
 var
-  FDQuery: TFDQuery;
   vAnswer: string;
   vAction: TAction;
   vSell: TSell;
@@ -453,7 +458,7 @@ begin
     var
       vString: UnicodeString;
       I: Integer;
-      FDQuery: TFDQuery;
+      vQuery: TFDQuery;
       IdTCPClient: TIdTCPClient;
     begin
       IdTCPClient := TIdTCPClient.Create(nil);
@@ -486,44 +491,44 @@ begin
                 Inc(Page);
               end;
             end;
-
-            case vAction.SendType of
-              stUpdateData:
-                begin
-
-                  For I := 0 to vStringData.Count - 1 do
-                    vString := vString + vStringData[I];
-
-                  ExeExec(vString, exExecute, FDQuery);
-
-                  TThread.Synchronize(TThread.CurrentThread,
-                    procedure
-                    begin
-                      recLoading.Visible := false;
-                      sleep(3000);
-                      StartApp;
-                    end);
-                end;
-
-              stUserExists:
-                begin
-                  TThread.Synchronize(TThread.CurrentThread,
-                    procedure
-                    begin
-                      Showmessage('Сталкер с таким именем уже зарегистрирован.');
-                    end);
-
-                  recLoading.Visible := false;
-                  layEnterName.Visible := true;
-                end;
-            end;
           finally
-            FreeAndNil(vStringData);
+            IdTCPClient.Disconnect;
           end;
 
+          case vAction.SendType of
+            stUpdateData:
+              begin
+
+                For I := 0 to vStringData.Count - 1 do
+                  vString := vString + vStringData[I];
+
+                ExeExec(vString, exExecute, vQuery);
+
+                TThread.Synchronize(TThread.CurrentThread,
+                  procedure
+                  begin
+                    recLoading.Visible := false;
+                    //sleep(1000);
+                    StartApp;
+                  end);
+              end;
+
+            stUserExists:
+              begin
+                TThread.Synchronize(TThread.CurrentThread,
+                  procedure
+                  begin
+                    Showmessage('Сталкер с таким именем уже зарегистрирован.');
+                  end);
+
+                recLoading.Visible := false;
+                layEnterName.Visible := true;
+              end;
+          end;
         finally
-          IdTCPClient.Disconnect;
-        end
+          FreeAndNil(vStringData);
+        end;
+
       except
         TThread.Synchronize(TThread.CurrentThread,
           procedure
@@ -565,7 +570,7 @@ begin
   FFrameBag.Parent := TabBag;
   FFrameBag.layBag.Height := FFrameBag.Height - FFrameBag.layTopBorder.Height - FFrameBag.recCash.Height + 63;
   FFrameBag.layBag.Width := FFrameBag.Width;
-  FFrameBag.CreateElements(True);
+  FFrameBag.CreateElements(true);
 
   FFrameBag.LoadBagElements;
 
@@ -588,7 +593,7 @@ end;
 
 procedure TMainForm.eNickNameKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
 begin
-  if Key = 13 then
+  if (Key = 13) and (btnConfirmName.Visible) then
     btnConfirmNameClick(nil);
 end;
 
@@ -663,13 +668,13 @@ begin
       TThread.Synchronize(TThread.CurrentThread,
         procedure
         begin
+          layBtn.Visible := FIsMerchantZone;
+          labNotConnect.Visible := NOT FIsMerchantZone;
+
           if Assigned(FFrameBag) then
             FFrameBag.laySells.Visible := FIsMerchantZone;
 
           ActiveScaner(FIsMerchantZone);
-
-          layBtn.Visible := FIsMerchantZone;
-          labNotConnect.Visible := NOT FIsMerchantZone;
         end);
     end).Start;
 {$ENDIF}

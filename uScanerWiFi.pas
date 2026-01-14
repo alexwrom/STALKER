@@ -59,7 +59,7 @@ function GetMyIP: string;
 var
   vInfo: JWifiInfo;
 begin
-  if (WiFiManager <> nil) and WiFiManager.isWifiEnabled and (FNetworks <> nil) then
+  if (WiFiManager <> nil) and WiFiManager.isWifiEnabled and (FNetworks.Count > 0) then
   begin
     vInfo := WiFiManager.getConnectionInfo;
     Result := convertor(vInfo.getIpAddress);
@@ -153,7 +153,7 @@ begin
 
   Result := False;
   try
-    if (WiFiManager <> nil) and WiFiManager.isWifiEnabled and (FNetworks <> nil) then
+    if (WiFiManager <> nil) and WiFiManager.isWifiEnabled then
     begin
       for i := 0 to FNetworks.Count - 1 do
         if FNetworks[i].SSID = MERCHANT_WIFI then
@@ -336,62 +336,65 @@ begin
 end;
 
 function ConnectToNetwork: boolean;
-var
-  i, j: Integer;
-  vList: JList;
-  NetId: Integer;
-  ExistingConfig: JWifiConfiguration;
-  Config: JWifiConfiguration;
-
 begin
-  try
-    for j := 0 to FNetworks.Count - 1 do
-      if FNetworks[j].SSID = MERCHANT_WIFI then
-      begin
-        if (WiFiManager <> nil) and WiFiManager.isWifiEnabled then
-        begin
-          // Ищем существующую конфигурацию
-          vList := WiFiManager.getConfiguredNetworks;
-          NetId := -1;
-
-          if Assigned(vList) then
+  PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.CHANGE_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION'],
+    procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
+    var
+      i, j: Integer;
+      vList: JList;
+      NetId: Integer;
+      ExistingConfig: JWifiConfiguration;
+      Config: JWifiConfiguration;
+    begin
+      try
+        for j := 0 to FNetworks.Count - 1 do
+          if FNetworks[j].SSID = MERCHANT_WIFI then
           begin
-            for i := 0 to vList.Size - 1 do
+            if (WiFiManager <> nil) and WiFiManager.isWifiEnabled then
             begin
-              ExistingConfig := TJWifiConfiguration.Wrap(vList.get(i));
-              if JStringToString(ExistingConfig.SSID).Contains(MERCHANT_WIFI) then
+              // Ищем существующую конфигурацию
+              vList := WiFiManager.getConfiguredNetworks;
+              NetId := -1;
+
+              if Assigned(vList) then
               begin
-                NetId := ExistingConfig.networkId;
-                Break;
+                for i := 0 to vList.Size - 1 do
+                begin
+                  ExistingConfig := TJWifiConfiguration.Wrap(vList.get(i));
+                  if JStringToString(ExistingConfig.SSID).Contains(MERCHANT_WIFI) then
+                  begin
+                    NetId := ExistingConfig.networkId;
+                    Break;
+                  end;
+                end;
               end;
+
+              if NetId = -1 then
+              begin
+                // Создаем новую конфигурацию (предполагаем WPA2)
+                Config := CreateWifiConfiguration(MERCHANT_WIFI);
+                NetId := WiFiManager.addNetwork(Config);
+              end;
+
+              if NetId <> -1 then
+              begin
+                // Отключаем от текущей сети
+                WiFiManager.disconnect;
+
+                // Подключаемся к выбранной сети
+                if WiFiManager.enableNetwork(NetId, true) then
+                begin
+                  WiFiManager.reconnect;
+                  sleep(2000);
+                end;
+              end;
+
             end;
+            Break;
           end;
-
-          if NetId = -1 then
-          begin
-            // Создаем новую конфигурацию (предполагаем WPA2)
-            Config := CreateWifiConfiguration(MERCHANT_WIFI);
-            NetId := WiFiManager.addNetwork(Config);
-          end;
-
-          if NetId <> -1 then
-          begin
-            // Отключаем от текущей сети
-            WiFiManager.disconnect;
-
-            // Подключаемся к выбранной сети
-            if WiFiManager.enableNetwork(NetId, true) then
-            begin
-              WiFiManager.reconnect;
-              // sleep(3000);
-            end;
-          end;
-
-        end;
-        Break;
+      except
       end;
-  except
-  end;
+    end);
 end;
 
 procedure ConnectToMerchatZone;
@@ -405,10 +408,12 @@ begin
   FIsMerchantZone := IsMechantZone;
 
   if not FIsMerchantZone then
+  begin
     if TOSVersion.Check(10) then
       ConnectToNetworkAndroid10Plus
     else
       ConnectToNetwork;
+  end;
 end;
 {$ENDIF}
 

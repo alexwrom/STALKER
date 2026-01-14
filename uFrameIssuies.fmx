@@ -8768,7 +8768,7 @@ object FrameIssuies: TFrameIssuies
             TextSettings.Font.StyleExt = {00070000000000000004000000}
             TextSettings.FontColor = xFFE47106
             Text = #1054#1087#1080#1089#1072#1085#1080#1077' '#1079#1072#1076#1072#1085#1080#1103':'
-            TabOrder = 3
+            TabOrder = 2
           end
           object labDetailIssueActive: TLabel
             Align = Top
