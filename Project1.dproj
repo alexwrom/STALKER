@@ -278,6 +278,8 @@
         <DCC_UnitSearchPath>..\..\Lib\Classes;..\..\Lib\Classes\Common;..\..\Lib\Classes\Common\Detector;..\..\Lib\Classes\Common\ReedSolomon;..\..\Lib\Classes\Filtering;..\..\Lib\Classes\1D Barcodes;..\..\Lib\Classes\2D Barcodes;..\..\Lib\Classes\2D Barcodes\Decoder;..\..\Lib\Classes\2D Barcodes\Detector;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <Android_BackgroundColor>#FFFFFF</Android_BackgroundColor>
         <Android_DarkBackgroundColor>#000000</Android_DarkBackgroundColor>
+        <AUP_ACCESS_MEDIA_LOCATION>true</AUP_ACCESS_MEDIA_LOCATION>
+        <AUP_CALL_PHONE>false</AUP_CALL_PHONE>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Android64)'!=''">
         <VerInfo_Build>1</VerInfo_Build>

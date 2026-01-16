@@ -13,7 +13,7 @@ uses
   FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys,
   FireDAC.FMXUI.Wait, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
   FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client, uGlobal, uFrameDetector,
-  uFrameQRScaner, uFrameIssuies, uFrameBag, Classes.sell, Classes.action, Rest.Json, IdGlobal, StrUtils, Threading,
+  uFrameQRScaner, uFrameIssuies, uFrameBag, Classes.sell, Classes.action, Rest.Json, IdGlobal, StrUtils, Threading, System.IOUtils,
 {$IFDEF ANDROID}
   Androidapi.JNI.JavaTypes, // Для JString
   Androidapi.JNI.GraphicsContentViewText,
@@ -101,6 +101,7 @@ type
     layPersonHealth: TLayout;
     recBack: TRectangle;
     MediaPlayer: TMediaPlayer;
+    ProgressBar: TProgressBar;
     procedure FormCreate(Sender: TObject);
     procedure btnToMapClick(Sender: TObject);
     procedure btnToPercsClick(Sender: TObject);
@@ -116,12 +117,13 @@ type
     procedure eNickNameEnter(Sender: TObject);
     procedure eNickNameExit(Sender: TObject);
   private
-    vStringData: TList<UnicodeString>;
+
     procedure LoadArtefacts;
     procedure LoadPlaces;
     procedure LoadBag;
     procedure GetData;
     procedure LoadCritical;
+    procedure GetImage(AHex: UnicodeString);
 
   public
     { Public declarations }
@@ -297,47 +299,51 @@ var
 begin
   FPlacesList := TList<TPlaceData>.Create;
   ExeExec('select * from places;', exActive, vQuery);
-  vQuery.First;
+  try
+    vQuery.First;
 
-  while Not vQuery.Eof do
-  begin
-    vPlaceData.Coords.Latitude := vQuery.FieldByName('lat').AsFloat;
-    vPlaceData.Coords.Longitude := vQuery.FieldByName('lon').AsFloat;
-    vPlaceData.Name := vQuery.FieldByName('name').AsString;
-    vPlaceData.Radius := vQuery.FieldByName('radius').AsInteger;
+    while Not vQuery.Eof do
+    begin
+      vPlaceData.Coords.Latitude := vQuery.FieldByName('lat').AsFloat;
+      vPlaceData.Coords.Longitude := vQuery.FieldByName('lon').AsFloat;
+      vPlaceData.Name := vQuery.FieldByName('name').AsString;
+      vPlaceData.Radius := vQuery.FieldByName('radius').AsInteger;
 
-    if vQuery.FieldByName('type').AsString = 'mtBase' then
-      vPlaceData.MarkerType := mtBase
-    else if vQuery.FieldByName('type').AsString = 'mtSafe' then
-      vPlaceData.MarkerType := mtSafe;
+      if vQuery.FieldByName('type').AsString = 'mtBase' then
+        vPlaceData.MarkerType := mtBase
+      else if vQuery.FieldByName('type').AsString = 'mtSafe' then
+        vPlaceData.MarkerType := mtSafe;
 
-    FPlacesList.Add(vPlaceData);
-    vQuery.Next;
+      FPlacesList.Add(vPlaceData);
+      vQuery.Next;
+    end;
+  finally
+    FreeQueryAndConn(vQuery);
   end;
-
-  FreeQueryAndConn(vQuery);
 end;
 
 procedure TMainForm.FormShow(Sender: TObject);
 var
   vUserExists: boolean;
 begin
-  ExeExec('select user_id  from users limit 1;', exActive, FDQuery);
-  vUserExists := FDQuery.RecordCount = 1;
-  FreeQueryAndConn(FDQuery);
+ExeExec('select user_id  from users limit 1;', exActive, FDQuery);
+        vUserExists := FDQuery.RecordCount = 1;
+        FreeQueryAndConn(FDQuery);
 
-  if vUserExists then
-  begin
-    StartApp;
-  end
-  else
-  begin
-    Person := TPerson.Create;
-    Person.UserId := -1;
-    Person.GroupId := -1;
-    Person.CountContener := -1;
-    layEnterName.Visible := true;
-  end;
+        if vUserExists then
+        begin
+          StartApp;
+        end
+        else
+        begin
+          Person := TPerson.Create;
+          Person.UserId := -1;
+          Person.GroupId := -1;
+          Person.CountContener := -1;
+          layEnterName.Visible := true;
+        end;
+
+  PermissionsService.RequestPermissions(['android.permission.WRITE_EXTERNAL_STORAGE'], nil);
 end;
 
 procedure TMainForm.StartApp;
@@ -446,20 +452,18 @@ end;
 
 procedure TMainForm.GetData;
 var
-  vAnswer: string;
-  vAction: TAction;
-  vSell: TSell;
-  I: Integer;
-  vStr: string;
-  Page: Integer;
+vQuery: TFDQuery;
 begin
   TTask.Run(
     procedure
     var
       vString: UnicodeString;
       I: Integer;
-      vQuery: TFDQuery;
+
       IdTCPClient: TIdTCPClient;
+      vStringData: TList<UnicodeString>;
+      vStr: string;
+      vAction: TAction;
     begin
       IdTCPClient := TIdTCPClient.Create(nil);
       IdTCPClient.Host := '192.168.4.60';
@@ -469,28 +473,47 @@ begin
           IdTCPClient.Connect;
 
           IdTCPClient.IOHandler.WriteLn(TJson.ObjectToJsonString(Person), IndyUTF8Encoding(true));
-          vStringData := TList<UnicodeString>.Create;
+
           try
             vAction := TJson.JsonToObject<TAction>(IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(true)));
-            Page := 1;
 
-            if vAction.PageCount > 1 then
+            TThread.Synchronize(TThread.CurrentThread,
+              procedure
+              begin
+                ProgressBar.Max := vAction.PageCount;
+                ProgressBar.Value := 1;
+              end);
+
+            vStringData := TList<UnicodeString>.Create;
+
+            if vAction.PageCount > 0 then
             begin
-              while Page <> vAction.PageCount do
+              // TParallel.for(1, vAction.PageCount,
+              // procedure(I: Integer)
+
+              for I := 1 to vAction.PageCount do
+
               begin
                 vStr := IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(true));
 
                 if vStr[1] = '~' then
                 begin
-                  vStringData[vStringData.Count - 1] := vStringData[vStringData.Count - 1] + Copy(vStr, 2, Length(vStr) - 1);
-                  Dec(Page);
+                  vStringData[vStringData.Count - 1] := vStringData[vStringData.Count - 1] + Copy(vStr, 2);
                 end
                 else
                   vStringData.Add(vStr);
 
-                Inc(Page);
+                TThread.Synchronize(TThread.CurrentThread,
+                  procedure
+                  begin
+                    //Memo1.lines.add(vStr);
+
+                    ProgressBar.Value := ProgressBar.Value + 1;
+                  end);
+                // end);
               end;
             end;
+
           finally
             IdTCPClient.Disconnect;
           end;
@@ -499,16 +522,39 @@ begin
             stUpdateData:
               begin
 
-                For I := 0 to vStringData.Count - 1 do
+                TThread.Synchronize(TThread.CurrentThread,
+                  procedure
+                  begin
+                    ProgressBar.Max := vStringData.Count;
+                    ProgressBar.Value := 0;
+                  end);
+
+                For I := 0 to vStringData.Count - 2 do // Последняя строка это Hex карты
+                begin
                   vString := vString + vStringData[I];
 
+                  TThread.Synchronize(TThread.CurrentThread,
+                    procedure
+                    begin
+                      ProgressBar.Value := ProgressBar.Value + 1;
+                    end);
+                end;
+
+
                 ExeExec(vString, exExecute, vQuery);
+
+                GetImage(vStringData[vStringData.Count - 1]);
+
+                TThread.Synchronize(TThread.CurrentThread,
+                  procedure
+                  begin
+                    ProgressBar.Value := I;
+                  end);
 
                 TThread.Synchronize(TThread.CurrentThread,
                   procedure
                   begin
                     recLoading.Visible := false;
-                    //sleep(1000);
                     StartApp;
                   end);
               end;
@@ -540,6 +586,38 @@ begin
         layEnterName.Visible := true;
       end;
     end);
+end;
+
+procedure TMainForm.GetImage(AHex: UnicodeString);
+var
+  Stream: TMemoryStream;
+  I: Integer;
+  ByteValue: Byte;
+  Bytes: TBytes;
+  HexByte: UnicodeString;
+begin
+  SetLength(Bytes, Length(AHex) div 2);
+  // Конвертируем шестнадцатеричную строку в байты
+  for I := 0 to (Length(AHex) div 2) - 1 do
+  begin
+    HexByte := Copy(AHex, I * 2 + 1, 2);
+    try
+      ByteValue := StrToInt('$' + HexByte);
+      Bytes[I] := ByteValue;
+    except
+    end;
+  end;
+
+  // Создаем поток из байт
+  Stream := TMemoryStream.Create;
+  try
+    Stream.WriteBuffer(Bytes[0], Length(Bytes));
+    Stream.Position := 0;
+
+    Stream.SaveToFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'map_image.png'));
+  finally
+    FreeAndNil(Stream);
+  end;
 end;
 
 procedure TMainForm.btnToBagClick(Sender: TObject);

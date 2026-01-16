@@ -109,11 +109,10 @@ type
     FMarkerList: TList<TMarkerData>;
     FMarkerIssue: TList<TMarkerData>;
     FAnomalyList: TList<TAnomalyData>;
-    procedure LoadMapFromFile(const AFileName: string);
+    procedure LoadMap;
     procedure SetLocationMarker(Lat, Lon: Double);
     function CoordinatesToPixels(Lat, Lon: Double): TPointF;
     function PixelsToCoordinates(X, Y: Single): TLocationCoord2D;
-    procedure UpdateMapBounds;
     procedure UpdateZoomControls;
     procedure ApplyZoom(ACenterX: Single = -1; ACenterY: Single = -1);
     procedure ZoomIn;
@@ -137,9 +136,6 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure ResetLocationMarkers;
-
-    // Установка границ карты (координаты углов)
-    procedure SetMapBounds(TopLeftLat, TopLeftLon, BottomRightLat, BottomRightLon: Double);
 
     // Масштабирование
     procedure ZoomToPoint(APoint: TPointF; AScale: Double);
@@ -184,7 +180,7 @@ begin
   FMarkerIssue := TList<TMarkerData>.Create;
   FAnomalyList := TList<TAnomalyData>.Create;
 
-  LoadMapFromFile(''); // Переписать
+  LoadMap;
 
   LoadAnomalies;
   UpdateIssue;
@@ -513,27 +509,37 @@ begin
   MarkersPanel.Visible := False;
 end;
 
-procedure TFrameMap.LoadMapFromFile(const AFileName: string);
+procedure TFrameMap.LoadMap;
+var
+  vQuery: TFDQuery;
 begin
   try
-    // MapImage.Bitmap.LoadFromFile(AFileName);
-    FMapLoaded := True;
+      MapImage.Bitmap.LoadFromFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'map_image.png'));
+      FMapLoaded := True;
 
-    // Сохраняем оригинальные размеры
-    FOriginalMapWidth := MapImage.Bitmap.Width;
-    FOriginalMapHeight := MapImage.Bitmap.Height;
+      // Сохраняем оригинальные размеры
+      FOriginalMapWidth := MapImage.Bitmap.Width;
+      FOriginalMapHeight := MapImage.Bitmap.Height;
 
-    // Устанавливаем размер Image под размер карты
-    MapImage.Width := FOriginalMapWidth;
-    MapImage.Height := FOriginalMapHeight;
-    MapLayout.Width := FOriginalMapWidth;
-    MapLayout.Height := FOriginalMapHeight;
+      // Устанавливаем размер Image под размер карты
+      MapImage.Width := FOriginalMapWidth;
+      MapImage.Height := FOriginalMapHeight;
+      MapLayout.Width := FOriginalMapWidth;
+      MapLayout.Height := FOriginalMapHeight;
 
-    // Сбрасываем масштаб
-    SetZoom(1.0);
+      // Сбрасываем масштаб
+      SetZoom(1.0);
 
-    // Обновляем границы карты
-    UpdateMapBounds;
+      // Обновляем границы карты
+      ExeExec('select * from game_data;', exActive, vQuery);
+    try
+      FTopLeftLat := vQuery.FieldByName('map_left_top_lat').AsFloat;
+      FTopLeftLon := vQuery.FieldByName('map_left_top_lon').AsFloat;
+      FBottomRightLat := vQuery.FieldByName('map_right_bottom_lat').AsFloat;
+      FBottomRightLon := vQuery.FieldByName('map_right_bottom_lon').AsFloat;
+    finally
+      FreeQueryAndConn(vQuery);
+    end;
 
   except
     on E: Exception do
@@ -1129,23 +1135,6 @@ begin
   // Обновляем состояние кнопок
   btnZoomIn.Enabled := FCurrentScale < FMaxScale;
   btnZoomOut.Enabled := FCurrentScale > FMinScale;
-end;
-
-procedure TFrameMap.UpdateMapBounds;
-begin
-  // Устанавливаем границы по умолчанию
-  FTopLeftLat := 52.154782;
-  FTopLeftLon := 23.581863;
-  FBottomRightLat := 52.151343;
-  FBottomRightLon := 23.596943;
-end;
-
-procedure TFrameMap.SetMapBounds(TopLeftLat, TopLeftLon, BottomRightLat, BottomRightLon: Double);
-begin
-  FTopLeftLat := TopLeftLat;
-  FTopLeftLon := TopLeftLon;
-  FBottomRightLat := BottomRightLat;
-  FBottomRightLon := BottomRightLon;
 end;
 
 end.

@@ -6228,7 +6228,7 @@ object MainForm: TMainForm
     Size.Width = 789.000000000000000000
     Size.Height = 489.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 16
+    TabOrder = 19
     object igeDeadGlow: TInnerGlowEffect
       Softness = 9.000000000000000000
       GlowColor = claDarkred
@@ -11430,7 +11430,6 @@ object MainForm: TMainForm
     Size.Width = 810.000000000000000000
     Size.Height = 509.000000000000000000
     Size.PlatformDefault = False
-    Visible = False
     TabOrder = 4
     object Rectangle8: TRectangle
       Align = Contents
@@ -15485,8 +15484,8 @@ object MainForm: TMainForm
   object recLoading: TRectangle
     Align = Contents
     Fill.Color = xFF111611
-    Size.Width = 828.000000000000000000
-    Size.Height = 527.000000000000000000
+    Size.Width = 809.000000000000000000
+    Size.Height = 509.000000000000000000
     Size.PlatformDefault = False
     Stroke.Kind = None
     Visible = False
@@ -15499,7 +15498,7 @@ object MainForm: TMainForm
       object Label3: TLabel
         Align = Bottom
         StyledSettings = []
-        Position.Y = 146.000000000000000000
+        Position.Y = 126.000000000000000000
         Size.Width = 285.000000000000000000
         Size.Height = 32.000000000000000000
         Size.PlatformDefault = False
@@ -15509,7 +15508,7 @@ object MainForm: TMainForm
         TextSettings.FontColor = claDarkgray
         TextSettings.HorzAlign = Center
         TextSettings.VertAlign = Trailing
-        Text = #1055#1086#1076#1082#1083#1102#1095#1077#1085#1080#1077' '#1082' '#1089#1090#1072#1083#1082#1077#1088#1089#1082#1086#1081' '#1089#1077#1090#1080
+        Text = #1055#1086#1076#1082#1083#1102#1095#1077#1085#1080#1077' '#1082' '#1089#1090#1072#1083#1082#1077#1088#1089#1082#1086#1081' '#1089#1077#1090#1080'...'
         TabOrder = 3
       end
       object Label4: TLabel
@@ -15526,6 +15525,14 @@ object MainForm: TMainForm
         TextSettings.VertAlign = Leading
         Text = #1046#1076#1080', '#1101#1090#1080' '#1089#1077#1082#1091#1085#1076#1099' '#1090#1074#1086#1077#1081' '#1078#1080#1079#1085#1080' '#1085#1077' '#1087#1088#1086#1081#1076#1091#1090' '#1085#1072#1087#1088#1072#1089#1085#1086
         TabOrder = 2
+      end
+      object ProgressBar: TProgressBar
+        Align = Bottom
+        Orientation = Horizontal
+        Position.Y = 158.000000000000000000
+        Size.Width = 285.000000000000000000
+        Size.Height = 20.000000000000000000
+        Size.PlatformDefault = False
       end
     end
   end
