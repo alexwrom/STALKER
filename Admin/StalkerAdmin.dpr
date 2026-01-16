@@ -3,7 +3,7 @@ program StalkerAdmin;
 uses
   System.StartUpCopy,
   FMX.Forms,
-  uMainForm in 'uMainForm.pas' {Form1},
+  uMainForm in 'uMainForm.pas' {MainForm},
   uGlobal in 'uGlobal.pas',
   classes.action in '..\classes\classes.action.pas',
   uGenericBaseData in 'uGenericBaseData.pas',
@@ -14,6 +14,6 @@ uses
 
 begin
   Application.Initialize;
-  Application.CreateForm(TForm1, Form1);
+  Application.CreateForm(TMainForm, MainForm);
   Application.Run;
 end.

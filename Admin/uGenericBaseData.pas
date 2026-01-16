@@ -6,6 +6,9 @@ uses
   uGlobal, System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   Generics.Collections, FireDAC.Comp.Client, StrUtils, FMX.Graphics, Classes.action;
 
+const
+  cDefLength = 9000;
+
 function GoGenericBaseData(AUserID: integer; var APageCount: integer): UnicodeString;
 
 implementation
@@ -55,9 +58,12 @@ begin
       FDQueryCol.First;
       while not FDQueryCol.Eof do
       begin
-        vColumn.Name := FDQueryCol.FieldByName('name').AsString;
-        vColumn.TypeCol := FDQueryCol.FieldByName('type').AsString;
-        vColumns.Add(vColumn);
+        if FDQueryCol.FieldByName('name').AsString <> 'map_image' then
+        begin
+          vColumn.Name := FDQueryCol.FieldByName('name').AsString;
+          vColumn.TypeCol := FDQueryCol.FieldByName('type').AsString;
+          vColumns.Add(vColumn);
+        end;
         FDQueryCol.Next;
       end;
 
@@ -98,21 +104,27 @@ begin
 
           vStr := 'insert into ' + ATable + ' (' + vColName + ') values (' + vColValue + ');';
 
-          if Length(vStr) > 5000 then
+          if Length(vStr) > cDefLength then
           begin
-            AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + Copy(vStr, 1, 5000);
-            Delete(vStr, 1, 5000);
+            AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + Copy(vStr, 1, cDefLength);
+            APageCount := APageCount + 1;
+            Delete(vStr, 1, cDefLength);
 
-            while Length(vStr) > 5000 do
+            while Length(vStr) > cDefLength do
             begin
-              AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + IfThen(AStrData = '', '', '~') + Copy(vStr, 1, 5000);
-              Delete(vStr, 1, 5000);
+              AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + IfThen(AStrData = '', '', '~') + Copy(vStr, 1, cDefLength);
+              APageCount := APageCount + 1;
+              Delete(vStr, 1, cDefLength);
             end;
             AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + '~' + vStr;
+            APageCount := APageCount + 1;
           end
           else
+          begin
             AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + vStr;
-          APageCount := APageCount + 1;
+            APageCount := APageCount + 1;
+          end;
+
           FDQuery.Next;
         end;
 
@@ -124,8 +136,54 @@ begin
     end;
   finally
     FreeAndNil(vColumns);
+
+    TThread.Synchronize(nil,
+      procedure
+      begin
+        SetProgressInc;
+      end);
   end;
 
+end;
+
+procedure AddMapToHex(var AStrData: string; var APageCount: integer);
+var
+  FDQuery: TFDQuery;
+  vBitmap: TBitmap;
+  vColValue: UnicodeString;
+begin
+  ExeExec('select map_image from game_data;', exActive, FDQuery);
+  try
+    vBitmap := TBitmap.Create;
+    try
+      vBitmap.Assign(FDQuery.FieldByName('map_image'));
+      vColValue := BitmapToHexString(vBitmap);
+    except
+    end;
+
+    if Length(vColValue) > cDefLength then
+    begin
+      AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + Copy(vColValue, 1, cDefLength);
+      APageCount := APageCount + 1;
+      Delete(vColValue, 1, cDefLength);
+
+      while Length(vColValue) > cDefLength do
+      begin
+        AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + IfThen(AStrData = '', '', '~') + Copy(vColValue, 1, cDefLength);
+        APageCount := APageCount + 1;
+        Delete(vColValue, 1, cDefLength);
+      end;
+      AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + '~' + vColValue;
+      APageCount := APageCount + 1;
+    end
+    else
+    begin
+      AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + vColValue;
+      APageCount := APageCount + 1;
+    end;
+  finally
+    FreeQueryAndConn(FDQuery);
+  end;
 end;
 
 function GoGenericBaseData(AUserID: integer; var APageCount: integer): UnicodeString;
@@ -147,6 +205,8 @@ begin
   GenerateTableInsert('places', Result, APageCount);
   GenerateTableInsert('weapons', Result, APageCount);
   GenerateTableInsert('bag', Result, APageCount);
+  GenerateTableInsert('game_data', Result, APageCount);
+  AddMapToHex(Result, APageCount);
 end;
 
 end.

@@ -40,8 +40,11 @@ procedure GenerateQRCode(const AText: string; AImage: TImage);
 function GetUserAppPath: string;
 function ExeExec(Str: string; Typ: TExecType; var AQuery: TFDQuery): boolean;
 procedure FreeQueryAndConn(var AQuery: TFDQuery);
+procedure SetProgressInc;
 
 implementation
+
+uses uMainForm;
 
 function GetLocalIP: String;
 const
@@ -175,6 +178,11 @@ procedure FreeQueryAndConn(var AQuery: TFDQuery);
 begin
   AQuery.Connection.Connected := false;
   FreeAndNil(AQuery);
+end;
+
+procedure SetProgressInc;
+begin
+  MainForm.ProgressBar.Value := MainForm.ProgressBar.Value + 1;
 end;
 
 end.

@@ -7,56 +7,78 @@ uses
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, IdContext,
   IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer, IdGlobal,
   FMX.Memo.Types, FMX.Controls.Presentation, FMX.ScrollBox, FMX.Memo, uGlobal, Rest.Json, Classes.action,
-  FireDAC.Comp.Client, FMX.StdCtrls, Generics.Collections, uGenericBaseData, StrUtils, Classes.send,
+  FireDAC.Comp.Client, FMX.StdCtrls, Generics.Collections, uGenericBaseData, StrUtils, Classes.send, Threading,
   FMX.Objects;
 
 type
-  TForm1 = class(TForm)
+  TMainForm = class(TForm)
     IdTCPServer: TIdTCPServer;
     Button1: TButton;
     Memo1: TMemo;
     ImgQR: TImage;
+    labStatusLoadData: TLabel;
+    ProgressBar: TProgressBar;
     procedure IdTCPServerExecute(AContext: TIdContext);
     procedure Button1Click(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     { Private declarations }
+    FStrdata: UnicodeString;
+    FPageCount: Integer;
   public
     { Public declarations }
   end;
 
 var
-  Form1: TForm1;
+  MainForm: TMainForm;
 
 implementation
 
 {$R *.fmx}
 
-procedure TForm1.Button1Click(Sender: TObject);
+procedure TMainForm.Button1Click(Sender: TObject);
 var
   vSend: TSend;
-  vPageCount: Integer;
-  I: Integer;
-  s:string;
-begin
-memo1.Text := GoGenericBaseData(1, vPageCount);
 
- { vSend := TSend.Create;
-  try
+  I: Integer;
+  s: string;
+begin
+  Memo1.Text := FStrdata;
+
+  { vSend := TSend.Create;
+    try
     vSend.Ip := GetLocalIP;
     GenerateQRCode(TJson.ObjectToJsonString(vSend), ImgQR);
-  finally
+    finally
     FreeAndNil(vSend);
-  end;     }
+    end; }
 end;
 
-procedure TForm1.IdTCPServerExecute(AContext: TIdContext);
+procedure TMainForm.FormShow(Sender: TObject);
+begin
+  FPageCount := 0;
+
+  TTask.Run(
+    procedure
+    begin
+      FStrdata := GoGenericBaseData(1, FPageCount);
+
+      TThread.Synchronize(nil,
+      procedure
+      begin
+        ProgressBar.Value := 0;
+        labStatusLoadData.Text := 'Готово';
+      end);
+    end);
+end;
+
+procedure TMainForm.IdTCPServerExecute(AContext: TIdContext);
 var
   vContext: string;
   vPerson: TPerson;
   vAnswer: TAction;
   FDQuery: TFDQuery;
-  StrData: UnicodeString;
-  vPageCount: Integer;
+  vStrData: UnicodeString;
 begin
   vContext := AContext.Connection.Socket.ReadLn();
 
@@ -72,10 +94,8 @@ begin
     ExeExec('insert into users (nickname, group_id) values (' + QuotedStr(vPerson.UserName) + ', 1);', exExecute, FDQuery);
     vAnswer := TAction.Create;
     vAnswer.SendType := stUpdateData;
-    vPageCount := 0;
-    StrData := GoGenericBaseData(1, vPageCount);
-    StrData := 'insert into users (nickname, group_id) values (' + QuotedStr(vPerson.UserName) + ', 1);' + #13#10 + StrData;
-    vAnswer.PageCount := vPageCount + 2;
+    vStrData := 'insert into users (nickname, group_id) values (' + QuotedStr(vPerson.UserName) + ', 1);' + #13#10 + FStrdata;
+    vAnswer.PageCount := FPageCount + 1;
   end
   else
   begin
@@ -85,7 +105,7 @@ begin
     begin
       vAnswer := TAction.Create;
       vAnswer.SendType := stUserExists;
-      vPageCount := 1;
+      FPageCount := 1;
     end
     else // Ищем для него информацию по уведомлениях
     begin
@@ -93,7 +113,7 @@ begin
     end;
   end;
 
-  AContext.Connection.Socket.WriteLn(TJson.ObjectToJsonString(vAnswer) + #13#10 + StrData, IndyUTF8Encoding(true));
+  AContext.Connection.Socket.WriteLn(TJson.ObjectToJsonString(vAnswer) + #13#10 + vStrData, IndyUTF8Encoding(true));
   AContext.Connection.Disconnect;
 
 end;
