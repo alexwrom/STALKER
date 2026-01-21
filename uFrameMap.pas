@@ -67,6 +67,7 @@ type
     MediaPlayerStartCritical: TMediaPlayer;
     MediaPlayerNotificationCritical: TMediaPlayer;
     MediaPlayerStopCritical: TMediaPlayer;
+    CheckBox1: TCheckBox;
     layCritical: TLayout;
     Image1: TImage;
     Rectangle4: TRectangle;
@@ -75,7 +76,6 @@ type
     Layout7: TLayout;
     layPersonHealth: TLayout;
     ShadowEffect1: TShadowEffect;
-    cManRadius: TCircle;
     procedure MapImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure btnZoomInClick(Sender: TObject);
     procedure btnZoomOutClick(Sender: TObject);
@@ -109,7 +109,6 @@ type
     FMarkerList: TList<TMarkerData>;
     FMarkerIssue: TList<TMarkerData>;
     FAnomalyList: TList<TAnomalyData>;
-    FMapRealWidth: integer;
     procedure LoadMap;
     procedure SetLocationMarker(Lat, Lon: Double);
     function CoordinatesToPixels(Lat, Lon: Double): TPointF;
@@ -133,7 +132,6 @@ type
     procedure LoadAnomalies;
     procedure ScanInnerCritical;
     procedure SetArrows(AArrow: TImage; ATarget: TControl);
-    procedure UpdateAnomalies;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -183,11 +181,11 @@ begin
   FAnomalyList := TList<TAnomalyData>.Create;
 
   LoadMap;
-
+  
   LoadAnomalies;
   UpdateIssue;
   UpdateBaseSafeDead;
-  UpdateAnomalies;
+  //ResetLocationMarkers;
 
   MediaPlayerRad.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'zvuk-radiacii.mp3');
   MediaPlayerAnomaly.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'detector.mp3');
@@ -279,29 +277,8 @@ begin
     FCoords := FPlacesList[I].Coords;
     AMarker.Coords := FCoords;
     AMarker.MarkerType := FPlacesList[I].MarkerType;
-    AMarker.Index := I;
-    AMarker.Radius := FPlacesList[I].Radius;
+
     AMarker.LabelText := FPlacesList[I].Name;
-
-    CreateMarker(AMarker);
-  end;
-end;
-
-procedure TFrameMap.UpdateAnomalies;
-var
-  AMarker: TMarkerData;
-  I: integer;
-begin
-  for I := 0 to FAnomalyList.Count - 1 do
-  begin
-    FCoords := FAnomalyList[I].Coords;
-    AMarker.Coords := FCoords;
-
-    if FAnomalyList[I].AnomalyType = atRadiation then
-      AMarker.MarkerType := mtRadiation
-    else
-      AMarker.MarkerType := mtAnomaly;
-    AMarker.Index := I;
 
     CreateMarker(AMarker);
   end;
@@ -466,7 +443,7 @@ begin
     end;
   end;
 
-  if vIsInnerCritical then
+  if vIsInnerCritical and CheckBox1.ischecked then
   begin
     if (FSecondBeforeStartDamage <= 0) and (NOT FIsDead) then
     begin
@@ -513,17 +490,17 @@ begin
       end;
     1:
       begin
-        AMarker.MarkerType := mtPointRad;
+        AMarker.MarkerType := mtRad;
         AMarker.LabelText := 'Радиация';
       end;
     2:
       begin
-        AMarker.MarkerType := mtPointAnomaly;
+        AMarker.MarkerType := mtAnomaly;
         AMarker.LabelText := 'Аномалия';
       end;
     3:
       begin
-        AMarker.MarkerType := mtPointBag;
+        AMarker.MarkerType := mtBag;
         AMarker.LabelText := 'Схрон';
       end;
   end;
@@ -537,30 +514,29 @@ var
   vQuery: TFDQuery;
 begin
   try
-    MapImage.Bitmap.LoadFromFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'map_image.png'));
-    FMapLoaded := True;
+      MapImage.Bitmap.LoadFromFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'map_image.png'));
+      FMapLoaded := True;
 
-    // Сохраняем оригинальные размеры
-    FOriginalMapWidth := MapImage.Bitmap.Width;
-    FOriginalMapHeight := MapImage.Bitmap.Height;
+      // Сохраняем оригинальные размеры
+      FOriginalMapWidth := MapImage.Bitmap.Width;
+      FOriginalMapHeight := MapImage.Bitmap.Height;
 
-    // Устанавливаем размер Image под размер карты
-    MapImage.Width := FOriginalMapWidth;
-    MapImage.Height := FOriginalMapHeight;
-    MapLayout.Width := FOriginalMapWidth;
-    MapLayout.Height := FOriginalMapHeight;
+      // Устанавливаем размер Image под размер карты
+      MapImage.Width := FOriginalMapWidth;
+      MapImage.Height := FOriginalMapHeight;
+      MapLayout.Width := FOriginalMapWidth;
+      MapLayout.Height := FOriginalMapHeight;
 
-    // Сбрасываем масштаб
-    SetZoom(1.0);
+      // Сбрасываем масштаб
+      SetZoom(1.0);
 
-    // Обновляем границы карты
-    ExeExec('select * from game_data;', exActive, vQuery);
+      // Обновляем границы карты
+      ExeExec('select * from game_data;', exActive, vQuery);
     try
       FTopLeftLat := vQuery.FieldByName('map_left_top_lat').AsFloat;
       FTopLeftLon := vQuery.FieldByName('map_left_top_lon').AsFloat;
       FBottomRightLat := vQuery.FieldByName('map_right_bottom_lat').AsFloat;
       FBottomRightLon := vQuery.FieldByName('map_right_bottom_lon').AsFloat;
-      FMapRealWidth := vQuery.FieldByName('map_real_width').AsInteger;
     finally
       FreeQueryAndConn(vQuery);
     end;
@@ -619,11 +595,10 @@ begin
           vBlockDamage := Person.PsiArmor;
       end;
 
-      Person.Health := Person.Health - FAnomalyList[I].Power * ((FAnomalyList[I].Radius - vDistance) / FAnomalyList[I].Radius) * ((100 - vBlockDamage) / 100);
+      Person.Health := Person.Health - FAnomalyList[I].Power * (vDistance / FAnomalyList[I].Radius) * ((100 - vBlockDamage) / 100);
     end
-    else if vDistance <= FAnomalyList[I].Radius + 10 then // Сигнализируем за 10 метров до зоны действия
+    else if vDistance <= 40 then
     begin
-      Vibration(50);
       StopDamageGlow;
 
       if FAnomalyList[I].AnomalyType = atRadiation then
@@ -643,16 +618,6 @@ begin
       end;
     end;
   end;
-
-  for I := 0 to FMarkerList.Count - 1 do
-    if FMarkerList[I].MarkerType in [mtRadiation, mtAnomaly] then
-    begin
-      vDistance := CalculateFastDistance(FLocation.Latitude, FLocation.Longitude, FAnomalyList[FMarkerList[I].Index].Coords.Latitude, FAnomalyList[FMarkerList[I].Index].Coords.Longitude);
-      if Person.Detector.Level = 4 then
-        FMarkerList[I].Marker.Visible := vDistance <= Person.Detector.Radius
-      else
-        FMarkerList[I].Marker.Visible := False;
-    end;
 end;
 
 function TFrameMap.CalculateBearing(const StartPoint, EndPoint: TLocationCoord2D): Double;
@@ -685,18 +650,6 @@ procedure TFrameMap.SetLocationMarker(Lat, Lon: Double);
 var
   Point: TPointF;
 begin
-
-  if Person.Detector.Level = 4 then
-  begin
-    cManRadius.Width := FOriginalMapWidth / FMapRealWidth * Person.Detector.Radius * 2 * FCurrentScale;
-    cManRadius.Height := cManRadius.Width;
-  end
-  else
-  begin
-    cManRadius.Width := 0;
-    cManRadius.Height := 0;
-  end;
-
   if not FMapLoaded then
     Exit;
 
@@ -753,27 +706,18 @@ begin
 end;
 
 procedure TFrameMap.MapImageGesture(Sender: TObject; const EventInfo: TGestureEventInfo; var Handled: Boolean);
-  function GetPoints: integer;
-  var
-    I: integer;
-  begin
-   Result := 0;
-   
-    for I := 0 to FMarkerList.Count - 1 do
-      if FMarkerList[I].MarkerType in [mtPoint, mtPointRad, mtPointAnomaly, mtPointBag] then
-        Result := Result + 1;
-  end;
-
 begin
+  // if Button = TMouseButton.mbLeft then
+  // begin
+  // Получаем координаты по клику
   FCoords := PixelsToCoordinates(FLongTap.X, FLongTap.Y);
-  btnAddMarker.Enabled := GetPoints < 10;
-  btnAddMarkerRad.Enabled := GetPoints < 10;
-  btnAddMarkerBag.Enabled := GetPoints < 10;
-  btnAddMarkerAnomaly.Enabled := GetPoints < 10;
-  labMarkerCount.Text := GetPoints.ToString + '/10';
+  btnAddMarker.Enabled := FMarkerList.Count < 10;
+  btnAddMarkerRad.Enabled := FMarkerList.Count < 10;
+  btnAddMarkerBag.Enabled := FMarkerList.Count < 10;
+  btnAddMarkerAnomaly.Enabled := FMarkerList.Count < 10;
+  labMarkerCount.Text := FMarkerList.Count.ToString + '/10';
   // Устанавливаем маркер
   SetMarker(MarkersPanel, FCoords.Latitude, FCoords.Longitude);
-  MarkersPanel.Visible := True;
   MarkersPanel.BringToFront;
 end;
 
@@ -791,7 +735,7 @@ begin
   AMarker.Position.X := Point.X - AMarker.Width / 2;
   AMarker.Position.Y := Point.Y - AMarker.Height / 2;
   AMarker.BringToFront;
-  // AMarker.Visible := True;
+  AMarker.Visible := True;
 end;
 
 procedure TFrameMap.MapImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
@@ -909,54 +853,24 @@ begin
 end;
 
 procedure TFrameMap.CreateMarker(AMarker: TMarkerData);
-  procedure CreateBackground;
-  begin
-    with TCircle.Create(AMarker.Marker) do
-    begin
-      Parent := AMarker.Marker;
-      Align := TAlignLayout.Client;
-      fill.Kind := TBrushKind.Solid;
-      fill.Color := TAlphaColors.Alpha;
-      Stroke.Kind := TBrushKind.Solid;
-      Stroke.Color := TAlphaColors.White;
-      HitTest := False;
-      Opacity := 0.5;
-    end;
-  end;
-
-  procedure CreateIcon(ABitmap: TBitmap; AWidth: integer = 30);
-  begin
-    with TImage.Create(AMarker.Marker) do
-    begin
-      Parent := AMarker.Marker;
-      Align := TAlignLayout.Center;
-      Opacity := 1;
-      Bitmap.Assign(ABitmap);
-      Width := AWidth;
-      Height := Width;
-      HitTest := False;
-    end;
-  end;
-
 begin
   AMarker.Marker := TImage.Create(MapLayout);
   AMarker.Marker.Parent := MapLayout;
-  AMarker.Marker.Width := 40;
+  AMarker.Marker.Width := 50;
   AMarker.Marker.Height := AMarker.Marker.Width;
   AMarker.Marker.OnClick := OnMarkerClick;
 
   case AMarker.MarkerType of
     mtPoint:
       AMarker.Marker.Bitmap.Assign(ImageList.Source[0].MultiResBitmap[0].Bitmap);
-    mtPointRad:
+    mtRad:
       AMarker.Marker.Bitmap.Assign(ImageList.Source[1].MultiResBitmap[0].Bitmap);
-    mtPointAnomaly:
+    mtAnomaly:
       AMarker.Marker.Bitmap.Assign(ImageList.Source[2].MultiResBitmap[0].Bitmap);
-    mtPointBag:
+    mtBag:
       AMarker.Marker.Bitmap.Assign(ImageList.Source[3].MultiResBitmap[0].Bitmap);
     mtIssue:
       begin
-
         AMarker.Marker.Bitmap.Assign(ImageList.Source[4].MultiResBitmap[0].Bitmap);
 
         AMarker.Arrow := TImage.Create(LayClient);
@@ -971,67 +885,15 @@ begin
       end;
     mtBase:
       begin
-        AMarker.Marker.Width := FOriginalMapWidth / FMapRealWidth * FPlacesList[AMarker.Index].Radius * 2 * FCurrentScale;
+        AMarker.Marker.Bitmap.Assign(ImageList.Source[6].MultiResBitmap[0].Bitmap);
+        AMarker.Marker.Width := 100;
         AMarker.Marker.Height := AMarker.Marker.Width;
-        AMarker.Marker.Tag := Round(AMarker.Marker.Width / FCurrentScale);
-
-        CreateBackground;
-        CreateIcon(ImageList.Source[6].MultiResBitmap[0].Bitmap, 60);
-
+        // AMarker.Marker.OnClick := OnMarkerIssueClick;
       end;
     mtSafe:
       begin
-        AMarker.Marker.Width := FOriginalMapWidth / FMapRealWidth * FPlacesList[AMarker.Index].Radius * 2 * FCurrentScale;
-        AMarker.Marker.Height := AMarker.Marker.Width;
-        AMarker.Marker.Tag := Round(AMarker.Marker.Width / FCurrentScale);
-
-        CreateBackground;
-        CreateIcon(ImageList.Source[5].MultiResBitmap[0].Bitmap, 50);
-      end;
-    mtRadiation:
-      begin
-        AMarker.Marker.Width := FOriginalMapWidth / FMapRealWidth * FAnomalyList[AMarker.Index].Radius * 2 * FCurrentScale;
-        AMarker.Marker.Height := AMarker.Marker.Width;
-        AMarker.Marker.Tag := Round(AMarker.Marker.Width / FCurrentScale);
-        AMarker.LabelText := 'Радиация';
-        CreateBackground;
-        CreateIcon(ImageList.Source[9].MultiResBitmap[0].Bitmap);
-      end;
-    mtAnomaly:
-      begin
-        AMarker.Marker.Width := FOriginalMapWidth / FMapRealWidth * FAnomalyList[AMarker.Index].Radius * 2 * FCurrentScale;
-        AMarker.Marker.Tag := Round(AMarker.Marker.Width / FCurrentScale);
-        AMarker.Marker.Height := AMarker.Marker.Width;
-
-        CreateBackground;
-
-        case FAnomalyList[AMarker.Index].AnomalyType of
-          atElectro:
-            begin
-              CreateIcon(ImageList.Source[10].MultiResBitmap[0].Bitmap);
-              AMarker.LabelText := 'Электрическая аномалия';
-            end;
-          atFire:
-            begin
-              CreateIcon(ImageList.Source[12].MultiResBitmap[0].Bitmap);
-              AMarker.LabelText := 'Термическая аномалия';
-            end;
-          atPhisic:
-            begin
-              CreateIcon(ImageList.Source[13].MultiResBitmap[0].Bitmap);
-              AMarker.LabelText := 'Гравитационная аномалия';
-            end;
-          atChimishe:
-            begin
-              CreateIcon(ImageList.Source[11].MultiResBitmap[0].Bitmap);
-              AMarker.LabelText := 'Химическая аномалия';
-            end;
-          atPSI:
-            begin
-              CreateIcon(ImageList.Source[8].MultiResBitmap[0].Bitmap);
-              AMarker.LabelText := 'ПСИ-излучение';
-            end;
-        end;
+        AMarker.Marker.Bitmap.Assign(ImageList.Source[5].MultiResBitmap[0].Bitmap);
+        // AMarker.Marker.OnClick := OnMarkerIssueClick;
       end;
   end;
 
@@ -1049,14 +911,7 @@ var
 begin
 
   for I := 0 to FMarkerList.Count - 1 do
-  begin
-    if (FMarkerList[I].MarkerType in [mtAnomaly, mtRadiation, mtBase, mtSafe]) then
-    begin
-      FMarkerList[I].Marker.Width := FMarkerList[I].Marker.Tag * FCurrentScale;
-      FMarkerList[I].Marker.Height := FMarkerList[I].Marker.Width;
-    end;
     SetMarker(FMarkerList[I].Marker, FMarkerList[I].Coords.Latitude, FMarkerList[I].Coords.Longitude);
-  end;
 
   for I := 0 to FMarkerIssue.Count - 1 do
     SetMarker(FMarkerIssue[I].Marker, FMarkerIssue[I].Coords.Latitude, FMarkerIssue[I].Coords.Longitude);
@@ -1210,7 +1065,6 @@ begin
     end
     else
     begin
-      Vibration(800);
       labCritical.Text := 'Начался выброс';
       ScanInnerCritical;
       MediaPlayerNotificationCritical.Stop;

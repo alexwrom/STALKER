@@ -128,7 +128,7 @@ type
     btnCloseInfo: TSpeedButton;
     layParameter: TLayout;
     recBack: TRectangle;
-    layPercs: TLayout;
+    Layout3: TLayout;
     Rectangle1: TRectangle;
     recHealth: TRectangle;
     HealthProgress: TRectangle;
@@ -262,7 +262,7 @@ begin
   layClearArt.Visible := false;
   layPanel.Height := ImgBottom.Height + ImgTop.Height + layClearArmorWeapon.Height + layRestoreArmorWeapon.Height + imgPercs.Height;
   layInfo.Tag := 0;
-  layPercs.Visible := true;
+  imgPercs.Visible := true;
   layInfo.Visible := true;
 end;
 
@@ -336,7 +336,7 @@ begin
     layClearArt.Visible := true;
     layClearArmorWeapon.Visible := false;
     layRestoreArmorWeapon.Visible := false;
-    layPercs.Visible := true;
+    imgPercs.Visible := true;
     layPanel.Height := ImgBottom.Height + ImgTop.Height + layClearArt.Height + imgPercs.Height;
     layInfo.Visible := true;
   end;
@@ -355,7 +355,7 @@ end;
 procedure TFramePercs.btnWeaponInfoClick(Sender: TObject);
 begin
   layInfo.Tag := 1;
-  layPercs.Visible := false;
+  imgPercs.Visible := false;
   layClearArt.Visible := false;
   layClearArmorWeapon.Visible := true;
   layRestoreArmorWeapon.Visible := true;
