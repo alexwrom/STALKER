@@ -7,49 +7,79 @@ uses
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, IdContext,
   IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer, IdGlobal,
   FMX.Memo.Types, FMX.Controls.Presentation, FMX.ScrollBox, FMX.Memo, uGlobal, Rest.Json, Classes.action,
-  FireDAC.Comp.Client, FMX.StdCtrls, Generics.Collections, uGenericBaseData, StrUtils, Classes.send,
+  FireDAC.Comp.Client, FMX.StdCtrls, Generics.Collections, uGenericBaseData, StrUtils, Classes.send, Threading,
   FMX.Objects;
 
 type
-  TForm1 = class(TForm)
+  TMainForm = class(TForm)
     IdTCPServer: TIdTCPServer;
     Button1: TButton;
     Memo1: TMemo;
     ImgQR: TImage;
+    ProgressBar: TProgressBar;
+    labStatusLoadData: TLabel;
     procedure IdTCPServerExecute(AContext: TIdContext);
     procedure Button1Click(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     { Private declarations }
+    FStrdata: UnicodeString;
+    FStrDataForAdmin: UnicodeString;
+    FPageCount: Integer;
+    FPageCountAdmin: Integer;
   public
     { Public declarations }
   end;
 
 var
-  Form1: TForm1;
+  MainForm: TMainForm;
 
 implementation
 
 {$R *.fmx}
 
-procedure TForm1.Button1Click(Sender: TObject);
+procedure TMainForm.Button1Click(Sender: TObject);
 var
   vSend: TSend;
   vPageCount: Integer;
   I: Integer;
-  s:string;
+  s: string;
 begin
-memo1.Text := GoGenericBaseData(1, vPageCount);
+  Memo1.Text := GoGenericBaseData(vPageCount);
 
- { vSend := TSend.Create;
-  try
+  { vSend := TSend.Create;
+    try
     vSend.Ip := GetLocalIP;
     GenerateQRCode(TJson.ObjectToJsonString(vSend), ImgQR);
-  finally
+    finally
     FreeAndNil(vSend);
-  end;     }
+    end; }
 end;
 
-procedure TForm1.IdTCPServerExecute(AContext: TIdContext);
+procedure TMainForm.FormShow(Sender: TObject);
+begin
+  FPageCount := 0;
+
+  TTask.Run(
+    procedure
+    begin
+      ProgressBar.Value := 0;
+      ProgressBar.Max := 18;
+      FStrdata := GoGenericBaseData(FPageCount);
+      ProgressBar.Value := 0;
+      ProgressBar.Max := 7;
+      FStrDataForAdmin := GoGenericBaseData(FPageCountAdmin, true);
+
+      TThread.Synchronize(nil,
+        procedure
+        begin
+          ProgressBar.Value := 0;
+          labStatusLoadData.Text := 'Готово';
+        end);
+    end);
+end;
+
+procedure TMainForm.IdTCPServerExecute(AContext: TIdContext);
 var
   vContext: string;
   vPerson: TPerson;
@@ -57,39 +87,96 @@ var
   FDQuery: TFDQuery;
   StrData: UnicodeString;
   vPageCount: Integer;
+  vStrData: UnicodeString;
+  vAction: TAction;
+  vStringData: TList<UnicodeString>;
+  vStr, vString: UnicodeString;
+  I: Integer;
 begin
-  vContext := AContext.Connection.Socket.ReadLn();
+  vContext := AContext.Connection.Socket.ReadLn(IndyUTF8Encoding(true));
 
-  vPerson := TPerson.Create;
-  vPerson := TJson.JsonToObject<TPerson>(vContext);
-
-  ExeExec('select count(*) as cnt from users where nickname = ' + QuotedStr(vPerson.UserName) + ';', exActive, FDQuery);
-
-  if FDQuery.FieldByName('cnt').AsInteger = 0 then // Создаем пользователя и высылаем все данные
+  if vContext = 'PDA ADMIN' then
   begin
-    FreeQueryAndConn(FDQuery);
-
-    ExeExec('insert into users (nickname, group_id) values (' + QuotedStr(vPerson.UserName) + ', 1);', exExecute, FDQuery);
     vAnswer := TAction.Create;
     vAnswer.SendType := stUpdateData;
     vPageCount := 0;
-    StrData := GoGenericBaseData(1, vPageCount);
-    StrData := 'insert into users (nickname, group_id) values (' + QuotedStr(vPerson.UserName) + ', 1);' + #13#10 + StrData;
-    vAnswer.PageCount := vPageCount + 2;
+    vAnswer.PageCount := FPageCountAdmin;
+    vStrData := FStrDataForAdmin;
+  end
+  else if Copy(vContext, 1, 7) = 'INSERT:' then
+  begin
+    try
+      ExeExec('delete from arts_to_map; delete from anomalies; delete from places;', exExecute, FDQuery);
+
+      vAction := TJson.JsonToObject<TAction>(Copy(vContext, 8));
+
+      vStringData := TList<UnicodeString>.Create;
+
+      if vAction.PageCount > 0 then
+      begin
+
+        for I := 1 to vAction.PageCount do
+        begin
+          vStr := AContext.Connection.Socket.ReadLn(#13#10, IndyUTF8Encoding(true));
+          vStringData.Add(vStr);
+        end;
+      end;
+
+      case vAction.SendType of
+        stUpdateData:
+          begin
+            For I := 0 to vStringData.Count - 1 do
+              vString := vString + vStringData[I];
+
+            ExeExec(vString, exExecute, FDQuery);
+          end;
+      end;
+
+      vAnswer := TAction.Create;
+      vAnswer.SendType := stUpdateData;
+      vAnswer.PageCount := 0;
+      vStrData := '';
+    except
+      vAnswer := TAction.Create;
+      vAnswer.SendType := stCancel;
+      vAnswer.PageCount := 0;
+      vStrData := '';
+    end;
+
   end
   else
   begin
-    FreeQueryAndConn(FDQuery);
+    vPerson := TPerson.Create;
+    vPerson := TJson.JsonToObject<TPerson>(vContext);
 
-    if vPerson.UserId = -1 then // Если в базе есть логин, а на телефоне не зарегистрирован, то возвращаем ошибку
+    ExeExec('select count(*) as cnt from users where nickname = ' + QuotedStr(vPerson.UserName) + ';', exActive, FDQuery);
+
+    if FDQuery.FieldByName('cnt').AsInteger = 0 then // Создаем пользователя и высылаем все данные
     begin
+      FreeQueryAndConn(FDQuery);
+
+      ExeExec('insert into users (nickname, group_id) values (' + QuotedStr(vPerson.UserName) + ', 1);', exExecute, FDQuery);
       vAnswer := TAction.Create;
       vAnswer.SendType := stUserExists;
       vPageCount := 1;
+      vAnswer.SendType := stUpdateData;
+      vStrData := 'insert into users (nickname, group_id) values (' + QuotedStr(vPerson.UserName) + ', 1);' + #13#10 + FStrdata;
+      vAnswer.PageCount := FPageCount + 1;
     end
-    else // Ищем для него информацию по уведомлениях
+    else
     begin
+      FreeQueryAndConn(FDQuery);
 
+      if vPerson.UserId = -1 then // Если в базе есть логин, а на телефоне не зарегистрирован, то возвращаем ошибку
+      begin
+        vAnswer := TAction.Create;
+        vAnswer.SendType := stUserExists;
+        FPageCount := 1;
+      end
+      else // Ищем для него информацию по уведомлениях
+      begin
+
+      end;
     end;
   end;
 

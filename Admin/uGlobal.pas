@@ -13,7 +13,7 @@ uses
 
 type
   TExecType = (exActive, exExecute);
-  TSendType = (stSell, stIssue, stAnswerSell, stCancelSell, stUpdateData, stUserExists);
+  TSendType = (stSell, stIssue, stAnswerSell, stCancelSell, stUpdateData, stUserExists, stCancel);
 
   TColumn = record
     Name: string;
@@ -40,8 +40,11 @@ procedure GenerateQRCode(const AText: string; AImage: TImage);
 function GetUserAppPath: string;
 function ExeExec(Str: string; Typ: TExecType; var AQuery: TFDQuery): boolean;
 procedure FreeQueryAndConn(var AQuery: TFDQuery);
+procedure SetProgressInc;
 
 implementation
+
+uses uMainForm;
 
 function GetLocalIP: String;
 const
@@ -176,5 +179,11 @@ begin
   AQuery.Connection.Connected := false;
   FreeAndNil(AQuery);
 end;
+
+procedure SetProgressInc;
+begin
+  MainForm.ProgressBar.Value := MainForm.ProgressBar.Value + 1;
+end;
+
 
 end.
