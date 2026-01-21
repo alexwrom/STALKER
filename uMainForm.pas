@@ -255,7 +255,7 @@ var
   vArtefactData: TArtefactData;
 begin
   FArtefactsList := TList<TArtefactData>.Create;
-  ExeExec('select * from arts_to_map;', exActive, vQuery);
+  ExeExec('select * from arts_to_map atm join arts a on a.art_id = atm.art_id;', exActive, vQuery);
   vQuery.First;
 
   while Not vQuery.Eof do
@@ -343,7 +343,7 @@ ExeExec('select user_id  from users limit 1;', exActive, FDQuery);
           layEnterName.Visible := true;
         end;
 
-  PermissionsService.RequestPermissions(['android.permission.WRITE_EXTERNAL_STORAGE'], nil);
+  //PermissionsService.RequestPermissions(['android.permission.WRITE_EXTERNAL_STORAGE'], nil);
 end;
 
 procedure TMainForm.StartApp;

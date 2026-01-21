@@ -8236,9 +8236,9 @@ object FrameBag: TFrameBag
           Align = Top
           HitTest = False
           Opacity = 0.500000000000000000
-          Position.Y = 231.000000000000000000
+          Position.Y = 226.000000000000000000
           Size.Width = 608.000000000000000000
-          Size.Height = 10.000000000000000000
+          Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           WrapMode = Stretch
         end
@@ -8893,13 +8893,13 @@ object FrameBag: TFrameBag
           Opacity = 0.500000000000000000
           Position.Y = 80.000000000000000000
           Size.Width = 608.000000000000000000
-          Size.Height = 10.000000000000000000
+          Size.Height = 5.000000000000000000
           Size.PlatformDefault = False
           WrapMode = Stretch
         end
         object Layout4: TLayout
           Align = Top
-          Position.Y = 90.000000000000000000
+          Position.Y = 85.000000000000000000
           Size.Width = 608.000000000000000000
           Size.Height = 15.000000000000000000
           Size.PlatformDefault = False
@@ -9120,7 +9120,7 @@ object FrameBag: TFrameBag
         end
         object Layout6: TLayout
           Align = Top
-          Position.Y = 241.000000000000000000
+          Position.Y = 231.000000000000000000
           Size.Width = 608.000000000000000000
           Size.Height = 15.000000000000000000
           Size.PlatformDefault = False
@@ -9335,7 +9335,7 @@ object FrameBag: TFrameBag
         end
         object layWeaponLayouts: TLayout
           Align = Top
-          Position.Y = 105.000000000000000000
+          Position.Y = 100.000000000000000000
           Size.Width = 608.000000000000000000
           Size.Height = 126.000000000000000000
           Size.PlatformDefault = False
@@ -9381,7 +9381,7 @@ object FrameBag: TFrameBag
         end
         object layArmorsLayuots: TLayout
           Align = Top
-          Position.Y = 256.000000000000000000
+          Position.Y = 246.000000000000000000
           Size.Width = 608.000000000000000000
           Size.Height = 189.000000000000000000
           Size.PlatformDefault = False
@@ -9710,15 +9710,15 @@ object FrameBag: TFrameBag
             TabOrder = 1
             object layArtefacsLayouts: TLayout
               Align = Top
-              Position.X = 10.000000000000000000
+              Position.X = 5.000000000000000000
               Position.Y = 15.000000000000000000
-              Size.Width = 409.000000000000000000
+              Size.Width = 414.000000000000000000
               Size.Height = 63.000000000000000000
               Size.PlatformDefault = False
               TabOrder = 4
               object Layout13: TLayout
                 Align = Contents
-                Size.Width = 409.000000000000000000
+                Size.Width = 414.000000000000000000
                 Size.Height = 63.000000000000000000
                 Size.PlatformDefault = False
                 TabOrder = 2
@@ -9737,11 +9737,11 @@ object FrameBag: TFrameBag
               object HorzScrollBox3: THorzScrollBox
                 Align = Client
                 HitTest = False
-                Size.Width = 409.000000000000000000
+                Size.Width = 414.000000000000000000
                 Size.Height = 63.000000000000000000
                 Size.PlatformDefault = False
                 TabOrder = 1
-                Viewport.Width = 409.000000000000000000
+                Viewport.Width = 414.000000000000000000
                 Viewport.Height = 63.000000000000000000
                 object flArts: TFlowLayout
                   Align = Left
@@ -9757,8 +9757,8 @@ object FrameBag: TFrameBag
             end
             object Layout14: TLayout
               Align = Top
-              Position.X = 10.000000000000000000
-              Size.Width = 409.000000000000000000
+              Position.X = 5.000000000000000000
+              Size.Width = 414.000000000000000000
               Size.Height = 15.000000000000000000
               Size.PlatformDefault = False
               TabOrder = 3
@@ -10940,7 +10940,7 @@ object FrameBag: TFrameBag
                 end>
               Align = MostLeft
               Opacity = 0.500000000000000000
-              Size.Width = 10.000000000000000000
+              Size.Width = 5.000000000000000000
               Size.Height = 80.000000000000000000
               Size.PlatformDefault = False
               WrapMode = Stretch
@@ -12330,6 +12330,7 @@ object FrameBag: TFrameBag
     end
     object layPanel: TLayout
       Align = Center
+      Margins.Right = -40.000000000000000000
       Size.Width = 497.000000000000000000
       Size.Height = 288.000000000000000000
       Size.PlatformDefault = False
@@ -23709,6 +23710,7 @@ object FrameBag: TFrameBag
     end
     object Layout3: TLayout
       Align = Center
+      Margins.Right = -40.000000000000000000
       Size.Width = 522.000000000000000000
       Size.Height = 276.000000000000000000
       Size.PlatformDefault = False

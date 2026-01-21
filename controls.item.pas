@@ -120,8 +120,8 @@ begin
     Parent := layTop;
     Align := TAlignLayout.MostLeft;
     Stroke.Kind := TBrushKind.None;
-    Fill.Kind := TBrushKind.None;
-    Fill.Color := $FF282828;
+    Fill.Kind := TBrushKind.Solid;
+    Fill.Color := TAlphaColors.Chocolate;
     Width := Height;
     HitTest := false;
   end;
@@ -132,7 +132,8 @@ begin
     Parent := recIconBackgroundTransp;
     Align := TAlignLayout.Client;
     Stroke.Kind := TBrushKind.None;
-    Fill.Kind := TBrushKind.None;
+    Fill.Kind := TBrushKind.Solid;
+    Fill.Color := $FF111611;
     Width := Height;
     Margins.Right := 5;
     Margins.Top := 5;

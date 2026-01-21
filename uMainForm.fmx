@@ -6228,7 +6228,7 @@ object MainForm: TMainForm
     Size.Width = 789.000000000000000000
     Size.Height = 489.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 19
+    TabOrder = 20
     object igeDeadGlow: TInnerGlowEffect
       Softness = 9.000000000000000000
       GlowColor = claDarkred
@@ -8752,7 +8752,7 @@ object MainForm: TMainForm
       end
       object GridPanelLayout1: TGridPanelLayout
         Align = Client
-        Size.Width = 41.730781555175780000
+        Size.Width = 43.000000000000000000
         Size.Height = 489.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
@@ -8981,13 +8981,13 @@ object MainForm: TMainForm
           MarginWrapMode = Tile
           Opacity = 0.699999988079071000
           Margins.Bottom = 4.000000000000000000
-          Size.Width = 41.730781555175780000
+          Size.Width = 43.000000000000000000
           Size.Height = 93.804641723632810000
           Size.PlatformDefault = False
           WrapMode = Stretch
           object btnToMap: TSpeedButton
             Align = Client
-            Size.Width = 39.730781555175780000
+            Size.Width = 41.000000000000000000
             Size.Height = 91.804641723632810000
             Size.PlatformDefault = False
             StyleLookup = 'transparentcirclebuttonstyle'
@@ -9160,7 +9160,7 @@ object MainForm: TMainForm
           object recSelect: TRectangle
             Align = Contents
             Fill.Color = x69FD9E02
-            Size.Width = 41.730781555175780000
+            Size.Width = 43.000000000000000000
             Size.Height = 93.804641723632810000
             Size.PlatformDefault = False
             Stroke.Kind = None
@@ -9350,13 +9350,13 @@ object MainForm: TMainForm
           MarginWrapMode = Tile
           Opacity = 0.699999988079071000
           Margins.Bottom = 4.000000000000000000
-          Size.Width = 41.730781555175780000
+          Size.Width = 43.000000000000000000
           Size.Height = 93.796005249023440000
           Size.PlatformDefault = False
           WrapMode = Stretch
           object btnToPercs: TSpeedButton
             Align = Client
-            Size.Width = 39.730781555175780000
+            Size.Width = 41.000000000000000000
             Size.Height = 91.796005249023440000
             Size.PlatformDefault = False
             StyleLookup = 'transparentcirclebuttonstyle'
@@ -9651,13 +9651,13 @@ object MainForm: TMainForm
           MarginWrapMode = Tile
           Opacity = 0.699999988079071000
           Margins.Bottom = 4.000000000000000000
-          Size.Width = 41.730781555175780000
+          Size.Width = 43.000000000000000000
           Size.Height = 93.798583984375000000
           Size.PlatformDefault = False
           WrapMode = Stretch
           object btnToBag: TSpeedButton
             Align = Client
-            Size.Width = 39.730781555175780000
+            Size.Width = 41.000000000000000000
             Size.Height = 91.798583984375000000
             Size.PlatformDefault = False
             StyleLookup = 'transparentcirclebuttonstyle'
@@ -9906,13 +9906,13 @@ object MainForm: TMainForm
           MarginWrapMode = Tile
           Opacity = 0.699999988079071000
           Margins.Bottom = 4.000000000000000000
-          Size.Width = 41.730781555175780000
+          Size.Width = 43.000000000000000000
           Size.Height = 93.800781250000000000
           Size.PlatformDefault = False
           WrapMode = Stretch
           object btnToIssuies: TSpeedButton
             Align = Client
-            Size.Width = 39.730781555175780000
+            Size.Width = 41.000000000000000000
             Size.Height = 91.800781250000000000
             Size.PlatformDefault = False
             StyleLookup = 'transparentcirclebuttonstyle'
@@ -10197,13 +10197,13 @@ object MainForm: TMainForm
           Padding.Bottom = 1.000000000000000000
           MarginWrapMode = Tile
           Opacity = 0.699999988079071000
-          Size.Width = 41.730781555175780000
+          Size.Width = 43.000000000000000000
           Size.Height = 97.799987792968750000
           Size.PlatformDefault = False
           WrapMode = Stretch
           object btnToQRScanner: TSpeedButton
             Align = Client
-            Size.Width = 39.730781555175780000
+            Size.Width = 41.000000000000000000
             Size.Height = 95.799987792968750000
             Size.PlatformDefault = False
             StyleLookup = 'transparentcirclebuttonstyle'
@@ -11236,7 +11236,7 @@ object MainForm: TMainForm
           end>
         Align = FitLeft
         Opacity = 0.699999988079071000
-        Size.Width = 6.269220352172852000
+        Size.Width = 5.000000000000000000
         Size.Height = 489.000000000000000000
         Size.PlatformDefault = False
         WrapMode = Stretch
@@ -11430,6 +11430,7 @@ object MainForm: TMainForm
     Size.Width = 810.000000000000000000
     Size.Height = 509.000000000000000000
     Size.PlatformDefault = False
+    Visible = False
     TabOrder = 4
     object Rectangle8: TRectangle
       Align = Contents

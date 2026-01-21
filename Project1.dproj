@@ -280,6 +280,8 @@
         <Android_DarkBackgroundColor>#000000</Android_DarkBackgroundColor>
         <AUP_ACCESS_MEDIA_LOCATION>true</AUP_ACCESS_MEDIA_LOCATION>
         <AUP_CALL_PHONE>false</AUP_CALL_PHONE>
+        <AUP_BODY_SENSORS_BACKGROUND>true</AUP_BODY_SENSORS_BACKGROUND>
+        <AUP_ACCESS_LOCATION_EXTRA_COMMANDS>true</AUP_ACCESS_LOCATION_EXTRA_COMMANDS>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Android64)'!=''">
         <VerInfo_Build>1</VerInfo_Build>

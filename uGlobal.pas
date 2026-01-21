@@ -299,6 +299,7 @@ begin
     begin
       SetSkin(MainForm.FFramePercs.recSkin);
       SetSkin(MainForm.FFramePercs.recSkin1);
+      SetSkin(MainForm.FFramePercs.recSkin2);
     end;
 
     if Assigned(MainForm.FFrameDetector) then

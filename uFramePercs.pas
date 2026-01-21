@@ -141,6 +141,64 @@ type
     Rectangle2: TRectangle;
     Rectangle3: TRectangle;
     Rectangle4: TRectangle;
+    layPercsUp: TLayout;
+    recSkin2: TRectangle;
+    Layout14: TLayout;
+    Rectangle9: TRectangle;
+    InnerGlowEffect7: TInnerGlowEffect;
+    Image6: TImage;
+    Image11: TImage;
+    Image12: TImage;
+    Image15: TImage;
+    Rectangle10: TRectangle;
+    InnerGlowEffect8: TInnerGlowEffect;
+    btnClosePercsUp: TSpeedButton;
+    GridPanelLayout3: TGridPanelLayout;
+    layTehnic3: TLayout;
+    Image17: TImage;
+    btnTehnic3: TSpeedButton;
+    layMedic3: TLayout;
+    Image19: TImage;
+    btnMedic3: TSpeedButton;
+    layTehnic2: TLayout;
+    Image20: TImage;
+    btnTehnic2: TSpeedButton;
+    layMedic2: TLayout;
+    Image21: TImage;
+    btnMedic2: TSpeedButton;
+    layTehnic1: TLayout;
+    Image23: TImage;
+    btnTehnic1: TSpeedButton;
+    layMedic1: TLayout;
+    Image24: TImage;
+    btnMedic1: TSpeedButton;
+    Label3: TLabel;
+    Label4: TLabel;
+    Label5: TLabel;
+    Label6: TLabel;
+    Label7: TLabel;
+    Label8: TLabel;
+    Label9: TLabel;
+    Label10: TLabel;
+    Label11: TLabel;
+    Label12: TLabel;
+    Label13: TLabel;
+    Label14: TLabel;
+    Label15: TLabel;
+    Label16: TLabel;
+    Label17: TLabel;
+    Label18: TLabel;
+    Label19: TLabel;
+    Label20: TLabel;
+    Label21: TLabel;
+    Layout2: TLayout;
+    Rectangle6: TRectangle;
+    InnerGlowEffect6: TInnerGlowEffect;
+    Layout7: TLayout;
+    Image10: TImage;
+    btnOpenPercs: TSpeedButton;
+    Image16: TImage;
+    Image4: TImage;
     procedure btnInfoClick(Sender: TObject);
     procedure btnCloseInfoClick(Sender: TObject);
     procedure btnArmorInfoClick(Sender: TObject);
@@ -148,6 +206,8 @@ type
     procedure btnClearArmorWeaponClick(Sender: TObject);
     procedure btnClearArtClick(Sender: TObject);
     procedure btnWeaponInfoClick(Sender: TObject);
+    procedure btnClosePercsUpClick(Sender: TObject);
+    procedure btnOpenPercsClick(Sender: TObject);
   private
     { Private declarations }
     FArtsList: TList<TPerc>;
@@ -242,6 +302,11 @@ begin
   layInfo.Visible := false;
 end;
 
+procedure TFramePercs.btnClosePercsUpClick(Sender: TObject);
+begin
+ layPercsUp.Visible := false;
+end;
+
 procedure TFramePercs.btnInfoClick(Sender: TObject);
 begin
   if FArtsList.Count >= (Sender as TSpeedButton).Tag then
@@ -280,6 +345,11 @@ end;
 procedure TFramePercs.btnOpenDetectorClick(Sender: TObject);
 begin
   GoToDetector;
+end;
+
+procedure TFramePercs.btnOpenPercsClick(Sender: TObject);
+begin
+layPercsUp.Visible := true;
 end;
 
 procedure TFramePercs.btnWeaponInfoClick(Sender: TObject);

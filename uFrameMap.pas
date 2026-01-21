@@ -181,11 +181,11 @@ begin
   FAnomalyList := TList<TAnomalyData>.Create;
 
   LoadMap;
-
+  
   LoadAnomalies;
   UpdateIssue;
   UpdateBaseSafeDead;
-  ResetLocationMarkers;
+  //ResetLocationMarkers;
 
   MediaPlayerRad.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'zvuk-radiacii.mp3');
   MediaPlayerAnomaly.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'detector.mp3');
@@ -734,7 +734,7 @@ begin
   // Позиционируем маркер
   AMarker.Position.X := Point.X - AMarker.Width / 2;
   AMarker.Position.Y := Point.Y - AMarker.Height / 2;
-
+  AMarker.BringToFront;
   AMarker.Visible := True;
 end;
 
@@ -897,7 +897,6 @@ begin
       end;
   end;
 
-  AMarker.Marker.Visible := True;
   SetMarker(AMarker.Marker, FCoords.Latitude, FCoords.Longitude);
 
   if AMarker.MarkerType = mtIssue then

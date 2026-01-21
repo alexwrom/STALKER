@@ -13,11 +13,13 @@ type
     procedure DeleteItem(AObject: TObject);
     procedure Clear;
     function Count: integer;
+    function SelectTo(AIndex: integer): TControlItem;
     constructor Create(AOwner: TFMXObject); overload;
   private
     procedure vsbMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure vsbMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Single);
     procedure vsbMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
+
   end;
 
 implementation
@@ -64,6 +66,16 @@ end;
 function TControlListItem.AddItem(AddRightButtom: Boolean = false): TControlItem;
 begin
   result := TControlItem.Create(Self, AddRightButtom);
+end;
+
+function TControlListItem.SelectTo(AIndex: integer): TControlItem;
+var
+  lObject: TFMXObject;
+begin
+  result := nil;
+
+  if Self.Content.ChildrenCount > AIndex then
+    result := Self.Content.Children[AIndex] as TControlItem;
 end;
 
 procedure TControlListItem.DeleteItem(AObject: TObject);
