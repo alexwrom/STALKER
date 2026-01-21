@@ -58,9 +58,12 @@ begin
       FDQueryCol.First;
       while not FDQueryCol.Eof do
       begin
-        vColumn.Name := FDQueryCol.FieldByName('name').AsString;
-        vColumn.TypeCol := FDQueryCol.FieldByName('type').AsString;
-        vColumns.Add(vColumn);
+        if FDQueryCol.FieldByName('name').AsString <> 'map_image' then
+        begin
+          vColumn.Name := FDQueryCol.FieldByName('name').AsString;
+          vColumn.TypeCol := FDQueryCol.FieldByName('type').AsString;
+          vColumns.Add(vColumn);
+        end;
         FDQueryCol.Next;
       end;
 
@@ -104,10 +107,12 @@ begin
           if Length(vStr) > 5000 then
           begin
             AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + Copy(vStr, 1, 5000);
+            APageCount := APageCount + 1;
             Delete(vStr, 1, 5000);
 
             while Length(vStr) > 5000 do
             begin
+              APageCount := APageCount + 1;
               AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + IfThen(AStrData = '', '', '~') + Copy(vStr, 1, 5000);
               Delete(vStr, 1, 5000);
             end;
@@ -115,6 +120,7 @@ begin
           end
           else
             AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + vStr;
+
           APageCount := APageCount + 1;
           FDQuery.Next;
         end;

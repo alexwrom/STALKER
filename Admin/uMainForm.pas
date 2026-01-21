@@ -27,6 +27,7 @@ type
     FStrDataForAdmin: UnicodeString;
     FPageCount: Integer;
     FPageCountAdmin: Integer;
+    procedure ReloadDatabase;
   public
     { Public declarations }
   end;
@@ -45,7 +46,7 @@ var
   I: Integer;
   s: string;
 begin
-  Memo1.Text := GoGenericBaseData(vPageCount);
+  Memo1.Text := FStrData;
 
   { vSend := TSend.Create;
     try
@@ -57,6 +58,11 @@ begin
 end;
 
 procedure TMainForm.FormShow(Sender: TObject);
+begin
+  ReloadDatabase;
+end;
+
+procedure TMainForm.ReloadDatabase;
 begin
   FPageCount := 0;
 
@@ -85,8 +91,6 @@ var
   vPerson: TPerson;
   vAnswer: TAction;
   FDQuery: TFDQuery;
-  StrData: UnicodeString;
-  vPageCount: Integer;
   vStrData: UnicodeString;
   vAction: TAction;
   vStringData: TList<UnicodeString>;
@@ -99,7 +103,6 @@ begin
   begin
     vAnswer := TAction.Create;
     vAnswer.SendType := stUpdateData;
-    vPageCount := 0;
     vAnswer.PageCount := FPageCountAdmin;
     vStrData := FStrDataForAdmin;
   end
@@ -143,6 +146,7 @@ begin
       vStrData := '';
     end;
 
+    ReloadDatabase;
   end
   else
   begin
@@ -157,8 +161,6 @@ begin
 
       ExeExec('insert into users (nickname, group_id) values (' + QuotedStr(vPerson.UserName) + ', 1);', exExecute, FDQuery);
       vAnswer := TAction.Create;
-      vAnswer.SendType := stUserExists;
-      vPageCount := 1;
       vAnswer.SendType := stUpdateData;
       vStrData := 'insert into users (nickname, group_id) values (' + QuotedStr(vPerson.UserName) + ', 1);' + #13#10 + FStrdata;
       vAnswer.PageCount := FPageCount + 1;
@@ -180,7 +182,7 @@ begin
     end;
   end;
 
-  AContext.Connection.Socket.WriteLn(TJson.ObjectToJsonString(vAnswer) + #13#10 + StrData, IndyUTF8Encoding(true));
+  AContext.Connection.Socket.WriteLn(TJson.ObjectToJsonString(vAnswer) + #13#10 + vStrData, IndyUTF8Encoding(true));
   AContext.Connection.Disconnect;
 
 end;
