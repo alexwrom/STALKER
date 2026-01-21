@@ -87,7 +87,7 @@ end;
 
 procedure TFrameQRScanner.StartScan;
 begin
-  layInfo.Visible := False;
+  layInfo.Visible := false;
   fFrameTake := 0;
   fScanBitmap := nil;
   Camera.OnSampleBufferReady := CameraSampleBufferReady;
@@ -170,6 +170,7 @@ begin
           begin
             if (ReadResult <> nil) then
             begin
+              Vibration(100);
               StopScan;
 
               vSend := TSend.Create;
@@ -178,12 +179,17 @@ begin
               if vSend.Code <> '' then
               begin
                 case Length(vSend.Code) of
-                  2: // Смена группировки
+                  2: // Детектор      {"code":"01"}
+                    begin
+                      SetDetector(vSend.Code.ToInteger());
+                      ExeExec(Format('update users set detector_id = %d where user_id = %d;', [vSend.Code.ToInteger(), Person.UserId]), exExecute, FDQuery);
+                    end;
+                  3: // Смена группировки  {"code":"001"}
                     begin
                       Person.GroupId := vSend.Code.ToInteger;
                       ExeExec(Format('update users set group_id = %d where user_id = %d;', [vSend.Code.ToInteger(), Person.UserId]), exExecute, FDQuery);
                     end;
-                  5: // Добавление в сумку
+                  5: // Добавление в сумку   {"code":"01001"}
                     begin
                       case Copy(vSend.Code, 1, 2).ToInteger of
                         1:
@@ -199,7 +205,12 @@ begin
                       vRowID := Copy(vSend.Code, 3, 3).ToInteger;
 
                       ExeExec(Format('insert into bag (table_name, row_id, health) values(''%s'', %d, 100);', [vTableName, vRowID]), exExecute, FDQuery);
-                    end
+                    end;
+                    7: // Деньги      {"code":"0050000"}
+                    begin
+                      Person.Cash := Person.Cash + vSend.Code.ToInteger;
+                      ExeExec(Format('update users set cash = %d where user_id = %d;', [Round(Person.Cash), Person.UserId]), exExecute, FDQuery);
+                    end;
                 end;
               end
               else

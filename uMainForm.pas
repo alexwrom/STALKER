@@ -326,24 +326,22 @@ procedure TMainForm.FormShow(Sender: TObject);
 var
   vUserExists: boolean;
 begin
-ExeExec('select user_id  from users limit 1;', exActive, FDQuery);
-        vUserExists := FDQuery.RecordCount = 1;
-        FreeQueryAndConn(FDQuery);
+  ExeExec('select user_id  from users limit 1;', exActive, FDQuery);
+  vUserExists := FDQuery.RecordCount = 1;
+  FreeQueryAndConn(FDQuery);
 
-        if vUserExists then
-        begin
-          StartApp;
-        end
-        else
-        begin
-          Person := TPerson.Create;
-          Person.UserId := -1;
-          Person.GroupId := -1;
-          Person.CountContener := -1;
-          layEnterName.Visible := true;
-        end;
-
-  //PermissionsService.RequestPermissions(['android.permission.WRITE_EXTERNAL_STORAGE'], nil);
+  if vUserExists then
+  begin
+    StartApp;
+  end
+  else
+  begin
+    Person := TPerson.Create;
+    Person.UserId := -1;
+    Person.GroupId := -1;
+    Person.CountContener := -1;
+    layEnterName.Visible := true;
+  end;
 end;
 
 procedure TMainForm.StartApp;
@@ -443,16 +441,28 @@ begin
     Showmessage('Введите ваше имя')
   else
   begin
-    Person.UserName := eNickName.Text;
-    layEnterName.Visible := false;
-    recLoading.Visible := true;
-    GetData;
+    PermissionsService.RequestPermissions(['android.permission.WRITE_EXTERNAL_STORAGE'],
+      procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
+
+      begin
+        if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
+        begin
+          Person.UserName := eNickName.Text;
+          layEnterName.Visible := false;
+          recLoading.Visible := true;
+          GetData;
+        end
+        else
+        begin
+          Showmessage('Необходимы разрешения для к памяти устройства.');
+        end;
+      end);
   end;
 end;
 
 procedure TMainForm.GetData;
 var
-vQuery: TFDQuery;
+  vQuery: TFDQuery;
 begin
   TTask.Run(
     procedure
@@ -488,11 +498,7 @@ begin
 
             if vAction.PageCount > 0 then
             begin
-              // TParallel.for(1, vAction.PageCount,
-              // procedure(I: Integer)
-
               for I := 1 to vAction.PageCount do
-
               begin
                 vStr := IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(true));
 
@@ -506,11 +512,8 @@ begin
                 TThread.Synchronize(TThread.CurrentThread,
                   procedure
                   begin
-                    //Memo1.lines.add(vStr);
-
                     ProgressBar.Value := ProgressBar.Value + 1;
                   end);
-                // end);
               end;
             end;
 
@@ -539,7 +542,6 @@ begin
                       ProgressBar.Value := ProgressBar.Value + 1;
                     end);
                 end;
-
 
                 ExeExec(vString, exExecute, vQuery);
 
@@ -595,6 +597,7 @@ var
   ByteValue: Byte;
   Bytes: TBytes;
   HexByte: UnicodeString;
+  vPath: string;
 begin
   SetLength(Bytes, Length(AHex) div 2);
   // Конвертируем шестнадцатеричную строку в байты
@@ -614,7 +617,12 @@ begin
     Stream.WriteBuffer(Bytes[0], Length(Bytes));
     Stream.Position := 0;
 
-    Stream.SaveToFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'map_image.png'));
+    vPath := System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'map_image.png');
+
+    if FileExists(vPath) then
+      TFile.Delete(vPath);
+
+    Stream.SaveToFile(vPath);
   finally
     FreeAndNil(Stream);
   end;
@@ -725,13 +733,14 @@ procedure TMainForm.StopDetector;
 var
   I: Integer;
 begin
-  if FFrameDetector.timerScannerArtefacts.Enabled then
-    for I := 0 to 2 do
-    begin
-      sleep(100);
-      FFrameDetector.timerScannerArtefacts.Enabled := false;
-      FFrameDetector.TimerSensor.Enabled := false;
-    end;
+  if Assigned(FFrameDetector) then
+    if FFrameDetector.timerScannerArtefacts.Enabled then
+      for I := 0 to 2 do
+      begin
+        sleep(100);
+        FFrameDetector.timerScannerArtefacts.Enabled := false;
+        FFrameDetector.TimerSensor.Enabled := false;
+      end;
 end;
 
 procedure TMainForm.timerScannerWifiMerchantTimer(Sender: TObject);

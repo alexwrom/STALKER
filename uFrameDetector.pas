@@ -34,6 +34,11 @@ type
     recSkin: TRectangle;
     InnerGlowEffect1: TInnerGlowEffect;
     ShadowEffect1: TShadowEffect;
+    layVeles: TLayout;
+    Image2: TImage;
+    ShadowEffect2: TShadowEffect;
+    Rectangle1: TRectangle;
+    Label1: TLabel;
     procedure TimerSensorTimer(Sender: TObject);
     procedure timerScannerArtefactsTimer(Sender: TObject);
     procedure FrameResize(Sender: TObject);
@@ -65,18 +70,28 @@ begin
         layOtklik.Visible := true;
         layBear.Visible := false;
         layVilka.Visible := false;
+        layVeles.Visible := false;
       end;
     2:
       begin
         layOtklik.Visible := false;
         layBear.Visible := true;
         layVilka.Visible := false;
+        layVeles.Visible := false;
       end;
     3:
       begin
         layVilka.Visible := true;
         layBear.Visible := false;
         layOtklik.Visible := false;
+        layVeles.Visible := false;
+      end;
+    4:
+      begin
+        layVilka.Visible := false;
+        layBear.Visible := false;
+        layOtklik.Visible := false;
+        layVeles.Visible := true;
       end;
   end;
   MediaPlayer.FileName := TPath.Combine(GetUserAppPath, 'detector_art.mp3');
@@ -88,6 +103,8 @@ begin
   if Not FIsDead then
   begin
     FrameResize(nil);
+
+    Vibration(100);
 
     if FArtDistance <= Person.Detector.Radius then
     begin
@@ -138,6 +155,13 @@ begin
             MediaPlayer.Play;
           end;
         3:
+          begin
+            labDisplayVilka.Text := FArtDistance.ToString.PadLeft(4, '0');
+            MediaPlayer.CurrentTime := 0;
+            MediaPlayer.Volume := 100;
+            MediaPlayer.Play;
+          end;
+        4:
           begin
             labDisplayVilka.Text := FArtDistance.ToString.PadLeft(4, '0');
             MediaPlayer.CurrentTime := 0;
