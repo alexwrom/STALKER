@@ -451,7 +451,7 @@ begin
       FTopLeftLon := vQuery.FieldByName('map_left_top_lon').AsFloat;
       FBottomRightLat := vQuery.FieldByName('map_right_bottom_lat').AsFloat;
       FBottomRightLon := vQuery.FieldByName('map_right_bottom_lon').AsFloat;
-      FMapRealWidth := 1260; // vQuery.FieldByName('map_real_width').AsInteger;
+      FMapRealWidth := Round(CalculateFastDistance(FTopLeftLat, FTopLeftLon, FTopLeftLat, FBottomRightLon));
     finally
       FreeQueryAndConn(vQuery);
     end;

@@ -46,7 +46,7 @@ object FrameMap: TFrameMap
         object Rectangle3: TRectangle
           Align = Top
           Corners = [TopLeft, TopRight]
-          Fill.Color = x960C0C0C
+          Fill.Color = xDC0C0C0C
           Size.Width = 145.000000000000000000
           Size.Height = 41.000000000000000000
           Size.PlatformDefault = False
@@ -71,7 +71,7 @@ object FrameMap: TFrameMap
         object recPanelDeleteMarker: TRectangle
           Align = Client
           Corners = [BottomLeft, BottomRight]
-          Fill.Color = x960C0C0C
+          Fill.Color = xDC0C0C0C
           Margins.Top = 2.000000000000000000
           Size.Width = 145.000000000000000000
           Size.Height = 45.000000000000000000

@@ -9,7 +9,12 @@ uses
   FireDAC.Stan.Pool, FireDAC.Phys, FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef,
   FireDAC.Stan.ExprFuncs, FireDAC.Phys.SQLiteWrapper.Stat, FireDAC.FMXUI.Wait,
   Data.DB, System.IOUtils, FireDAC.Comp.Client, FireDAC.Comp.DataSet, System.SysUtils, System.Sensors, FMX.Objects,
-  Generics.Collections, DelphiZXingQRCode, FMX.Graphics, System.UITypes, System.Types, FMX.Layouts, Math;
+{$IFDEF ANDROID}
+  Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText,
+  Androidapi.JNIBridge, Androidapi.Helpers, Androidapi.JNI.Os,
+  Androidapi.JNI.Net,
+{$ENDIF}
+  Generics.Collections, DelphiZXingQRCode, FMX.Graphics, System.UITypes, System.Types, FMX.Layouts, Math, FMX.Platform;
 
 const
   cCriticalColor = $FF890000;
@@ -21,7 +26,7 @@ const
   cBetterColor = $FF0D8409;
 
 type
-  TMarkerType = (mtPoint, mtRad, mtAnomaly, mtBag, mtIssue, mtBase, mtSafe);
+  TMarkerType = (mtPoint, mtPointRad, mtPointAnomaly, mtPointBag, mtIssue, mtBase, mtSafe, mtRadiation, mtAnomaly, mtArtefact);
   TAnomalyType = (atElectro, atFire, atPhisic, atRadiation, atChimishe, atPSI);
   TBagType = (btMedical, btArmor, btWeapon, btArt, btDetector);
   TSendType = (stSell, stIssue, stAnswerSell, stCancelSell, stUpdateData, stUserExists, stLoadArmor);
@@ -33,6 +38,8 @@ type
     LabelDetail: string;
     MarkerType: TMarkerType;
     Arrow: TImage;
+    Index: integer;
+    Radius: integer;
   end;
 
   TCritical = record
@@ -186,11 +193,17 @@ procedure ReloadPercs;
 function IsFullBelt: boolean;
 procedure ActiveScaner(AValue: boolean);
 procedure StartApp;
+procedure SetDetector(ID: integer);
+function GetOrientation: Single;
+{$IF Defined(ANDROID)}
+procedure Vibration(AValue: integer);
+{$ENDIF}
 
 var
   Person: TPerson;
   FLocation: TLocationCoord2D;
   FArtefactsList: TList<TArtefactData>;
+  FAnomalyList: TList<TAnomalyData>;
   FIssueList: TList<TIssueData>;
   FPlacesList: TList<TPlaceData>;
   FBagList: TList<TBagData>;
@@ -201,6 +214,14 @@ var
   FIsCriticalStart: boolean;
   FSecondBeforeStartDamage: integer;
   FCurrentCritical: TCritical;
+
+  FOriginalMapWidth: double;
+  FOriginalMapHeight: double;
+  FMapRealWidth: integer;
+  FTopLeftLat: double;
+  FTopLeftLon: double;
+  FBottomRightLat: double;
+  FBottomRightLon: double;
 
 implementation
 
@@ -370,6 +391,9 @@ begin
 
     if vDiff > 0 then
     begin
+{$IF Defined(ANDROID)}
+      Vibration(500);
+{$ENDIF}
       FArmorHealth := FArmorHealth - vDiff * 0.2;
 
       if FArmorHealth < 0 then
@@ -428,6 +452,20 @@ begin
       SetHealthProgress(MainForm.FFramePercs.HealthProgress, FHealth);
   end;
 end;
+
+{$IF Defined(ANDROID)}
+
+procedure Vibration(AValue: integer);
+// Процедура вибрации
+var
+  Vibrator: JVibrator;
+begin
+  Vibrator := TJVibrator.Wrap(TAndroidHelper.Context.getSystemService(TJContext.JavaClass.VIBRATOR_SERVICE));
+
+  if Vibrator.hasVibrator() then
+    Vibrator.vibrate(AValue);
+end;
+{$ENDIF}
 
 procedure SetHealthProgress(AHealthProgress: TRectangle; AValue: double);
 begin
@@ -508,6 +546,17 @@ begin
   MainForm.FFrameDetector.timerScannerArtefacts.Enabled := true;
   MainForm.layPersonHealth.Visible := true;
   MainForm.recSelect.Parent := nil;
+
+  MainForm.FFrameDetector.FCurrentScale := FMapRealWidth / (FOriginalMapWidth * Person.Detector.Radius / MainForm.FFrameDetector.layVelesDisplay.Width);
+  MainForm.FFrameDetector.MapLayout.Width := FOriginalMapWidth * MainForm.FFrameDetector.FCurrentScale;
+  MainForm.FFrameDetector.MapLayout.Height := FOriginalMapHeight * MainForm.FFrameDetector.FCurrentScale;
+  MainForm.FFrameDetector.UpdateAnomalies;
+  MainForm.FFrameDetector.UpdateArtefacts;
+end;
+
+function GetOrientation: Single;
+begin
+  result := MainForm.FFrameMap.OrientationMarker.RotationAngle;
 end;
 
 function CalculateFastDistance(const Lat1, Lon1, Lat2, Lon2: double): double;
@@ -625,6 +674,18 @@ end;
 procedure StartApp;
 begin
   MainForm.StartApp;
+end;
+
+procedure SetDetector(ID: integer);
+var
+  vQuery: TFDQuery;
+begin
+  ExeExec('select * from detectors where detector_id = ' + ID.ToString + ';', exActive, vQuery);
+
+  if vQuery.RecordCount > 0 then
+    MainForm.FFramePercs.SetDetector(vQuery.FieldByName('detector_id').AsInteger, vQuery.FieldByName('radius').AsInteger, vQuery.FieldByName('level').AsInteger);
+
+  FreeQueryAndConn(vQuery);
 end;
 
 end.

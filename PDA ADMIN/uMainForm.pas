@@ -529,6 +529,7 @@ begin
           layBtn.Visible := FIsMerchantZone;
           labNotConnect.Visible := NOT FIsMerchantZone;
           imgBtnSend.Visible := FIsMerchantZone;
+          imgDownload.Visible := FIsMerchantZone;
         end);
     end).Start;
 {$ENDIF}

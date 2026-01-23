@@ -5,20 +5,20 @@
     <Transaction>1899.12.30 00:00:00.000.957,C:\Users\user\Documents\Embarcadero\Studio\Projects\Unit2.pas=E:\Delphi\STALKER PDA\PDA ADMIN\uMainForm.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.478,=E:\Delphi\STALKER PDA\PDA ADMIN\uFrameMap.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.556,E:\Delphi\STALKER PDA\uGlobal.pas=</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.957,C:\Users\user\Documents\Embarcadero\Studio\Projects\Unit2.fmx=E:\Delphi\STALKER PDA\PDA ADMIN\uMainForm.fmx</Transaction>
     <Transaction>1899.12.30 00:00:00.000.651,=E:\Delphi\STALKER PDA\controls.listitem.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.889,C:\Users\user\Documents\Embarcadero\Studio\Projects\Project2.dproj=E:\Delphi\STALKER PDA\PDA ADMIN\PDAAdmin.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.414,=E:\Delphi\STALKER PDA\PDA ADMIN\uGenericBaseData.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.611,=E:\Delphi\STALKER PDA\controls.item.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.957,C:\Users\user\Documents\Embarcadero\Studio\Projects\Unit2.fmx=E:\Delphi\STALKER PDA\PDA ADMIN\uMainForm.fmx</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.767,=E:\Delphi\STALKER PDA\uGlobal.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.549,E:\Delphi\ZXing.Delphi-3.10.0\DelphiZXingQRCode-master\Source\DelphiZXIngQRCode.pas=</Transaction>
     <Transaction>1899.12.30 00:00:00.000.744,=E:\Delphi\ZXing.Delphi-3.10.0\DelphiZXingQRCode-master\Source\DelphiZXIngQRCode.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.861,=E:\Delphi\STALKER PDA\PDA ADMIN\uGlobal.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.032,=E:\Delphi\STALKER PDA\uScanerWiFi.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.940,=E:\Delphi\STALKER PDA\Resources\font\montblancctt.ttf</Transaction>
     <Transaction>1899.12.30 00:00:00.000.872,=E:\Delphi\STALKER PDA\classes\classes.action.pas</Transaction>
-    <Transaction>2026.01.20 23:57:00.677,=E:\Delphi\STALKER PDA\Admin\uGenericBaseData.pas</Transaction>
-    <Transaction>2026.01.21 00:00:05.515,E:\Delphi\STALKER PDA\Admin\uGenericBaseData.pas=</Transaction>
-    <Transaction>2026.01.21 00:00:20.414,=E:\Delphi\STALKER PDA\PDA ADMIN\uGenericBaseData.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.767,=E:\Delphi\STALKER PDA\uGlobal.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.940,=E:\Delphi\STALKER PDA\Resources\font\montblancctt.ttf</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.677,=E:\Delphi\STALKER PDA\Admin\uGenericBaseData.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.515,E:\Delphi\STALKER PDA\Admin\uGenericBaseData.pas=</Transaction>
   </Transactions>
 	<ActiveMobileDevice>
 		<NoProfile Android="222ca14c0411" Android64=""/>

@@ -6228,7 +6228,7 @@ object MainForm: TMainForm
     Size.Width = 789.000000000000000000
     Size.Height = 489.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 20
+    TabOrder = 23
     object igeDeadGlow: TInnerGlowEffect
       Softness = 9.000000000000000000
       GlowColor = claDarkred
