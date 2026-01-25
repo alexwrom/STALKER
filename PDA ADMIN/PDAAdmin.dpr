@@ -12,7 +12,8 @@ uses
   uScanerWiFi in '..\uScanerWiFi.pas',
   controls.item in '..\controls.item.pas',
   controls.listitem in '..\controls.listitem.pas',
-  uGenericBaseData in 'uGenericBaseData.pas';
+  uGenericBaseData in 'uGenericBaseData.pas',
+  uLocationListener in '..\uLocationListener.pas';
 
 {$R *.res}
 

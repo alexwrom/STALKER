@@ -95,7 +95,8 @@ uses
   classes.sell in 'classes\classes.sell.pas',
   classes.send in 'classes\classes.send.pas',
   classes.action in 'classes\classes.action.pas',
-  uFrameQRScaner in 'uFrameQRScaner.pas' {FrameQRScanner: TFrame};
+  uFrameQRScaner in 'uFrameQRScaner.pas' {FrameQRScanner: TFrame},
+  uLocationListener in 'uLocationListener.pas';
 
 {$R *.res}
 

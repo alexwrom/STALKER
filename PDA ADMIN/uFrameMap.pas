@@ -10,7 +10,9 @@ uses
   System.Math, System.Sensors, System.Sensors.Components, System.Permissions,
   FMX.Effects, Generics.Collections, System.ImageList, FMX.ImgList,
   System.Actions, FMX.ActnList, uGlobal, FMX.Memo.Types, FMX.ScrollBox, FMX.Memo,
-  FMX.Media, System.IOUtils, FireDAC.Comp.Client, System.Threading;
+  FMX.Media, System.IOUtils, FireDAC.Comp.Client, System.Threading, Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText,
+  Androidapi.JNIBridge, Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNI.Location,
+  Androidapi.JNI.Net, uLocationListener;
 
 type
   TFrameMap = class(TFrame)
@@ -64,6 +66,7 @@ type
     Image5: TImage;
     btnAddAnomaly: TCornerButton;
     imgAddPanel: TImage;
+    TimerLocation: TTimer;
     procedure MapImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure btnZoomInClick(Sender: TObject);
     procedure btnZoomOutClick(Sender: TObject);
@@ -78,6 +81,7 @@ type
     procedure btnAddArtClick(Sender: TObject);
     procedure btnAddPlaceClick(Sender: TObject);
     procedure btnAddAnomalyClick(Sender: TObject);
+    procedure TimerLocationTimer(Sender: TObject);
   private
     FMapLoaded: Boolean;
     FOriginalMapWidth: Double;
@@ -94,6 +98,7 @@ type
     FIsZooming: Boolean;
     FLongTap: TPointF;
     FMapRealWidth: integer;
+    FLoad : boolean;
     procedure LoadMap;
     procedure SetLocationMarker(Lat, Lon: Double);
     function CoordinatesToPixels(Lat, Lon: Double): TPointF;
@@ -109,8 +114,10 @@ type
     procedure CreateMarker(AMarker: TMarkerData);
     procedure OnMarkerClick(Sender: TObject);
     function GetNumberMarker(AMarker: TImage): integer;
-
+    procedure LocationServiceChanged;
     procedure SetArrows(AArrow: TImage; ATarget: TControl);
+
+
 
   public
     constructor Create(AOwner: TComponent); override;
@@ -122,6 +129,7 @@ type
     procedure UpdateAnomalies;
     procedure LoadPlaces;
     procedure UpdateBaseSafeDead;
+    procedure LocationisChanged(Location: JLocation);
     // Масштабирование
     procedure ZoomToPoint(APoint: TPointF; AScale: Double);
 
@@ -142,6 +150,7 @@ uses
 constructor TFrameMap.Create(AOwner: TComponent);
 begin
   inherited;
+  FLoad := true;
 
   // Настройки для Android
   SetupAndroidSpecifics;
@@ -465,15 +474,52 @@ begin
   end;
 end;
 
+procedure TFrameMap.LocationServiceChanged;
+var
+  LocationManagerService: JObject;
+  Location: JLocation;
+begin
+  if not Assigned(FLocationManager) then
+  begin
+    LocationManagerService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.LOCATION_SERVICE);
+    FLocationManager := TJLocationManager.Wrap((LocationManagerService as ILocalObject).GetObjectID);
+
+    if not Assigned(locationListener) then
+      locationListener := TLocationListener.Create();
+  end;
+
+  try
+    FLocationManager.requestLocationUpdates(TJLocationManager.JavaClass.GPS_PROVIDER, 0, 0, locationListener, TJLooper.JavaClass.getMainLooper);
+
+    Location := FLocationManager.getLastKnownLocation(TJLocationManager.JavaClass.GPS_PROVIDER);
+    LocationisChanged(Location);
+  finally
+  end;
+end;
+
 procedure TFrameMap.LocationSensorLocationChanged(Sender: TObject; const OldLocation, NewLocation: TLocationCoord2D);
 begin
+  LocationServiceChanged;
+  FLoad := true;
+
   if NewLocation.Latitude <> 0 then
   begin
-    FLocation := NewLocation;
-    LocationMarker.Visible := True;
+    FSensorLocation := TLocationCoord2D.Create(NewLocation.Latitude, NewLocation.Longitude);
+    FLocation := TLocationCoord2D.Create((FServiceLocation.Latitude + FSensorLocation.Latitude) / 2, (FServiceLocation.Longitude + FSensorLocation.Longitude) / 2);
+    LocationMarker.Visible := true;
 
     SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
     OrientationMarker.RotationAngle := 135 + CalculateBearing(OldLocation, FLocation);
+  end;
+end;
+
+procedure TFrameMap.LocationisChanged(Location: JLocation);
+begin
+  if Assigned(Location) then
+  begin
+    FServiceLocation := TLocationCoord2D.Create(Location.getLatitude, Location.getLongitude);
+    FLocation := TLocationCoord2D.Create((FServiceLocation.Latitude + FSensorLocation.Latitude) / 2, (FServiceLocation.Longitude + FSensorLocation.Longitude) / 2);
+    SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
   end;
 end;
 
@@ -901,6 +947,16 @@ begin
         ApplyZoom(ACenterX, ACenterY);
       end;
     end;
+  end;
+end;
+
+procedure TFrameMap.TimerLocationTimer(Sender: TObject);
+begin
+  if FLoad then
+  begin
+    LocationSensor.Active := False;
+    LocationSensor.Active := true;
+    FLoad := False;
   end;
 end;
 

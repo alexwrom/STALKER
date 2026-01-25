@@ -10,7 +10,9 @@ uses
   System.Math, System.Sensors, System.Sensors.Components, System.Permissions,
   FMX.Effects, Generics.Collections, System.ImageList, FMX.ImgList,
   System.Actions, FMX.ActnList, uGlobal, FMX.Memo.Types, FMX.ScrollBox, FMX.Memo,
-  FMX.Media, System.IOUtils, FireDAC.Comp.Client, System.Threading;
+  FMX.Media, System.IOUtils, FireDAC.Comp.Client, System.Threading, Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText,
+  Androidapi.JNIBridge, Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNI.Location,
+  Androidapi.JNI.Net, uLocationListener;
 
 type
   TFrameMap = class(TFrame)
@@ -76,7 +78,9 @@ type
     layPersonHealth: TLayout;
     ShadowEffect1: TShadowEffect;
     cManRadius: TCircle;
-    OrientationSensor1: TOrientationSensor;
+    TimerLocation: TTimer;
+    faMarkerX: TFloatAnimation;
+    faMarkerY: TFloatAnimation;
     procedure MapImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure btnZoomInClick(Sender: TObject);
     procedure btnZoomOutClick(Sender: TObject);
@@ -91,6 +95,7 @@ type
     procedure timerCriticalTimer(Sender: TObject);
     procedure timerCheckCriticalTimer(Sender: TObject);
     procedure ScrollBoxViewportPositionChange(Sender: TObject; const OldViewportPosition, NewViewportPosition: TPointF; const ContentSizeChanged: Boolean);
+    procedure TimerLocationTimer(Sender: TObject);
   private
     FMapLoaded: Boolean;
 
@@ -105,6 +110,10 @@ type
     FMarkerIssue: TList<TMarkerData>;
     FSmoothedAzimuth: Double;
     FCurrentScale: Double;
+    locationListener: TLocationListener;
+    FLocationManager: JLocationManager;
+    FSensorLocation, FServiceLocation: TLocationCoord2D;
+    FLoad: Boolean;
     procedure LoadMap;
     procedure SetLocationMarker(Lat, Lon: Double);
     function CoordinatesToPixels(Lat, Lon: Double): TPointF;
@@ -129,11 +138,13 @@ type
     procedure ScanInnerCritical;
     procedure SetArrows(AArrow: TImage; ATarget: TControl);
     procedure UpdateAnomalies;
+    procedure LocationServiceChanged;
+
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure ResetLocationMarkers;
-
+    procedure LocationisChanged(Location: JLocation);
     // Масштабирование
     procedure ZoomToPoint(APoint: TPointF; AScale: Double);
 
@@ -155,7 +166,7 @@ uses
 constructor TFrameMap.Create(AOwner: TComponent);
 begin
   inherited;
-
+  FLoad := true;
   // Настройки для Android
   SetupAndroidSpecifics;
 
@@ -313,7 +324,7 @@ begin
     vDistance := CalculateFastDistance(FLocation.Latitude, FLocation.Longitude, FIssueList[I].Coords.Latitude, FIssueList[I].Coords.Longitude);
 
     if (vDistance <= FIssueList[I].RadiusIN) and (FIssueList[I].RadiusIN > 0) then
-      if FIssueList[I].CompleteAfterIN then   // выполняется при входе в зону действия
+      if FIssueList[I].CompleteAfterIN then // выполняется при входе в зону действия
       begin
         ExeExec('update issuies set status_id = 1 where issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
         ExeExec('select cost from issuies where issue_id = ' + FIssueList[I].ID.ToString + ';', exActive, vQuery);
@@ -326,7 +337,7 @@ begin
       end;
 
     if (vDistance > FIssueList[I].RadiusOUT) and (FIssueList[I].RadiusOUT > 0) then
-      if FIssueList[I].CompleteAfterOUT then   // выполняется при выходе из зоны действия
+      if FIssueList[I].CompleteAfterOUT then // выполняется при выходе из зоны действия
       begin
         ExeExec('update issuies set status_id = 1 where issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
         ExeExec('select cost from issuies where issue_id = ' + FIssueList[I].ID.ToString + ';', exActive, vQuery);
@@ -337,7 +348,7 @@ begin
         UpdateIssue;
       end
       else
-      begin   // Провалено при выходе из зоны
+      begin // Провалено при выходе из зоны
         ExeExec('update issuies set status_id = 2 where issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
         ReloadIssuies;
         UpdateIssue;
@@ -447,7 +458,7 @@ var
   vDistance: Double;
   vIsInnerCritical: Boolean;
 begin
-  vIsInnerCritical := True;
+  vIsInnerCritical := true;
 
   for I := 0 to FPlacesList.Count - 1 do
   begin
@@ -490,7 +501,7 @@ begin
   begin
     // Настройка для лучшей производительности
     ScrollBox.EnableDragHighlight := False;
-    MapImage.HitTest := True;
+    MapImage.HitTest := true;
   end;
 end;
 
@@ -533,7 +544,7 @@ var
 begin
   try
     MapImage.Bitmap.LoadFromFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'map_image.png'));
-    FMapLoaded := True;
+    FMapLoaded := true;
 
     // Сохраняем оригинальные размеры
     FOriginalMapWidth := MapImage.Bitmap.Width;
@@ -569,15 +580,52 @@ begin
   end;
 end;
 
+procedure TFrameMap.LocationServiceChanged;
+var
+  LocationManagerService: JObject;
+  Location: JLocation;
+begin
+  if not Assigned(FLocationManager) then
+  begin
+    LocationManagerService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.LOCATION_SERVICE);
+    FLocationManager := TJLocationManager.Wrap((LocationManagerService as ILocalObject).GetObjectID);
+
+    if not Assigned(locationListener) then
+      locationListener := TLocationListener.Create();
+  end;
+
+  try
+    FLocationManager.requestLocationUpdates(TJLocationManager.JavaClass.GPS_PROVIDER, 0, 0, locationListener, TJLooper.JavaClass.getMainLooper);
+
+    Location := FLocationManager.getLastKnownLocation(TJLocationManager.JavaClass.GPS_PROVIDER);
+    LocationisChanged(Location);
+  finally
+  end;
+end;
+
 procedure TFrameMap.LocationSensorLocationChanged(Sender: TObject; const OldLocation, NewLocation: TLocationCoord2D);
 begin
+  LocationServiceChanged;
+  FLoad := true;
+
   if NewLocation.Latitude <> 0 then
   begin
-    FLocation := NewLocation;
-    LocationMarker.Visible := True;
+    FSensorLocation := TLocationCoord2D.Create(NewLocation.Latitude, NewLocation.Longitude);
+    FLocation := TLocationCoord2D.Create((FServiceLocation.Latitude + FSensorLocation.Latitude) / 2, (FServiceLocation.Longitude + FSensorLocation.Longitude) / 2);
+    LocationMarker.Visible := true;
 
     SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
     OrientationMarker.RotationAngle := 135 + CalculateBearing(OldLocation, FLocation);
+  end;
+end;
+
+procedure TFrameMap.LocationisChanged(Location: JLocation);
+begin
+  if Assigned(Location) then
+  begin
+    FServiceLocation := TLocationCoord2D.Create(Location.getLatitude, Location.getLongitude);
+    FLocation := TLocationCoord2D.Create((FServiceLocation.Latitude + FSensorLocation.Latitude) / 2, (FServiceLocation.Longitude + FSensorLocation.Longitude) / 2);
+    SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
   end;
 end;
 
@@ -703,12 +751,19 @@ begin
   Point.X := Point.X * FCurrentScale;
   Point.Y := Point.Y * FCurrentScale;
 
-  // Позиционируем маркер
-  LocationMarker.Position.X := Point.X - LocationMarker.Width / 2;
-  LocationMarker.Position.Y := Point.Y - LocationMarker.Height / 2;
-
-  LocationMarker.Visible := True;
+  LocationMarker.Visible := true;
   LocationMarker.BringToFront;
+
+  faMarkerX.Stop;
+  faMarkerX.StartValue := LocationMarker.Position.X;
+  faMarkerX.StopValue := Point.X - LocationMarker.Width / 2;
+
+  faMarkerY.Stop;
+  faMarkerY.StartValue := LocationMarker.Position.Y;
+  faMarkerY.StopValue := Point.Y - LocationMarker.Height / 2;;
+
+  faMarkerX.Start;
+  faMarkerY.Start;
 
   SetArrows(imgArrowMan, LocationMarker);
 end;
@@ -770,7 +825,7 @@ begin
   labMarkerCount.Text := GetPoints.ToString + '/10';
   // Устанавливаем маркер
   SetMarker(MarkersPanel, FCoords.Latitude, FCoords.Longitude);
-  MarkersPanel.Visible := True;
+  MarkersPanel.Visible := true;
   MarkersPanel.BringToFront;
 end;
 
@@ -829,7 +884,7 @@ end;
 
 procedure TFrameMap.btnDelMarkerClick(Sender: TObject);
 begin
-  gplDeleteYesNo.Visible := True;
+  gplDeleteYesNo.Visible := true;
   btnDelMarker.Visible := False;
 end;
 
@@ -864,9 +919,9 @@ begin
   LayDetailMarker.Position.Y := (Sender as TImage).Height / 2 - LayDetailMarker.Height / 2;
   labMarkerText.Text := FMarkerList[GetNumberMarker(Sender as TImage)].LabelText;
   btnDeleteYes.TagObject := (Sender as TImage);
-  LayDetailMarker.Visible := True;
+  LayDetailMarker.Visible := true;
   layDetailIssue.Visible := False;
-  recPanelDeleteMarker.Visible := NOT (FMarkerList[GetNumberMarker(Sender as TImage)].MarkerType in [mtBase, mtSafe, mtRadiation, mtAnomaly, mtArtefact]);
+  recPanelDeleteMarker.Visible := NOT(FMarkerList[GetNumberMarker(Sender as TImage)].MarkerType in [mtBase, mtSafe, mtRadiation, mtAnomaly, mtArtefact]);
   btnDelMarker.Visible := recPanelDeleteMarker.Visible;
   gplDeleteYesNo.Visible := False;
   (Sender as TImage).BringToFront;
@@ -879,11 +934,10 @@ begin
   layDetailIssue.Position.Y := 0;
   labIssueText.Text := FMarkerIssue[GetNumberMarker(Sender as TImage)].LabelText;
   labIssueDetail.Text := FMarkerIssue[GetNumberMarker(Sender as TImage)].LabelDetail;
-  layDetailIssue.Visible := True;
+  layDetailIssue.Visible := true;
   LayDetailMarker.Visible := False;
   (Sender as TImage).BringToFront;
 end;
-
 
 function TFrameMap.GetNumberMarker(AMarker: TImage): integer;
 var
@@ -1121,8 +1175,8 @@ begin
         begin
           FCurrentCritical := FCritical[I];
           FSecondBeforeStartDamage := FCurrentCritical.MinuteBeforeStartDamage * 60;
-          timerCritical.Enabled := True;
-          FIsCriticalStart := True;
+          timerCritical.Enabled := true;
+          FIsCriticalStart := true;
           labCritical.Text := 'Приближается выброс';
           break;
         end;
@@ -1144,10 +1198,10 @@ begin
           vIssue.Cost := 0;
           vIssue.RadiusIN := FPlacesList[I].Radius;
           vIssue.RadiusOUT := 0;
-          vIssue.CompleteAfterIN := True;
+          vIssue.CompleteAfterIN := true;
           vIssue.CompleteAfterOUT := False;
           vIssue.BlockDetail := 'critical';
-          vIssue.Visible := True;
+          vIssue.Visible := true;
           FIssueList.Add(vIssue);
         end;
 
@@ -1173,7 +1227,7 @@ begin
           else
           begin
             vIssue := FIssueList[I];
-            vIssue.Visible := True;
+            vIssue.Visible := true;
             FIssueList[I] := vIssue;
           end;
         end;
@@ -1225,6 +1279,16 @@ begin
   end;
 end;
 
+procedure TFrameMap.TimerLocationTimer(Sender: TObject);
+begin
+  if FLoad then
+  begin
+    LocationSensor.Active := False;
+    LocationSensor.Active := true;
+    FLoad := False;
+  end;
+end;
+
 procedure TFrameMap.TimerSensorTimer(Sender: TObject);
 begin
   if Assigned(Person) then
@@ -1241,7 +1305,7 @@ end;
 procedure TFrameMap.btnDeleteNoClick(Sender: TObject);
 begin
   gplDeleteYesNo.Visible := False;
-  btnDelMarker.Visible := True;
+  btnDelMarker.Visible := true;
 end;
 
 procedure TFrameMap.btnDeleteYesClick(Sender: TObject);
@@ -1252,7 +1316,7 @@ begin
   AMarker.Visible := False;
   FMarkerList.Delete(GetNumberMarker(AMarker));
   gplDeleteYesNo.Visible := False;
-  btnDelMarker.Visible := True;
+  btnDelMarker.Visible := true;
 end;
 
 procedure TFrameMap.ApplyZoom(ACenterX: Single = -1; ACenterY: Single = -1);

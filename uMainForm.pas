@@ -384,7 +384,7 @@ begin
     begin
       if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
       begin
-        FFrameMap.LocationSensor.Active := true;
+        FFrameMap.TimerLocation.Enabled := true;
       end
       else
       begin

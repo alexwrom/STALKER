@@ -353,6 +353,7 @@
         <DCCReference Include="..\controls.item.pas"/>
         <DCCReference Include="..\controls.listitem.pas"/>
         <DCCReference Include="uGenericBaseData.pas"/>
+        <DCCReference Include="..\uLocationListener.pas"/>
         <RcItem Include="..\Resources\font\montblancctt.ttf">
             <ResourceType>FONT</ResourceType>
             <ResourceId>1</ResourceId>
@@ -572,6 +573,17 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="Android\Debug\colors.xml" Configuration="Debug" Class="Android_Colors">
+                    <Platform Name="Android">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Android\Debug\ic_launcher-v33.xml" Configuration="Debug" Class="Android_AdaptiveIconV33">
+                    <Platform Name="Android">
+                        <RemoteName>ic_launcher.xml</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Android\Debug\ic_launcher.xml" Configuration="Debug" Class="Android_AdaptiveIcon">
                     <Platform Name="Android">
                         <Overwrite>true</Overwrite>
                     </Platform>
