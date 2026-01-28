@@ -1,0 +1,13 @@
+/__history
+/__recovery
+/Win32
+/OSX64
+/OSXARM64
+/units/__history
+/units/classes/__recovery
+/units/classes/__history
+/units/classes/translate/__recovery
+/units/classes/translate/__history
+
+/units/__recovery/__recovery.ini
+/units/__recovery/uUtils.pas

@@ -9,7 +9,7 @@ uses
   FireDAC.Stan.Pool, FireDAC.Phys, FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef,
   FireDAC.Stan.ExprFuncs, FireDAC.Phys.SQLiteWrapper.Stat, FireDAC.FMXUI.Wait,
   Data.DB, System.IOUtils, FireDAC.Comp.Client, FireDAC.Comp.DataSet, System.SysUtils, System.Sensors, FMX.Objects,
-  Generics.Collections, FMX.Graphics, System.UITypes, System.Types, FMX.Layouts, Math, DelphiZXingQRCode, WinSock;
+  Generics.Collections, FMX.Graphics, System.UITypes, System.Types, FMX.Layouts, Math, DelphiZXingQRCode, WinSock,  System.Classes;
 
 type
   TExecType = (exActive, exExecute);
@@ -35,6 +35,7 @@ type
 var
   Person: TPerson;
 
+function BitmapToHexString(Bitmap: TBitmap): string;
 function GetLocalIP: string;
 procedure GenerateQRCode(const AText: string; AImage: TImage);
 function GetUserAppPath: string;
@@ -45,6 +46,34 @@ procedure SetProgressInc;
 implementation
 
 uses uMainForm;
+
+
+ function BitmapToHexString(Bitmap: TBitmap): string;
+var
+  Stream: TMemoryStream;
+  i: integer;
+  pdByte: PByte;
+begin
+  Result := '';
+  if not Assigned(Bitmap) then
+    Exit;
+
+  Stream := TMemoryStream.Create;
+  try
+    Bitmap.SaveToStream(Stream);
+    Stream.Position := 0;
+
+    pdByte := Stream.Memory;
+    for i := 0 to Stream.Size - 1 do
+    begin
+      Result := Result + IntToHex(pdByte^, 2);
+      Inc(pdByte);
+    end;
+  finally
+    Stream.Free;
+  end;
+end;
+
 
 function GetLocalIP: String;
 const

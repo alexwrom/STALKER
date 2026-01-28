@@ -12,5 +12,10 @@
 /PDA ADMIN/Android64
 /PDA ADMIN/Win32
 /PDA ADMIN/__recovery
+/Admin Server/__history
+/Admin Server/Android
+/Admin Server/Android64
+/Admin Server/Win32
+/Admin Server/__recovery
 
 /Resources/Weapons/Card1/Cards.psd
