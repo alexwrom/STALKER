@@ -28,7 +28,8 @@ var
 {$ENDIF}
 
 const
-  MERCHANT_WIFI = 'Merchant';
+  MERCHANT_WIFI = '52';//'Merchant';
+  MERCHANT_PASS = '12091988';
 
 implementation
 
@@ -240,7 +241,7 @@ var
 begin
   Config := TJWifiConfiguration.JavaClass.init;
   Config.SSID := StringToJString('"' + ASSID + '"'); // SSID в кавычках
-  Config.preSharedKey := StringToJString('"12345678"');
+  Config.preSharedKey := StringToJString('"' + MERCHANT_PASS + '"');
   Result := Config;
 end;
 
@@ -269,7 +270,7 @@ begin
       if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
       begin
         try // Создаем предложение сети (WifiNetworkSuggestion)
-          Suggestion := TJWifiNetworkSuggestion_Builder.JavaClass.init.setSsid(StringToJString(MERCHANT_WIFI)).setWpa2Passphrase(StringToJString('12345678')).setIsAppInteractionRequired(False).setIsHiddenSsid(False).build;
+          Suggestion := TJWifiNetworkSuggestion_Builder.JavaClass.init.setSsid(StringToJString(MERCHANT_WIFI)).setWpa2Passphrase(StringToJString(MERCHANT_PASS)).setIsAppInteractionRequired(False).setIsHiddenSsid(False).build;
 
           // Создаем список предложений
           SuggestionsList := TJArrayList.JavaClass.init;
@@ -292,7 +293,7 @@ begin
             WifiNetworkSpecifierBuilder.setSsid(StringToJString(MERCHANT_WIFI));
 
             // Устанавливаем пароль для WPA2
-            WifiNetworkSpecifierBuilder.setWpa2Passphrase(StringToJString('12345678'));
+            WifiNetworkSpecifierBuilder.setWpa2Passphrase(StringToJString(MERCHANT_PASS));
 
             WifiNetworkSpecifier := WifiNetworkSpecifierBuilder.build;
 
@@ -398,12 +399,6 @@ begin
 end;
 
 procedure ConnectToMerchatZone;
-var
-  i, j: Integer;
-  vList: JList;
-  NetId: Integer;
-  ExistingConfig: JWifiConfiguration;
-  Config: JWifiConfiguration;
 begin
   FIsMerchantZone := IsMechantZone;
 

@@ -62,9 +62,11 @@ type
     function CoordinatesToPixels(Lat, Lon: double): TPointF;
     procedure MyLocationCenter;
 
+
     { Private declarations }
   public
     FCurrentScale: double;
+    procedure LoadDetector;
     procedure UpdateAnomalies;
     procedure UpdateArtefacts;
     constructor Create(AObject: TFmxObject);
@@ -84,8 +86,14 @@ begin
 
   FKoeff.Y := 0.2566;
   FKoeff.X := 0.5210;
+  LoadDetector;
+  MediaPlayer.FileName := TPath.Combine(GetUserAppPath, 'detector_art.mp3');
+  labDisplayVilka.TextSettings.Font.Family := 'lcd';
+end;
 
-  case Person.Detector.Level of
+procedure TFrameDetector.LoadDetector;
+begin
+   case Person.Detector.Level of
     1:
       begin
         layOtklik.Visible := true;
@@ -115,8 +123,6 @@ begin
         layVeles.Visible := true;
       end;
   end;
-  MediaPlayer.FileName := TPath.Combine(GetUserAppPath, 'detector_art.mp3');
-  labDisplayVilka.TextSettings.Font.Family := 'lcd';
 end;
 
 procedure TFrameDetector.TimerSensorTimer(Sender: TObject);

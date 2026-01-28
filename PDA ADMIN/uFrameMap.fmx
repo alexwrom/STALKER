@@ -2159,24 +2159,9 @@ object FrameMap: TFrameMap
         ShadowColor = claBlack
       end
     end
-    object TimerLocation: TTimer
-      Enabled = False
-      Interval = 200
-      OnTimer = TimerLocationTimer
-      Left = 368
-      Top = 24
-    end
   end
   object GestureManager: TGestureManager
     Sensitivity = 80.000000000000000000
-  end
-  object LocationSensor: TLocationSensor
-    Optimize = False
-    ActivityType = Navigation
-    UsageAuthorization = WhenInUse
-    OnLocationChanged = LocationSensorLocationChanged
-    Left = 632
-    Top = 24
   end
   object ImageList: TImageList
     Source = <

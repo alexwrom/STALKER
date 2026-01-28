@@ -11,6 +11,15 @@
     </PropertyGroup>
     <ItemGroup Condition="'$(Platform)'=='OSX64'"/>
     <ItemGroup Condition="'$(Platform)'=='Win32'">
+        <DeployFile Include="..\Resources\font\montblancctt.ttf" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>PDAAdmin\</RemoteDir>
+            <RemoteName>montblancctt.ttf</RemoteName>
+            <DeployClass>ProjectFile</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="Win32\Debug\PDAAdmin.exe" Condition="'$(Config)'=='Debug'">
             <RemoteDir>PDAAdmin\</RemoteDir>
             <RemoteName>PDAAdmin.exe</RemoteName>
@@ -56,6 +65,24 @@
             <RemoteName>styles.xml</RemoteName>
             <DeployClass>AndroidSplashStylesV31</DeployClass>
             <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="network_security_config.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>PDAAdmin\res\xml\</RemoteDir>
+            <RemoteName>network_security_config.xml</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="network_security_config.xml" Condition="'$(Config)'=='Release'">
+            <RemoteDir>PDAAdmin\res\xml\</RemoteDir>
+            <RemoteName>network_security_config.xml</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>

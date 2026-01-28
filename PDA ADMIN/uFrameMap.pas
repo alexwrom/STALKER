@@ -10,9 +10,13 @@ uses
   System.Math, System.Sensors, System.Sensors.Components, System.Permissions,
   FMX.Effects, Generics.Collections, System.ImageList, FMX.ImgList,
   System.Actions, FMX.ActnList, uGlobal, FMX.Memo.Types, FMX.ScrollBox, FMX.Memo,
-  FMX.Media, System.IOUtils, FireDAC.Comp.Client, System.Threading, Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText,
+  FMX.Media, System.IOUtils, FireDAC.Comp.Client, System.Threading,
+{$IFDEF ANDROID}
+  Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText,
   Androidapi.JNIBridge, Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNI.Location,
-  Androidapi.JNI.Net, uLocationListener;
+  Androidapi.JNI.Net,
+{$ENDIF}
+  uLocationListener;
 
 type
   TFrameMap = class(TFrame)
@@ -26,7 +30,6 @@ type
     GestureManager: TGestureManager;
     LocationMarker: TLayout;
     LayMapControls: TLayout;
-    LocationSensor: TLocationSensor;
     OrientationMarker: TImage;
     btnMyLocation: TButton;
     lblZoom: TLabel;
@@ -66,11 +69,9 @@ type
     Image5: TImage;
     btnAddAnomaly: TCornerButton;
     imgAddPanel: TImage;
-    TimerLocation: TTimer;
     procedure MapImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure btnZoomInClick(Sender: TObject);
     procedure btnZoomOutClick(Sender: TObject);
-    procedure LocationSensorLocationChanged(Sender: TObject; const OldLocation, NewLocation: TLocationCoord2D);
     procedure btnMyLocationClick(Sender: TObject);
     procedure btnDelMarkerClick(Sender: TObject);
     procedure btnDeleteNoClick(Sender: TObject);
@@ -81,7 +82,6 @@ type
     procedure btnAddArtClick(Sender: TObject);
     procedure btnAddPlaceClick(Sender: TObject);
     procedure btnAddAnomalyClick(Sender: TObject);
-    procedure TimerLocationTimer(Sender: TObject);
   private
     FMapLoaded: Boolean;
     FOriginalMapWidth: Double;
@@ -94,11 +94,9 @@ type
     FTopLeftLon: Double;
     FBottomRightLat: Double;
     FBottomRightLon: Double;
-    FLastDistance: integer;
-    FIsZooming: Boolean;
     FLongTap: TPointF;
     FMapRealWidth: integer;
-    FLoad : boolean;
+    FLoad: Boolean;
     procedure LoadMap;
     procedure SetLocationMarker(Lat, Lon: Double);
     function CoordinatesToPixels(Lat, Lon: Double): TPointF;
@@ -114,14 +112,14 @@ type
     procedure CreateMarker(AMarker: TMarkerData);
     procedure OnMarkerClick(Sender: TObject);
     function GetNumberMarker(AMarker: TImage): integer;
-    procedure LocationServiceChanged;
+
     procedure SetArrows(AArrow: TImage; ATarget: TControl);
-
-
+    procedure SetLocation;
 
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+
     procedure ResetLocationMarkers;
     procedure LoadArtefactsToMap;
     procedure UpdateArts;
@@ -129,7 +127,10 @@ type
     procedure UpdateAnomalies;
     procedure LoadPlaces;
     procedure UpdateBaseSafeDead;
+{$IFDEF ANDROID}
+    procedure LocationServiceChanged;
     procedure LocationisChanged(Location: JLocation);
+{$ENDIF}
     // Масштабирование
     procedure ZoomToPoint(APoint: TPointF; AScale: Double);
 
@@ -342,8 +343,6 @@ begin
 end;
 
 procedure TFrameMap.ScrollBoxViewportPositionChange(Sender: TObject; const OldViewportPosition, NewViewportPosition: TPointF; const ContentSizeChanged: Boolean);
-var
-  I: integer;
 begin
   SetArrows(imgArrowMan, LocationMarker);
 end;
@@ -428,7 +427,7 @@ begin
   begin
     // Настройка для лучшей производительности
     ScrollBox.EnableDragHighlight := False;
-    MapImage.HitTest := True;
+    MapImage.HitTest := true;
   end;
 end;
 
@@ -438,7 +437,7 @@ var
 begin
   try
     MapImage.Bitmap.LoadFromFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'map_image.png'));
-    FMapLoaded := True;
+    FMapLoaded := true;
 
     // Сохраняем оригинальные размеры
     FOriginalMapWidth := MapImage.Bitmap.Width;
@@ -474,6 +473,8 @@ begin
   end;
 end;
 
+{$IFDEF ANDROID}
+
 procedure TFrameMap.LocationServiceChanged;
 var
   LocationManagerService: JObject;
@@ -497,30 +498,21 @@ begin
   end;
 end;
 
-procedure TFrameMap.LocationSensorLocationChanged(Sender: TObject; const OldLocation, NewLocation: TLocationCoord2D);
-begin
-  LocationServiceChanged;
-  FLoad := true;
-
-  if NewLocation.Latitude <> 0 then
-  begin
-    FSensorLocation := TLocationCoord2D.Create(NewLocation.Latitude, NewLocation.Longitude);
-    FLocation := TLocationCoord2D.Create((FServiceLocation.Latitude + FSensorLocation.Latitude) / 2, (FServiceLocation.Longitude + FSensorLocation.Longitude) / 2);
-    LocationMarker.Visible := true;
-
-    SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
-    OrientationMarker.RotationAngle := 135 + CalculateBearing(OldLocation, FLocation);
-  end;
-end;
-
 procedure TFrameMap.LocationisChanged(Location: JLocation);
 begin
   if Assigned(Location) then
   begin
-    FServiceLocation := TLocationCoord2D.Create(Location.getLatitude, Location.getLongitude);
-    FLocation := TLocationCoord2D.Create((FServiceLocation.Latitude + FSensorLocation.Latitude) / 2, (FServiceLocation.Longitude + FSensorLocation.Longitude) / 2);
-    SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
+    FLocation := TLocationCoord2D.Create(Location.getLatitude, Location.getLongitude);
+    SetLocation;
   end;
+end;
+{$ENDIF}
+
+procedure TFrameMap.SetLocation;
+begin
+  SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
+  OrientationMarker.RotationAngle := 135 + CalculateBearing(FOldLocation, FLocation);
+  FOldLocation := FLocation;
 end;
 
 function TFrameMap.CalculateBearing(const StartPoint, EndPoint: TLocationCoord2D): Double;
@@ -566,7 +558,7 @@ begin
   LocationMarker.Position.X := Point.X - LocationMarker.Width / 2;
   LocationMarker.Position.Y := Point.Y - LocationMarker.Height / 2;
 
-  LocationMarker.Visible := True;
+  LocationMarker.Visible := true;
   LocationMarker.BringToFront;
   MapLayout.PrepareForPaint;
   MapLayout.Repaint;
@@ -624,7 +616,7 @@ begin
   AMarker.Position.X := Point.X - AMarker.Width / 2;
   AMarker.Position.Y := Point.Y - AMarker.Height / 2;
   AMarker.BringToFront;
-  AMarker.Visible := True;
+  AMarker.Visible := true;
 end;
 
 procedure TFrameMap.MapImageGesture(Sender: TObject; const EventInfo: TGestureEventInfo; var Handled: Boolean);
@@ -668,14 +660,13 @@ end;
 
 procedure TFrameMap.btnDelMarkerClick(Sender: TObject);
 begin
-  gplDeleteYesNo.Visible := True;
+  gplDeleteYesNo.Visible := true;
   gplDelEdit.Visible := False;
 end;
 
 procedure TFrameMap.btnEditClick(Sender: TObject);
 var
   AMarker: TMarkerData;
-  vQuery: TFDQuery;
 begin
   AMarker := FMarkerList[GetNumberMarker((Sender as TSpeedButton).TagObject as TImage)];
   EditMarker(AMarker);
@@ -684,13 +675,14 @@ end;
 procedure TFrameMap.btnMyLocationClick(Sender: TObject);
 var
   MarkerCenter: TPointF;
-  ViewportPos: TPointF;
   TargetX: Single;
   TargetY: Single;
 begin
   if LocationMarker.Visible then
   begin
-    ScrollBox.ViewportPosition := TPointF.Create(0, 0);
+    ScrollBox.AniCalculations.Animation := true;
+    ScrollBox.AniCalculations.BoundsAnimation := true;
+    ScrollBox.AniCalculations.TouchTracking := [ttVertical, ttHorizontal];
 
     // Получаем позицию центра маркера относительно MapLayout
     MarkerCenter := (TPointF.Create((LocationMarker.LocalToAbsolute(TPointF.Zero).X + LocationMarker.Width / 2) * MapLayout.Scale.X, (LocationMarker.LocalToAbsolute(TPointF.Zero).Y + LocationMarker.Height / 2)) * MapLayout.Scale.Y);
@@ -701,7 +693,7 @@ begin
     TargetY := MarkerCenter.Y - ScrollBox.Height / 2;
 
     // Устанавливаем позицию прокрутки
-    ScrollBox.ViewportPosition := TPointF.Create(TargetX, TargetY);
+    ScrollBox.AniCalculations.MouseWheel(TargetX, TargetY);
   end;
 end;
 
@@ -715,8 +707,8 @@ begin
 
   btnDeleteYes.TagObject := (Sender as TImage);
   btnEdit.TagObject := (Sender as TImage);
-  LayDetailMarker.Visible := True;
-  recPanelDeleteMarker.Visible := True;
+  LayDetailMarker.Visible := true;
+  recPanelDeleteMarker.Visible := true;
   gplDelEdit.Visible := recPanelDeleteMarker.Visible;
   gplDeleteYesNo.Visible := False;
   (Sender as TImage).BringToFront;
@@ -950,16 +942,6 @@ begin
   end;
 end;
 
-procedure TFrameMap.TimerLocationTimer(Sender: TObject);
-begin
-  if FLoad then
-  begin
-    LocationSensor.Active := False;
-    LocationSensor.Active := true;
-    FLoad := False;
-  end;
-end;
-
 procedure TFrameMap.btnAddAnomalyClick(Sender: TObject);
 begin
   AddAnomaly;
@@ -981,7 +963,7 @@ end;
 procedure TFrameMap.btnDeleteNoClick(Sender: TObject);
 begin
   gplDeleteYesNo.Visible := False;
-  gplDelEdit.Visible := True;
+  gplDelEdit.Visible := true;
 end;
 
 procedure TFrameMap.btnDeleteYesClick(Sender: TObject);
@@ -992,7 +974,7 @@ begin
   AMarker := (Sender as TSpeedButton).TagObject as TImage;
   AMarker.Visible := False;
   gplDeleteYesNo.Visible := False;
-  gplDelEdit.Visible := True;
+  gplDelEdit.Visible := true;
 
   case FMarkerList[GetNumberMarker(AMarker)].MarkerType of
     mtArt:

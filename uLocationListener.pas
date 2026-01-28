@@ -3,14 +3,18 @@ unit uLocationListener;
 interface
 
 uses
-  FMX.Forms, Permissions, Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText,
+  FMX.Forms, Permissions,
+{$IFDEF ANDROID}
+  Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText,
   Androidapi.JNIBridge, Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNI.Location,
-  Androidapi.JNI.Net, System.Sensors;
+  Androidapi.JNI.Net,
+{$ENDIF}
+  System.Sensors;
+{$IFDEF ANDROID}
 
 type
+
   TLocationListener = class(TJavaLocal, JLocationListener)
-  private
-    FParent: TForm;
   public
     procedure onFlushComplete(requestCode: integer); cdecl;
     procedure onLocationChanged(Location: JLocation); overload; cdecl;
@@ -23,12 +27,14 @@ type
 var
   locationListener: TLocationListener;
   FLocationManager: JLocationManager;
-  FSensorLocation, FServiceLocation: TLocationCoord2D;
+  FServiceLocation: TLocationCoord2D;
+{$ENDIF}
 
 implementation
 
 uses uMainForm;
 { TLocationListener }
+{$IFDEF ANDROID}
 
 procedure TLocationListener.onFlushComplete(requestCode: integer);
 begin
@@ -37,7 +43,8 @@ end;
 
 procedure TLocationListener.onLocationChanged(Location: JLocation);
 begin
-  MainForm.FFrameMap.LocationisChanged(Location);
+  if Assigned(MainForm.FFrameMap) then
+    MainForm.FFrameMap.LocationisChanged(Location);
 end;
 
 procedure TLocationListener.onLocationChanged(locations: JList);
@@ -59,5 +66,6 @@ procedure TLocationListener.onStatusChanged(provider: JString; status: integer; 
 begin
 
 end;
+{$ENDIF}
 
 end.

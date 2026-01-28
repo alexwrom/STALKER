@@ -458,7 +458,6 @@
         <DCCReference Include="..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.StringUtils.pas"/>
         <DCCReference Include="..\ZXing.Delphi-3.10.0\DelphiZXingQRCode-master\Source\DelphiZXIngQRCode.pas"/>
         <DCCReference Include="classes\classes.sell.pas"/>
-        <DCCReference Include="classes\classes.send.pas"/>
         <DCCReference Include="classes\classes.action.pas"/>
         <DCCReference Include="uFrameQRScaner.pas">
             <Form>FrameQRScanner</Form>
@@ -466,6 +465,16 @@
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="uLocationListener.pas"/>
+        <DCCReference Include="OAuth2.pas"/>
+        <DCCReference Include="classes\classes.answer.pas"/>
+        <DCCReference Include="classes\classes.data.pas"/>
+        <DCCReference Include="uFrameLogin.pas">
+            <Form>FrameLogin</Form>
+            <FormType>fmx</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="classes\classes.send.pas"/>
+        <DCCReference Include="classes\classes.user.pas"/>
         <RcItem Include="Resources\font\lcd.ttf">
             <ResourceType>FONT</ResourceType>
             <ResourceId>1</ResourceId>
@@ -1359,6 +1368,20 @@
                     <Platform Name="Android64">
                         <RemoteDir>.\assets\internal\</RemoteDir>
                         <RemoteName>base.db</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="network_security_config.xml" Configuration="Debug" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\res\xml\</RemoteDir>
+                        <RemoteName>network_security_config.xml</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="network_security_config.xml" Configuration="Release" Class="File">
+                    <Platform Name="Android">
+                        <RemoteDir>.\res\xml\</RemoteDir>
+                        <RemoteName>network_security_config.xml</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

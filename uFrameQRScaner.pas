@@ -184,12 +184,12 @@ begin
                   2: // Детектор      {"code":"01"}
                     begin
                       SetDetector(vSend.Code.ToInteger());
-                      ExeExec(Format('update users set detector_id = %d where user_id = %d;', [vSend.Code.ToInteger(), Person.UserId]), exExecute, FDQuery);
+                      ExeExec(Format('update users set detector_id = %d;', [vSend.Code.ToInteger()]), exExecute, FDQuery);
                     end;
                   3: // Смена группировки  {"code":"001"}
                     begin
                       Person.GroupId := vSend.Code.ToInteger;
-                      ExeExec(Format('update users set group_id = %d where user_id = %d;', [vSend.Code.ToInteger(), Person.UserId]), exExecute, FDQuery);
+                      ExeExec(Format('update users set group_id = %d;', [vSend.Code.ToInteger()]), exExecute, FDQuery);
                     end;
                   5: // Добавление в сумку   {"code":"01001"}
                     begin
@@ -211,7 +211,7 @@ begin
                   7: // Деньги      {"code":"0050000"}
                     begin
                       Person.Cash := Person.Cash + vSend.Code.ToInteger;
-                      ExeExec(Format('update users set cash = %d where user_id = %d;', [Round(Person.Cash), Person.UserId]), exExecute, FDQuery);
+                      ExeExec(Format('update users set cash = %d;', [Round(Person.Cash)]), exExecute, FDQuery);
                     end;
                 end;
               end

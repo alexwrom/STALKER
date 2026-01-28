@@ -87,7 +87,7 @@ procedure AddPlace;
 
 var
   FCoords: TLocationCoord2D;
-  FLocation: TLocationCoord2D;
+  FLocation, FOldLocation: TLocationCoord2D;
   FArtefactsList: TList<TArtefactData>;
   FPlacesList: TList<TPlaceData>;
   FMarkerList: TList<TMarkerData>;
@@ -113,7 +113,6 @@ end;
 function ExeExec(Str: UnicodeString; Typ: TExecType; var AQuery: TFDQuery): boolean;
 var
   FDConn: TFDConnection;
-  FilePath: string;
 begin
   result := true;
   // 0 - запрос на отображение списка

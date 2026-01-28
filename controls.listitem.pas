@@ -69,8 +69,6 @@ begin
 end;
 
 function TControlListItem.SelectTo(AIndex: integer): TControlItem;
-var
-  lObject: TFMXObject;
 begin
   result := nil;
 

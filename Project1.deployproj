@@ -1090,6 +1090,24 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
+        <DeployFile Include="network_security_config.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>Project1\res\xml\</RemoteDir>
+            <RemoteName>network_security_config.xml</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="network_security_config.xml" Condition="'$(Config)'=='Release'">
+            <RemoteDir>Project1\res\xml\</RemoteDir>
+            <RemoteName>network_security_config.xml</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="$(ProjectName).Artwork\Android\FM_VectorizedNotificationIcon.xml" Condition="'$(Config)'=='Debug'">
             <RemoteDir>Project1\res\drawable-anydpi-v24\</RemoteDir>
             <RemoteName>ic_notification.xml</RemoteName>

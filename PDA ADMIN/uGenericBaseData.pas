@@ -6,11 +6,11 @@ uses
   uGlobal, System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   Generics.Collections, FireDAC.Comp.Client, StrUtils, FMX.Graphics, Classes.action;
 
-function GoGenericBaseData(var APageCount: integer): UnicodeString;
+function GoGenericBaseData(): TList<UnicodeString>;
 
 implementation
 
-procedure GenerateTableInsert(ATable: string; var AStrData: string; var APageCount: integer);
+procedure GenerateTableInsert(ATable: string; var AStrData: TList<UnicodeString>);
 var
   FDQuery: TFDQuery;
   FDQueryCol: TFDQuery;
@@ -19,7 +19,6 @@ var
   i: integer;
   vColName: string;
   vColValue: UnicodeString;
-  vBitmap: TBitmap;
   vStr: string;
 begin
   vColumns := TList<TColumn>.Create;
@@ -62,9 +61,7 @@ begin
 
             end;
 
-            vStr := 'insert into ' + ATable + ' (' + vColName + ') values (' + vColValue + ');';
-            AStrData := AStrData + IfThen(AStrData = '', '', #13#10) + vStr;
-            APageCount := APageCount + 1;
+            AStrData.Add('insert into ' + ATable + ' (' + vColName + ') values (' + vColValue + ');');
             FDQuery.Next;
           end;
 
@@ -80,12 +77,13 @@ begin
 
 end;
 
-function GoGenericBaseData(var APageCount: integer): UnicodeString;
+function GoGenericBaseData(): TList<UnicodeString>;
 begin
   // Порядок важен
-  GenerateTableInsert('anomalies', Result, APageCount);
-  GenerateTableInsert('arts_to_map', Result, APageCount);
-  GenerateTableInsert('places', Result, APageCount);
+  Result := TList<UnicodeString>.Create;
+  GenerateTableInsert('anomalies', Result);
+  GenerateTableInsert('arts_to_map', Result);
+  GenerateTableInsert('places', Result);
 end;
 
 end.

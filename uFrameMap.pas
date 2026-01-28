@@ -10,9 +10,13 @@ uses
   System.Math, System.Sensors, System.Sensors.Components, System.Permissions,
   FMX.Effects, Generics.Collections, System.ImageList, FMX.ImgList,
   System.Actions, FMX.ActnList, uGlobal, FMX.Memo.Types, FMX.ScrollBox, FMX.Memo,
-  FMX.Media, System.IOUtils, FireDAC.Comp.Client, System.Threading, Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText,
+  FMX.Media, System.IOUtils, FireDAC.Comp.Client, System.Threading,
+{$IFDEF ANDROID}
+  Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText,
   Androidapi.JNIBridge, Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNI.Location,
-  Androidapi.JNI.Net, uLocationListener;
+  Androidapi.JNI.Net,
+{$ENDIF}
+  uLocationListener;
 
 type
   TFrameMap = class(TFrame)
@@ -27,7 +31,6 @@ type
     LocationMarker: TLayout;
     LayMapControls: TLayout;
     TimerSensor: TTimer;
-    LocationSensor: TLocationSensor;
     OrientationMarker: TImage;
     btnMyLocation: TButton;
     lblZoom: TLabel;
@@ -78,13 +81,12 @@ type
     layPersonHealth: TLayout;
     ShadowEffect1: TShadowEffect;
     cManRadius: TCircle;
-    TimerLocation: TTimer;
     faMarkerX: TFloatAnimation;
     faMarkerY: TFloatAnimation;
+    timerScanAnomaliesNextTo: TTimer;
     procedure MapImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure btnZoomInClick(Sender: TObject);
     procedure btnZoomOutClick(Sender: TObject);
-    procedure LocationSensorLocationChanged(Sender: TObject; const OldLocation, NewLocation: TLocationCoord2D);
     procedure btnMyLocationClick(Sender: TObject);
     procedure MapImageGesture(Sender: TObject; const EventInfo: TGestureEventInfo; var Handled: Boolean);
     procedure ActAddMarkerExecute(Sender: TObject);
@@ -95,7 +97,7 @@ type
     procedure timerCriticalTimer(Sender: TObject);
     procedure timerCheckCriticalTimer(Sender: TObject);
     procedure ScrollBoxViewportPositionChange(Sender: TObject; const OldViewportPosition, NewViewportPosition: TPointF; const ContentSizeChanged: Boolean);
-    procedure TimerLocationTimer(Sender: TObject);
+    procedure timerScanAnomaliesNextToTimer(Sender: TObject);
   private
     FMapLoaded: Boolean;
 
@@ -110,9 +112,11 @@ type
     FMarkerIssue: TList<TMarkerData>;
     FSmoothedAzimuth: Double;
     FCurrentScale: Double;
+{$IFDEF ANDROID}
     locationListener: TLocationListener;
     FLocationManager: JLocationManager;
-    FSensorLocation, FServiceLocation: TLocationCoord2D;
+{$ENDIF}
+    FServiceLocation: TLocationCoord2D;
     FLoad: Boolean;
     procedure LoadMap;
     procedure SetLocationMarker(Lat, Lon: Double);
@@ -138,13 +142,19 @@ type
     procedure ScanInnerCritical;
     procedure SetArrows(AArrow: TImage; ATarget: TControl);
     procedure UpdateAnomalies;
-    procedure LocationServiceChanged;
+    procedure ScanAnomaliesNextTo;
+{$IFDEF ANDROID}
+    procedure SetLocation;
 
+{$ENDIF}
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure ResetLocationMarkers;
+{$IFDEF ANDROID}
+    procedure LocationServiceChanged;
     procedure LocationisChanged(Location: JLocation);
+{$ENDIF}
     // Масштабирование
     procedure ZoomToPoint(APoint: TPointF; AScale: Double);
 
@@ -579,6 +589,7 @@ begin
     end;
   end;
 end;
+{$IFDEF ANDROID}
 
 procedure TFrameMap.LocationServiceChanged;
 var
@@ -603,31 +614,24 @@ begin
   end;
 end;
 
-procedure TFrameMap.LocationSensorLocationChanged(Sender: TObject; const OldLocation, NewLocation: TLocationCoord2D);
-begin
-  LocationServiceChanged;
-  FLoad := true;
-
-  if NewLocation.Latitude <> 0 then
-  begin
-    FSensorLocation := TLocationCoord2D.Create(NewLocation.Latitude, NewLocation.Longitude);
-    FLocation := TLocationCoord2D.Create((FServiceLocation.Latitude + FSensorLocation.Latitude) / 2, (FServiceLocation.Longitude + FSensorLocation.Longitude) / 2);
-    LocationMarker.Visible := true;
-
-    SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
-    OrientationMarker.RotationAngle := 135 + CalculateBearing(OldLocation, FLocation);
-  end;
-end;
-
 procedure TFrameMap.LocationisChanged(Location: JLocation);
 begin
   if Assigned(Location) then
   begin
     FServiceLocation := TLocationCoord2D.Create(Location.getLatitude, Location.getLongitude);
-    FLocation := TLocationCoord2D.Create((FServiceLocation.Latitude + FSensorLocation.Latitude) / 2, (FServiceLocation.Longitude + FSensorLocation.Longitude) / 2);
-    SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
+    FLocation := TLocationCoord2D.Create(FServiceLocation.Latitude, FServiceLocation.Longitude);
+    SetLocation;
   end;
 end;
+
+procedure TFrameMap.SetLocation;
+begin
+  LocationMarker.Visible := true;
+  SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
+  OrientationMarker.RotationAngle := 135 + CalculateBearing(FOldLocation, FLocation);
+  FOldLocation := FLocation;
+end;
+{$ENDIF}
 
 procedure TFrameMap.ScanAnomalies;
 var
@@ -637,57 +641,35 @@ var
 begin
 
   for I := 0 to FAnomalyList.Count - 1 do
-  begin
-    vDistance := CalculateFastDistance(FLocation.Latitude, FLocation.Longitude, FAnomalyList[I].Coords.Latitude, FAnomalyList[I].Coords.Longitude);
-
-    if vDistance <= FAnomalyList[I].Radius then
+    if NOT((Person.GroupId = 5) and (FAnomalyList[I].AnomalyType = atPSI)) then // 5- Монолит. ПСИ не действует на монлоит
     begin
-      MediaPlayerDamage.CurrentTime := 0;
-      MediaPlayerDamage.Volume := vDistance / FAnomalyList[I].Radius * 100;
-      MediaPlayerDamage.Play;
-      StartDamageGlow;
+      vDistance := CalculateFastDistance(FLocation.Latitude, FLocation.Longitude, FAnomalyList[I].Coords.Latitude, FAnomalyList[I].Coords.Longitude);
 
-      case FAnomalyList[I].AnomalyType of
-        atElectro:
-          vBlockDamage := Person.ElectroArmor;
-        atFire:
-          vBlockDamage := Person.FireArmor;
-        atPhisic:
-          vBlockDamage := Person.PhisicArmor;
-        atRadiation:
-          vBlockDamage := Person.RadiationArmor;
-        atChimishe:
-          vBlockDamage := Person.ChimisheArmor;
-        atPSI:
-          vBlockDamage := Person.PsiArmor;
-      end;
-
-      Person.Health := Person.Health - FAnomalyList[I].Power * ((FAnomalyList[I].Radius - vDistance) / FAnomalyList[I].Radius) * ((100 - vBlockDamage) / 100);
-    end
-    else if vDistance <= FAnomalyList[I].Radius + 10 then // Сигнализируем за 10 метров до зоны действия
-    begin
-{$IF Defined(ANDROID)}
-      Vibration(50);
-{$ENDIF}
-      StopDamageGlow;
-
-      if FAnomalyList[I].AnomalyType = atRadiation then
+      if (vDistance <= FAnomalyList[I].Radius) then
       begin
-        if (MediaPlayerRad.State = TMediaState.Stopped) or (MediaPlayerRad.State = TMediaState.Unavailable) then
-        begin
-          MediaPlayerRad.CurrentTime := 0;
-          MediaPlayerRad.Volume := vDistance / FAnomalyList[I].Radius * 100;
-          MediaPlayerRad.Play;
+        MediaPlayerDamage.CurrentTime := 0;
+        MediaPlayerDamage.Volume := vDistance / FAnomalyList[I].Radius * 100;
+        MediaPlayerDamage.Play;
+        StartDamageGlow;
+
+        case FAnomalyList[I].AnomalyType of
+          atElectro:
+            vBlockDamage := Person.ElectroArmor;
+          atFire:
+            vBlockDamage := Person.FireArmor;
+          atPhisic:
+            vBlockDamage := Person.PhisicArmor;
+          atRadiation:
+            vBlockDamage := Person.RadiationArmor;
+          atChimishe:
+            vBlockDamage := Person.ChimisheArmor;
+          atPSI:
+            vBlockDamage := Person.PsiArmor;
         end;
-      end
-      else
-      begin
-        MediaPlayerAnomaly.CurrentTime := 0;
-        MediaPlayerAnomaly.Volume := vDistance / FAnomalyList[I].Radius * 100;
-        MediaPlayerAnomaly.Play;
+
+        Person.Health := Person.Health - FAnomalyList[I].Power * ((FAnomalyList[I].Radius - vDistance) / FAnomalyList[I].Radius) * ((100 - vBlockDamage) / 100);
       end;
     end;
-  end;
 
   for I := 0 to FMarkerList.Count - 1 do
     if FMarkerList[I].MarkerType in [mtRadiation, mtAnomaly] then
@@ -697,6 +679,44 @@ begin
         FMarkerList[I].Marker.Visible := vDistance <= Person.Detector.Radius
       else
         FMarkerList[I].Marker.Visible := False;
+    end;
+end;
+
+procedure TFrameMap.ScanAnomaliesNextTo;
+var
+  I: integer;
+  vDistance: Double;
+begin
+  timerScanAnomaliesNextTo.Interval := 1000;
+
+  for I := 0 to FAnomalyList.Count - 1 do
+    if NOT((Person.GroupId = 5) and (FAnomalyList[I].AnomalyType = atPSI)) then // 5- Монолит. ПСИ не действует на монлоит
+    begin
+      vDistance := CalculateFastDistance(FLocation.Latitude, FLocation.Longitude, FAnomalyList[I].Coords.Latitude, FAnomalyList[I].Coords.Longitude);
+
+      if (vDistance > FAnomalyList[I].Radius) and (vDistance <= FAnomalyList[I].Radius + 10) then // Сигнализируем за 10 метров до зоны действия
+      begin
+{$IF Defined(ANDROID)}
+        Vibration(50);
+{$ENDIF}
+        StopDamageGlow;
+
+        timerScanAnomaliesNextTo.Interval := Round((vDistance - FAnomalyList[I].Radius) * 100);
+
+        if FAnomalyList[I].AnomalyType = atRadiation then
+        begin
+          if (MediaPlayerRad.State = TMediaState.Stopped) or (MediaPlayerRad.State = TMediaState.Unavailable) then
+          begin
+            MediaPlayerRad.CurrentTime := 0;
+            MediaPlayerRad.Play;
+          end;
+        end
+        else
+        begin
+          MediaPlayerAnomaly.CurrentTime := 0;
+          MediaPlayerAnomaly.Play;
+        end;
+      end;
     end;
 end;
 
@@ -865,7 +885,6 @@ begin
   vOldViewportPositionY := ScrollBox.ViewportPosition.Y / FCurrentScale * (FCurrentScale + FZoomStep);
   ZoomIn;
   ScrollBox.ViewportPosition := TPointF.Create(vOldViewportPositionX, vOldViewportPositionY);
-  // ApplyZoom(vOldViewportPositionX, vOldViewportPositionY);
   ResetLocationMarkers;
 end;
 
@@ -878,7 +897,6 @@ begin
   vOldViewportPositionY := ScrollBox.ViewportPosition.Y / FCurrentScale * (FCurrentScale - FZoomStep);
   ZoomOut;
   ScrollBox.ViewportPosition := TPointF.Create(vOldViewportPositionX, vOldViewportPositionY);
-  // ApplyZoom(vOldViewportPositionX, vOldViewportPositionY);
   ResetLocationMarkers;
 end;
 
@@ -897,7 +915,9 @@ var
 begin
   if LocationMarker.Visible then
   begin
-    ScrollBox.ViewportPosition := TPointF.Create(0, 0);
+    ScrollBox.AniCalculations.Animation := true;
+    ScrollBox.AniCalculations.BoundsAnimation := true;
+    ScrollBox.AniCalculations.TouchTracking := [ttVertical, ttHorizontal];
 
     // Получаем позицию центра маркера относительно MapLayout
     MarkerCenter := (TPointF.Create((LocationMarker.LocalToAbsolute(TPointF.Zero).X + LocationMarker.Width / 2) * MapLayout.Scale.X, (LocationMarker.LocalToAbsolute(TPointF.Zero).Y + LocationMarker.Height / 2)) * MapLayout.Scale.Y);
@@ -908,7 +928,7 @@ begin
     TargetY := MarkerCenter.Y - ScrollBox.Height / 2;
 
     // Устанавливаем позицию прокрутки
-    ScrollBox.ViewportPosition := TPointF.Create(TargetX, TargetY);
+    ScrollBox.AniCalculations.MouseWheel(TargetX, TargetY);
   end;
 end;
 
@@ -1113,7 +1133,13 @@ begin
   for I := 0 to FMarkerIssue.Count - 1 do
     SetMarker(FMarkerIssue[I].Marker, FMarkerIssue[I].Coords.Latitude, FMarkerIssue[I].Coords.Longitude);
 
+  faMarkerX.Duration := 0; // Для скрытия плавного движения при зуме
+  faMarkerY.Duration := 0;
+
   SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
+
+  faMarkerX.Duration := 0.2;
+  faMarkerY.Duration := 0.2;
 
   if MarkersPanel.Visible then
     SetMarker(MarkersPanel, FCoords.Latitude, FCoords.Longitude);
@@ -1279,14 +1305,10 @@ begin
   end;
 end;
 
-procedure TFrameMap.TimerLocationTimer(Sender: TObject);
+procedure TFrameMap.timerScanAnomaliesNextToTimer(Sender: TObject);
 begin
-  if FLoad then
-  begin
-    LocationSensor.Active := False;
-    LocationSensor.Active := true;
-    FLoad := False;
-  end;
+  if Not FIsDead then
+    ScanAnomaliesNextTo;
 end;
 
 procedure TFrameMap.TimerSensorTimer(Sender: TObject);

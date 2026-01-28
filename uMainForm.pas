@@ -23,7 +23,8 @@ uses
   Androidapi.JNI.Os,
   FMX.Platform.Android,
 {$ENDIF}
-  uScanerWiFi, FMX.Ani, FMX.Effects, IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer, IdTCPConnection, IdTCPClient, FMX.Edit, FMX.Media;
+  uScanerWiFi, FMX.Ani, FMX.Effects, IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer, IdTCPConnection, IdTCPClient, FMX.Edit, FMX.Media,
+  uFrameLogin;
 
 type
 
@@ -69,29 +70,6 @@ type
     timerScannerWifiMerchant: TTimer;
     recSkin1: TRectangle;
     InnerGlowEffect3: TInnerGlowEffect;
-    layEnterName: TLayout;
-    Rectangle8: TRectangle;
-    layPanel: TLayout;
-    imgBottom: TImage;
-    imgTop: TImage;
-    Image1: TImage;
-    Image3: TImage;
-    Rectangle4: TRectangle;
-    InnerGlowEffect9: TInnerGlowEffect;
-    layBtn: TLayout;
-    Image4: TImage;
-    btnConfirmName: TCornerButton;
-    eNickName: TEdit;
-    labSTALKER: TLabel;
-    Label1: TLabel;
-    Label2: TLabel;
-    labNotConnect: TLabel;
-    AniIndicator1: TAniIndicator;
-    recLoading: TRectangle;
-    Label3: TLabel;
-    Label4: TLabel;
-    Label5: TLabel;
-    InnerGlowEffect1: TInnerGlowEffect;
     recSkin: TRectangle;
     InnerGlowEffect2: TInnerGlowEffect;
     InnerGlowEffect4: TInnerGlowEffect;
@@ -101,7 +79,6 @@ type
     layPersonHealth: TLayout;
     recBack: TRectangle;
     MediaPlayer: TMediaPlayer;
-    ProgressBar: TProgressBar;
     procedure FormCreate(Sender: TObject);
     procedure btnToMapClick(Sender: TObject);
     procedure btnToPercsClick(Sender: TObject);
@@ -112,18 +89,13 @@ type
     procedure IdTCPServerExecute(AContext: TIdContext);
     procedure timerScannerWifiMerchantTimer(Sender: TObject);
     procedure FormActivate(Sender: TObject);
-    procedure btnConfirmNameClick(Sender: TObject);
-    procedure eNickNameKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
-    procedure eNickNameEnter(Sender: TObject);
-    procedure eNickNameExit(Sender: TObject);
   private
 
     procedure LoadArtefacts;
     procedure LoadPlaces;
     procedure LoadBag;
-    procedure GetData;
     procedure LoadCritical;
-    procedure GetImage(AHex: UnicodeString);
+    procedure CreateFrameLogin;
 
   public
     { Public declarations }
@@ -133,6 +105,7 @@ type
     FFrameQRScanner: TFrameQRScanner;
     FFrameIssuies: TFrameIssuies;
     FFrameBag: TFrameBag;
+    FFrameLogin: TFrameLogin;
     procedure StartApp;
     procedure LoadIsuies;
     procedure StopDetector;
@@ -159,7 +132,6 @@ procedure TMainForm.FormCreate(Sender: TObject);
 begin
 {$IF Defined(ANDROID) or Defined(IOS)}
   Self.FullScreen := true;
-  labSTALKER.TextSettings.Font.Family := 'montblancctt';
 {$ENDIF}
 end;
 
@@ -326,8 +298,8 @@ procedure TMainForm.FormShow(Sender: TObject);
 var
   vUserExists: boolean;
 begin
-  ExeExec('select user_id  from users limit 1;', exActive, FDQuery);
-  vUserExists := FDQuery.RecordCount = 1;
+  ExeExec('select Count(1) as cnt from users;', exActive, FDQuery);
+  vUserExists := false; // FDQuery.FieldByName('cnt').AsInteger = 1;
   FreeQueryAndConn(FDQuery);
 
   if vUserExists then
@@ -338,15 +310,21 @@ begin
   begin
     Person := TPerson.Create;
     Person.UserId := -1;
-    Person.GroupId := -1;
+    Person.GroupId := 1;
     Person.CountContener := -1;
-    layEnterName.Visible := true;
+    CreateFrameLogin;
   end;
+end;
+
+procedure TMainForm.CreateFrameLogin;
+begin
+  FFrameLogin := TFrameLogin.Create(Self);
+  FFrameLogin.Parent := Self;
+  FFrameLogin.BringToFront;
 end;
 
 procedure TMainForm.StartApp;
 begin
-  layEnterName.Visible := false;
   layMenu.Enabled := true;
 
   ExeExec('select user_id, group_id from users limit 1;', exActive, FDQuery);
@@ -363,6 +341,7 @@ begin
 
   FFrameMap := TFrameMap.Create(TabMap);
   FFrameMap.Parent := TabMap;
+
   FFramePercs := TFramePercs.Create(TabPercs);
   FFramePercs.Parent := TabPercs;
   Person.GroupId := Person.GroupId;
@@ -384,11 +363,13 @@ begin
     begin
       if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
       begin
-        FFrameMap.TimerLocation.Enabled := true;
+{$IFDEF ANDROID}
+        FFrameMap.LocationServiceChanged;
+{$ENDIF}
       end
       else
       begin
-        Showmessage('Необходимы разрешения для сканирования Wi-Fi');
+        Showmessage('Необходимы разрешения для сканирования GPS');
       end;
     end);
 end;
@@ -434,199 +415,6 @@ begin
     end;
 end;
 
-procedure TMainForm.btnConfirmNameClick(Sender: TObject);
-begin
-  if eNickName.Text = '' then
-    Showmessage('Введите ваше имя')
-  else
-  begin
-    PermissionsService.RequestPermissions(['android.permission.WRITE_EXTERNAL_STORAGE'],
-      procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
-
-      begin
-        if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
-        begin
-          Person.UserName := eNickName.Text;
-          layEnterName.Visible := false;
-          recLoading.Visible := true;
-          GetData;
-        end
-        else
-        begin
-          Showmessage('Необходимы разрешения для к памяти устройства.');
-        end;
-      end);
-  end;
-end;
-
-procedure TMainForm.GetData;
-var
-  vQuery: TFDQuery;
-begin
-  TTask.Run(
-    procedure
-    var
-      vString: UnicodeString;
-      I: Integer;
-
-      IdTCPClient: TIdTCPClient;
-      vStringData: TList<UnicodeString>;
-      vStr: string;
-      vAction: TAction;
-    begin
-      IdTCPClient := TIdTCPClient.Create(nil);
-      IdTCPClient.Host := '192.168.4.60';
-      IdTCPClient.Port := 2026;
-      try
-        try
-          IdTCPClient.Connect;
-
-          IdTCPClient.IOHandler.WriteLn(TJson.ObjectToJsonString(Person), IndyUTF8Encoding(true));
-
-          try
-            vAction := TJson.JsonToObject<TAction>(IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(true)));
-
-            TThread.Synchronize(TThread.CurrentThread,
-              procedure
-              begin
-                ProgressBar.Max := vAction.PageCount;
-                ProgressBar.Value := 1;
-              end);
-
-            vStringData := TList<UnicodeString>.Create;
-
-            if vAction.PageCount > 0 then
-            begin
-              for I := 1 to vAction.PageCount do
-              begin
-                vStr := IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(true));
-
-                if vStr[1] = '~' then
-                begin
-                  vStringData[vStringData.Count - 1] := vStringData[vStringData.Count - 1] + Copy(vStr, 2);
-                end
-                else
-                  vStringData.Add(vStr);
-
-                TThread.Synchronize(TThread.CurrentThread,
-                  procedure
-                  begin
-                    ProgressBar.Value := ProgressBar.Value + 1;
-                  end);
-              end;
-            end;
-
-          finally
-            IdTCPClient.Disconnect;
-          end;
-
-          case vAction.SendType of
-            stUpdateData:
-              begin
-
-                TThread.Synchronize(TThread.CurrentThread,
-                  procedure
-                  begin
-                    ProgressBar.Max := vStringData.Count;
-                    ProgressBar.Value := 0;
-                  end);
-
-                For I := 0 to vStringData.Count - 2 do // Последняя строка это Hex карты
-                begin
-                  vString := vString + vStringData[I];
-
-                  TThread.Synchronize(TThread.CurrentThread,
-                    procedure
-                    begin
-                      ProgressBar.Value := ProgressBar.Value + 1;
-                    end);
-                end;
-
-                ExeExec(vString, exExecute, vQuery);
-
-                GetImage(vStringData[vStringData.Count - 1]);
-
-                TThread.Synchronize(TThread.CurrentThread,
-                  procedure
-                  begin
-                    ProgressBar.Value := I;
-                  end);
-
-                TThread.Synchronize(TThread.CurrentThread,
-                  procedure
-                  begin
-                    recLoading.Visible := false;
-                    StartApp;
-                  end);
-              end;
-
-            stUserExists:
-              begin
-                TThread.Synchronize(TThread.CurrentThread,
-                  procedure
-                  begin
-                    Showmessage('Сталкер с таким именем уже зарегистрирован.');
-                  end);
-
-                recLoading.Visible := false;
-                layEnterName.Visible := true;
-              end;
-          end;
-        finally
-          FreeAndNil(vStringData);
-        end;
-
-      except
-        TThread.Synchronize(TThread.CurrentThread,
-          procedure
-          begin
-            Showmessage('Сталкерская сеть недоступна.');
-          end);
-
-        recLoading.Visible := false;
-        layEnterName.Visible := true;
-      end;
-    end);
-end;
-
-procedure TMainForm.GetImage(AHex: UnicodeString);
-var
-  Stream: TMemoryStream;
-  I: Integer;
-  ByteValue: Byte;
-  Bytes: TBytes;
-  HexByte: UnicodeString;
-  vPath: string;
-begin
-  SetLength(Bytes, Length(AHex) div 2);
-  // Конвертируем шестнадцатеричную строку в байты
-  for I := 0 to (Length(AHex) div 2) - 1 do
-  begin
-    HexByte := Copy(AHex, I * 2 + 1, 2);
-    try
-      ByteValue := StrToInt('$' + HexByte);
-      Bytes[I] := ByteValue;
-    except
-    end;
-  end;
-
-  // Создаем поток из байт
-  Stream := TMemoryStream.Create;
-  try
-    Stream.WriteBuffer(Bytes[0], Length(Bytes));
-    Stream.Position := 0;
-
-    vPath := System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'map_image.png');
-
-    if FileExists(vPath) then
-      TFile.Delete(vPath);
-
-    Stream.SaveToFile(vPath);
-  finally
-    FreeAndNil(Stream);
-  end;
-end;
-
 procedure TMainForm.btnToBagClick(Sender: TObject);
 begin
   LoadBag;
@@ -664,22 +452,6 @@ begin
 
   Person.Cash := Person.Cash;
   Person.GroupId := Person.GroupId;
-end;
-
-procedure TMainForm.eNickNameEnter(Sender: TObject);
-begin
-  layPanel.MArgins.Bottom := 180;
-end;
-
-procedure TMainForm.eNickNameExit(Sender: TObject);
-begin
-  layPanel.MArgins.Bottom := 0;
-end;
-
-procedure TMainForm.eNickNameKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
-begin
-  if (Key = 13) and (btnConfirmName.Visible) then
-    btnConfirmNameClick(nil);
 end;
 
 procedure TMainForm.btnToIssuiesClick(Sender: TObject);
@@ -748,21 +520,29 @@ begin
   TThread.CreateAnonymousThread(
     procedure
     begin
+      if Assigned(Self) then
+      begin
+        ConnectToMerchatZone; // Поиск зоны торговли
 
-      ConnectToMerchatZone; // Поиск зоны торговли
+        TThread.Synchronize(TThread.CurrentThread,
+          procedure
+          begin
 
-      TThread.Synchronize(TThread.CurrentThread,
-        procedure
-        begin
-          layBtn.Visible := FIsMerchantZone;
-          labNotConnect.Visible := NOT FIsMerchantZone;
+            if Assigned(FFrameLogin) then
+            begin
+              FFrameLogin.layBtn.Visible := FIsMerchantZone;
+              FFrameLogin.labNotConnect.Visible := NOT FIsMerchantZone;
+            end;
 
-          if Assigned(FFrameBag) then
-            FFrameBag.laySells.Visible := FIsMerchantZone;
+            if Assigned(FFrameBag) then
+              FFrameBag.laySells.Visible := FIsMerchantZone;
 
-          ActiveScaner(FIsMerchantZone);
-        end);
+            ActiveScaner(FIsMerchantZone);
+
+          end);
+      end;
     end).Start;
+
 {$ENDIF}
 end;
 

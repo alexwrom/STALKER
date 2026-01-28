@@ -13,6 +13,7 @@
 <%queries-child-elements%>
     </queries>
     <application
+        android:networkSecurityConfig="@xml/network_security_config"
         android:persistent="%persistent%"
         android:restoreAnyVersion="%restoreAnyVersion%"
         android:label="%label%"

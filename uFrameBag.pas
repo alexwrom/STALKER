@@ -7,7 +7,7 @@ uses
   FMX.Types, FMX.Graphics, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.StdCtrls,
   FMX.Objects, FMX.Layouts, uGlobal, System.ImageList, FMX.ImgList, Generics.Collections,
   FMX.Controls.Presentation, FMX.Effects, StrUtils, FireDAC.Comp.Client, uScanerWiFi, Classes.send, Classes.sell,
-  Rest.JSON, IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer, IdGlobal, System.Net.URLClient, Classes.action, FMX.TabControl;
+  Rest.JSON, IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer, IdGlobal, System.Net.URLClient, Classes.action, FMX.TabControl, FMX.Edit;
 
 type
   TFrameBag = class(TFrame)
@@ -413,7 +413,7 @@ begin
         if Person.ArmorId <> 0 then
           ExeExec('insert into bag (table_name, row_id, health) values (''armors'',' + Person.ArmorId.ToString + ',' + Person.ArmorHealth.ToString + ');', exExecute, vQuery);
 
-        ExeExec('update users set armor_id = ' + FBagList[vIndex].RowID.ToString + ', armor_health = ' + FBagList[vIndex].Health.ToString + ' where user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
+        ExeExec('update users set armor_id = ' + FBagList[vIndex].RowID.ToString + ', armor_health = ' + FBagList[vIndex].Health.ToString + ';', exExecute, vQuery);
         ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''armors'' and row_id = ' + FBagList[vIndex].RowID.ToString + ' and health = ' + FBagList[vIndex].Health.ToString + ' limit 1);', exExecute, vQuery);
 
         ExeExec('insert into bag (table_name, row_id, health) select ''arts'', art_id, 100 from belt where slot > ' + labCountSlots.Text + ';', exExecute, vQuery);
@@ -424,7 +424,7 @@ begin
         if Person.WeaponId <> 0 then
           ExeExec('insert into bag (table_name, row_id, health) values (''weapons'',' + Person.WeaponId.ToString + ',' + Person.WeaponHealth.ToString + ');', exExecute, vQuery);
 
-        ExeExec('update users set weapon_id = ' + FBagList[vIndex].RowID.ToString + ', weapon_health = ' + FBagList[vIndex].Health.ToString + ' where user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
+        ExeExec('update users set weapon_id = ' + FBagList[vIndex].RowID.ToString + ', weapon_health = ' + FBagList[vIndex].Health.ToString + ';', exExecute, vQuery);
         ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''weapons'' and row_id = ' + FBagList[vIndex].RowID.ToString + ' and health = ' + FBagList[vIndex].Health.ToString + ' limit 1);', exExecute, vQuery);
       end;
   end;
@@ -440,6 +440,7 @@ procedure TFrameBag.btnAddArtClick(Sender: TObject);
 var
   vQuery: TFDQuery;
   vIndex: integer;
+  str: string;
 begin
   vIndex := layInfo.Tag;
 
@@ -468,6 +469,7 @@ begin
 
     ReloadArts;
     layChangeSlot.Visible := true;
+    layInfo.Visible := False;
   end
   else
   begin
@@ -476,7 +478,6 @@ begin
     ReloadPercs;
     ReloadBag;
   end;
-  layInfo.Visible := False;
 end;
 
 procedure TFrameBag.ReloadArts;
@@ -818,6 +819,7 @@ begin
 
     btArt:
       begin
+
         labElementCost.Text := Format('%.0n', [FBagList[vIndex].Cost]);
         infoRadiation.Width := infoRadiation.Tag * FBagList[vIndex].Percs.RadiationArmor / 100;
         infoChimishe.Width := infoChimishe.Tag * FBagList[vIndex].Percs.ChimisheArmor / 100;
@@ -848,9 +850,13 @@ begin
         recHealth.Visible := False;
         layAddArmor.Visible := False;
         layAddArt.Visible := true;
+        layAddArt.Enabled := true;
         layUse.Visible := False;
         layPanel.Height := layPercs.Height + 25 + imgBottom.Height + imgTop.Height;
         layInfo.Visible := true;
+
+        if Person.CountContener = 0 then
+          layAddArt.Enabled := False;
       end;
 
     btArmor:

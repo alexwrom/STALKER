@@ -273,13 +273,13 @@ begin
   if layInfo.Tag = 0 then
   begin
     ExeExec('insert into bag (table_name, row_id, health) select ''arts'', art_id, 100 from belt;', exExecute, vQuery);
-    ExeExec('update users set armor_id = NULL, armor_health = 0 where user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
+    ExeExec('update users set armor_id = NULL, armor_health = 0;', exExecute, vQuery);
     ExeExec('delete from belt;', exExecute, vQuery);
     ExeExec('insert into bag (table_name, row_id, health) values (''armors'',' + Person.ArmorId.ToString + ',' + Person.ArmorHealth.ToString + ');', exExecute, vQuery);
   end
   else
   begin
-    ExeExec('update users set weapon_id = NULL, weapon_health = 0 where user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
+    ExeExec('update users set weapon_id = NULL, weapon_health = 0;', exExecute, vQuery);
     ExeExec('insert into bag (table_name, row_id, health) values (''weapons'',' + Person.WeaponId.ToString + ',' + Person.WeaponHealth.ToString + ');', exExecute, vQuery);
   end;
   ReloadPercs;

@@ -50119,7 +50119,6 @@ object FramePercs: TFramePercs
       Size.Height = 476.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = 'stoptoolbutton'
-      Text = 'btnCloseInfo'
       TextSettings.Trimming = None
       OnClick = btnCloseInfoClick
     end
@@ -59671,7 +59670,6 @@ object FramePercs: TFramePercs
       Size.Height = 476.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = 'stoptoolbutton'
-      Text = 'btnCloseInfo'
       TextSettings.Trimming = None
       OnClick = btnClosePercsUpClick
     end

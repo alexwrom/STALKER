@@ -13,7 +13,10 @@ uses
   controls.item in '..\controls.item.pas',
   controls.listitem in '..\controls.listitem.pas',
   uGenericBaseData in 'uGenericBaseData.pas',
-  uLocationListener in '..\uLocationListener.pas';
+  uLocationListener in '..\uLocationListener.pas',
+  OAuth2 in '..\OAuth2.pas',
+  classes.data in 'classes.data.pas',
+  classes.answer in 'classes.answer.pas';
 
 {$R *.res}
 

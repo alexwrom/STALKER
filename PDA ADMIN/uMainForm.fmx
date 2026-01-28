@@ -11861,7 +11861,7 @@ object MainForm: TMainForm
         TextSettings.FontColor = claDarkgray
         TextSettings.HorzAlign = Center
         TextSettings.VertAlign = Leading
-        Text = #1046#1076#1080', '#1101#1090#1080' '#1089#1077#1082#1091#1085#1076#1099' '#1090#1074#1086#1077#1081' '#1078#1080#1079#1085#1080' '#1085#1077' '#1087#1088#1086#1081#1076#1091#1090' '#1085#1072#1087#1088#1072#1089#1085#1086
+        Text = #1054#1078#1080#1076#1072#1081#1090#1077' '#1087#1077#1088#1077#1076#1072#1095#1080' '#1076#1072#1085#1085#1099#1093
         TabOrder = 2
       end
       object ProgressBar: TProgressBar
@@ -36603,14 +36603,5 @@ object MainForm: TMainForm
         end
       end
     end
-  end
-  object FDConn: TFDConnection
-    Left = 622
-    Top = 62
-  end
-  object FDQuery: TFDQuery
-    Connection = FDConn
-    Left = 670
-    Top = 62
   end
 end

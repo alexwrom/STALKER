@@ -12324,7 +12324,6 @@ object FrameBag: TFrameBag
       Size.Height = 340.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = 'stoptoolbutton'
-      Text = 'btnCloseInfo'
       TextSettings.Trimming = None
       OnClick = btnCloseInfoClick
     end
@@ -23704,7 +23703,7 @@ object FrameBag: TFrameBag
       Size.Height = 340.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = 'stoptoolbutton'
-      Text = 'btnCloseInfo'
+      Text = 'stoptoolbutton'
       TextSettings.Trimming = None
       OnClick = btnCloseChangeSlotClick
     end
@@ -37993,7 +37992,6 @@ object FrameBag: TFrameBag
         Size.Height = 283.333312988281300000
         Size.PlatformDefault = False
         StyleLookup = 'stoptoolbutton'
-        Text = 'btnCloseInfo'
         TextSettings.Trimming = None
         OnClick = btnCloseQRClick
         object InnerGlowEffect9: TInnerGlowEffect

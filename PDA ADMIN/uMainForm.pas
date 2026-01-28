@@ -25,7 +25,7 @@ uses
   FMX.Platform.Android,
 {$ENDIF}
   FMX.Ani, FMX.Effects, IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer, IdTCPConnection, IdTCPClient, FMX.Edit, FMX.Media,
-  Controls.listitem, Controls.item, FMX.EditBox, FMX.SpinBox, uGenericBaseData;
+  Controls.listitem, Controls.item, FMX.EditBox, FMX.SpinBox, uGenericBaseData, OAuth2, Classes.Data, Classes.answer;
 
 type
 
@@ -35,8 +35,6 @@ type
     Image8: TImage;
     Image11: TImage;
     Image10: TImage;
-    FDConn: TFDConnection;
-    FDQuery: TFDQuery;
     layDamage: TLayout;
     AniIndicator1: TAniIndicator;
     recLoading: TRectangle;
@@ -179,9 +177,11 @@ type
   private
 
     procedure LoadArtefacts;
-    procedure GetData(AType: string);
     procedure GetImage(AHex: UnicodeString);
     procedure ItemArtClick(FTagObject: TObject; FItem: TFMXObject);
+    procedure GetServerData;
+    procedure GetMap;
+    procedure GetData;
 
   public
     { Public declarations }
@@ -247,21 +247,96 @@ end;
 procedure TMainForm.btnConfirmNameClick(Sender: TObject);
 begin
   layEnterName.Visible := false;
-  GetData('PDA ADMIN');
+  recLoading.Visible := true;
+  GetServerData;
 end;
 
 procedure TMainForm.btnDownloadClick(Sender: TObject);
 begin
   MessageDlg('Загружая данные аномалий, артефактов и локаций вы потеряете текущий прогресс. Продолжить загрузку?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
     procedure(const AResult: TModalResult)
-    var
-      vQuery: TFDQuery;
     begin
       if (AResult = mrYes) then
       begin
-        GetData('PDA ADMIN');
+        recLoading.Visible := true;
+
+        TTask.Run(
+          procedure
+          begin
+            try
+              GetData;
+            finally
+              recLoading.Visible := false;
+              StartApp;
+            end;
+          end);
       end;
     end);
+end;
+
+procedure TMainForm.GetServerData;
+begin
+  TTask.Run(
+    procedure
+    begin
+      try
+        GetData;
+        GetMap;
+      finally
+        recLoading.Visible := false;
+        StartApp;
+      end;
+    end);
+end;
+
+procedure TMainForm.GetData;
+var
+  AData: TData;
+  AAnswer: TAnswer;
+  vSQL: UnicodeString;
+  I: Integer;
+  vQuery: TFDQuery;
+begin
+  ProgressBar.Value := 0;
+  try
+    ExeExec('delete from arts_to_map; delete from anomalies; delete from places; delete from game_data; delete from arts; delete from anomaly_types;', exExecute, vQuery);
+    AAnswer := TJSON.JsonToObject<TAnswer>(GetDataServer('api/get_data_admin'));
+    AData := TJSON.JsonToObject<TData>(AAnswer.Json);
+
+    TThread.Synchronize(nil,
+      procedure
+      begin
+        ProgressBar.Max := AData.SQL.Count;
+      end);
+
+    for I := 0 to AData.SQL.Count - 1 do
+    begin
+      vSQL := vSQL + AData.SQL[I];
+
+      TThread.Synchronize(nil,
+        procedure
+        begin
+          ProgressBar.Value := ProgressBar.Value + 1;
+        end);
+    end;
+
+    ExeExec(vSQL, exExecute, vQuery);
+  finally
+    FreeAndNil(AAnswer);
+    FreeAndNil(AData);
+  end;
+end;
+
+procedure TMainForm.GetMap;
+var
+  AAnswer: TAnswer;
+begin
+  try
+    AAnswer := TJSON.JsonToObject<TAnswer>(GetDataServer('api/get_map'));
+    GetImage(AAnswer.Json);
+  finally
+    FreeAndNil(AAnswer);
+  end;
 end;
 
 procedure TMainForm.btnSendToServerClick(Sender: TObject);
@@ -269,65 +344,48 @@ begin
   MessageDlg('Все существующие аномалии, расположение артефактов и локации на сервере будут утеряны. Сделайте при необходимости бэкап данных. Продолжить отправку?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
     procedure(const AResult: TModalResult)
     begin
-
       if (AResult = mrYes) then
       begin
         TTask.Run(
           procedure
           var
-            IdTCPClient: TIdTCPClient;
-            vAction: TAction;
-            vData: UnicodeString;
-            vPageCount: Integer;
+            AAnswer: TAnswer;
+            AData: TData;
           begin
-            IdTCPClient := TIdTCPClient.Create(nil);
-            IdTCPClient.Host := '192.168.4.60';
-            IdTCPClient.Port := 2026;
             try
-              IdTCPClient.Connect;
-
-              vAction := TAction.Create;
-              vAction.SendType := stUpdateData;
-              vPageCount := 0;
-              vData := GoGenericBaseData(vPageCount);
-              vAction.PageCount := vPageCount;
-              IdTCPClient.IOHandler.WriteLn('INSERT:' + TJSON.ObjectToJsonString(vAction) + #13#10 + vData, IndyUTF8Encoding(true));
-
               try
-                vAction := TJSON.JsonToObject<TAction>(IdTCPClient.IOHandler.ReadLn(IndyUTF8Encoding(true)));
+                AData := TData.Create;
+                AData.SQL := Tlist<UnicodeString>.Create;
+                AData.SQL := GoGenericBaseData();
 
-              finally
-                IdTCPClient.Disconnect;
-              end;
+                AAnswer := TJSON.JsonToObject<TAnswer>(PostDataServer('api/upload_data_from_admin', TJSON.ObjectToJsonString(AData)));
 
-              case vAction.SendType of
-                stUpdateData:
-                  TThread.Synchronize(TThread.CurrentThread,
+                if AAnswer.Status = 'success' then
+                  TThread.Synchronize(nil,
                     procedure
                     begin
-                      ShowMessage('Данные успешно отправлены');
-                    end);
-
-                stCancel:
-                  TThread.Synchronize(TThread.CurrentThread,
-                    procedure
-                    begin
-                      ShowMessage('Ошибка загрузки. Повторите отправку');
-                    end);
-              end;
-
-            except
-              TThread.Synchronize(TThread.CurrentThread,
-                procedure
-                begin
-                  ShowMessage('Ошибка загрузки. Повторите отправку');
-                end);
+                      Showmessage('Данные отправлены успешно')
+                    end)
+              else
+                TThread.Synchronize(nil,
+                  procedure
+                  begin
+                    Showmessage('Ошибка записи данных на стороне сервера');
+                  end);
+            finally
+              FreeAndNil(AAnswer);
+              FreeAndNil(AData);
             end;
-          end);
-      end;
-
-    end);
-
+          except
+            TThread.Synchronize(nil,
+              procedure
+              begin
+                Showmessage('Ошибка отправки данных. Повторите позже');
+              end);
+          end;
+        end);
+    end;
+  end);
 end;
 
 procedure TMainForm.ePlaceNameChange(Sender: TObject);
@@ -473,6 +531,7 @@ end;
 procedure TMainForm.FormShow(Sender: TObject);
 var
   vMapExists: boolean;
+  FDQuery: TFDQuery;
 begin
   ExeExec('select count(1) as cnt from game_data;', exActive, FDQuery);
   vMapExists := FDQuery.FieldByName('cnt').AsInteger = 1;
@@ -486,8 +545,9 @@ begin
   begin
     layEnterName.Visible := true;
   end;
-
+{$IFDEF ANDROID}
   PermissionsService.RequestPermissions(['android.permission.WRITE_EXTERNAL_STORAGE'], nil);
+{$ENDIF}
 end;
 
 procedure TMainForm.StartApp;
@@ -495,21 +555,27 @@ begin
   LoadArtefacts;
 
   if Assigned(FFrameMap) then
+  begin
+    FFrameMap.Parent := nil;
     FreeAndNil(FFrameMap);
+  end;
 
   FFrameMap := TFrameMap.Create(TabMap);
   FFrameMap.Parent := TabMap;
+  FFrameMap.btnMyLocationClick(nil);
 
   PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.ACCESS_COARSE_LOCATION', 'android.permission.CHANGE_WIFI_STATE'],
     procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
     begin
       if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
       begin
-        FFrameMap.LocationSensor.Active := true;
+{$IFDEF ANDROID}
+        FFrameMap.LocationServiceChanged;
+{$ENDIF}
       end
       else
       begin
-        ShowMessage('Необходимы разрешения для сканирования Wi-Fi');
+        Showmessage('Необходимы разрешения для сканирования Wi-Fi');
       end;
     end);
 end;
@@ -533,128 +599,6 @@ begin
         end);
     end).Start;
 {$ENDIF}
-end;
-
-procedure TMainForm.GetData(AType: string);
-var
-  vQuery: TFDQuery;
-begin
-  recLoading.Visible := true;
-  ExeExec('delete from arts_to_map; delete from anomalies; delete from places; delete from game_data; delete from arts; delete from anomaly_types;', exExecute, vQuery);
-
-  TTask.Run(
-    procedure
-    var
-      vString: UnicodeString;
-      I: Integer;
-
-      IdTCPClient: TIdTCPClient;
-      vStringData: TList<UnicodeString>;
-      vStr: string;
-      vAction: TAction;
-    begin
-      IdTCPClient := TIdTCPClient.Create(nil);
-      IdTCPClient.Host := '192.168.4.60';
-      IdTCPClient.Port := 2026;
-      try
-        try
-          IdTCPClient.Connect;
-
-          IdTCPClient.IOHandler.WriteLn(AType, IndyUTF8Encoding(true));
-
-          try
-            vAction := TJSON.JsonToObject<TAction>(IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(true)));
-
-            TThread.Synchronize(TThread.CurrentThread,
-              procedure
-              begin
-                ProgressBar.Max := vAction.PageCount;
-                ProgressBar.Value := 1;
-              end);
-
-            vStringData := TList<UnicodeString>.Create;
-
-            if vAction.PageCount > 0 then
-            begin
-              for I := 1 to vAction.PageCount do
-              begin
-                vStr := IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(true));
-
-                if vStr[1] = '~' then
-                begin
-                  vStringData[vStringData.Count - 1] := vStringData[vStringData.Count - 1] + Copy(vStr, 2);
-                end
-                else
-                  vStringData.Add(vStr);
-
-                TThread.Synchronize(TThread.CurrentThread,
-                  procedure
-                  begin
-                    ProgressBar.Value := ProgressBar.Value + 1;
-                  end);
-              end;
-            end;
-
-          finally
-            IdTCPClient.Disconnect;
-          end;
-
-          case vAction.SendType of
-            stUpdateData:
-              begin
-
-                TThread.Synchronize(TThread.CurrentThread,
-                  procedure
-                  begin
-                    ProgressBar.Max := vStringData.Count;
-                    ProgressBar.Value := 0;
-                  end);
-
-                For I := 0 to vStringData.Count - 2 do // Последняя строка это Hex карты
-                begin
-                  vString := vString + vStringData[I];
-
-                  TThread.Synchronize(TThread.CurrentThread,
-                    procedure
-                    begin
-                      ProgressBar.Value := ProgressBar.Value + 1;
-                    end);
-                end;
-
-                ExeExec(vString, exExecute, vQuery);
-
-                GetImage(vStringData[vStringData.Count - 1]);
-
-                TThread.Synchronize(TThread.CurrentThread,
-                  procedure
-                  begin
-                    ProgressBar.Value := I;
-                  end);
-
-                TThread.Synchronize(TThread.CurrentThread,
-                  procedure
-                  begin
-                    recLoading.Visible := false;
-                    StartApp;
-                  end);
-              end;
-          end;
-        finally
-          FreeAndNil(vStringData);
-        end;
-
-      except
-        TThread.Synchronize(TThread.CurrentThread,
-          procedure
-          begin
-            ShowMessage('Сталкерская сеть недоступна.');
-          end);
-
-        recLoading.Visible := false;
-        layEnterName.Visible := true;
-      end;
-    end);
-
 end;
 
 procedure TMainForm.GetImage(AHex: UnicodeString);

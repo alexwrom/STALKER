@@ -93,10 +93,15 @@ uses
   ZXing.StringUtils in '..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.StringUtils.pas',
   DelphiZXIngQRCode in '..\ZXing.Delphi-3.10.0\DelphiZXingQRCode-master\Source\DelphiZXIngQRCode.pas',
   classes.sell in 'classes\classes.sell.pas',
-  classes.send in 'classes\classes.send.pas',
   classes.action in 'classes\classes.action.pas',
   uFrameQRScaner in 'uFrameQRScaner.pas' {FrameQRScanner: TFrame},
-  uLocationListener in 'uLocationListener.pas';
+  uLocationListener in 'uLocationListener.pas',
+  OAuth2 in 'OAuth2.pas',
+  classes.answer in 'classes\classes.answer.pas',
+  classes.data in 'classes\classes.data.pas',
+  uFrameLogin in 'uFrameLogin.pas' {FrameLogin: TFrame},
+  classes.send in 'classes\classes.send.pas',
+  classes.user in 'classes\classes.user.pas';
 
 {$R *.res}
 

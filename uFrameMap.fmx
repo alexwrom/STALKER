@@ -2605,8 +2605,8 @@ object FrameMap: TFrameMap
   end
   object TimerSensor: TTimer
     OnTimer = TimerSensorTimer
-    Left = 424
-    Top = 8
+    Left = 544
+    Top = 16
   end
   object MediaPlayerAnomaly: TMediaPlayer
     Left = 710
@@ -2951,6 +2951,11 @@ object FrameMap: TFrameMap
         ShadowColor = claBlack
       end
     end
+    object timerScanAnomaliesNextTo: TTimer
+      OnTimer = timerScanAnomaliesNextToTimer
+      Left = 384
+      Top = 16
+    end
   end
   object layPersonHealth: TLayout
     Anchors = [akLeft, akBottom]
@@ -2962,14 +2967,6 @@ object FrameMap: TFrameMap
   end
   object GestureManager: TGestureManager
     Sensitivity = 80.000000000000000000
-  end
-  object LocationSensor: TLocationSensor
-    Optimize = False
-    ActivityType = Navigation
-    UsageAuthorization = Always
-    OnLocationChanged = LocationSensorLocationChanged
-    Left = 536
-    Top = 24
   end
   object ImageList: TImageList
     Source = <
@@ -6032,12 +6029,5 @@ object FrameMap: TFrameMap
       Text = 'ActAddMarker'
       OnExecute = ActAddMarkerExecute
     end
-  end
-  object TimerLocation: TTimer
-    Enabled = False
-    Interval = 200
-    OnTimer = TimerLocationTimer
-    Left = 336
-    Top = 24
   end
 end

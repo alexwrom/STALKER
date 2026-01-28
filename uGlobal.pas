@@ -141,7 +141,6 @@ type
     FPsiArmor: double;
     FChimisheArmor: double;
     FDetector: TDetector;
-    FUserId: integer;
     FGroupId: integer;
     FCash: Extended;
     FIsClassicBag: boolean;
@@ -149,18 +148,20 @@ type
     FArmorId: integer;
     FWeaponId: integer;
     FUserName: string;
+    FUserId: integer;
     procedure SetHealth(const Value: double);
     procedure SetHealthArmor(AValue: double);
     procedure SetHealthWeapon(AValue: double);
     procedure SetCash(const Value: Extended);
     procedure SetIsClassicBag(const Value: boolean);
     procedure SetGroupId(const Value: integer);
+    procedure SetUserId(const Value: integer);
 
   public
     constructor Create;
-    property UserId: integer read FUserId write FUserId;
     property UserName: string read FUserName write FUserName;
     property GroupId: integer read FGroupId write SetGroupId;
+    property UserId: integer read FUserId write SetUserId;
     property Health: double read FHealth write SetHealth;
     property ArmorId: integer read FArmorId write FArmorId;
     property ArmorHealth: double read FArmorHealth write FArmorHealth;
@@ -201,7 +202,7 @@ procedure Vibration(AValue: integer);
 
 var
   Person: TPerson;
-  FLocation: TLocationCoord2D;
+  FLocation, FOldLocation: TLocationCoord2D;
   FArtefactsList: TList<TArtefactData>;
   FAnomalyList: TList<TAnomalyData>;
   FIssueList: TList<TIssueData>;
@@ -263,8 +264,13 @@ var
 begin
   FIsClassicBag := Value;
 
-  if Person.UserId <> -1 then
+  if Assigned(Person) then
     ExeExec('update users set is_classic_bag = ' + FIsClassicBag.ToString + ';', exExecute, vQuery);
+end;
+
+procedure TPerson.SetUserId(const Value: integer);
+begin
+  FUserId := Value;
 end;
 
 procedure CancelingAllIssuies;
@@ -287,7 +293,7 @@ begin
   if Assigned(MainForm.FFrameBag) then
     MainForm.FFrameBag.labCash.Text := Format('%.0n', [FCash]);
 
-  ExeExec(Format('update users set cash = %d where user_id = %d;', [Round(FCash), Person.UserId]), exExecute, FDQuery);
+  ExeExec(Format('update users set cash = %d;', [Round(FCash)]), exExecute, FDQuery);
 end;
 
 procedure TPerson.SetGroupId(const Value: integer);
@@ -404,14 +410,14 @@ begin
       if FWeaponHealth < 0 then
         FWeaponHealth := 0;
 
-      ExeExec(Format('update users set health = %s, armor_health = %s, weapon_health = %s where user_id = %d;', [StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]), StringReplace(FArmorHealth.ToString, ',', '.', [rfReplaceAll]),
-        StringReplace(FWeaponHealth.ToString, ',', '.', [rfReplaceAll]), Person.UserId]), exExecute, vQuery);
+      ExeExec(Format('update users set health = %s, armor_health = %s, weapon_health = %s;', [StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]), StringReplace(FArmorHealth.ToString, ',', '.', [rfReplaceAll]),
+        StringReplace(FWeaponHealth.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
 
       SetHealthArmor(FArmorHealth);
       SetHealthWeapon(FWeaponHealth);
     end
     else
-      ExeExec('update users set health = ' + StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]) + ' where user_id = ' + Person.UserId.ToString + ';', exExecute, vQuery);
+      ExeExec('update users set health = ' + StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]) + ';', exExecute, vQuery);
 
     SetHealthProgress(MainForm.HealthProgress, FHealth);
 
@@ -474,9 +480,9 @@ begin
   else
     AHealthProgress.Width := AValue * AHealthProgress.Tag / 100;
 
-  if AValue < 33 then
+  if AValue <= 40 then
     AHealthProgress.Fill.Color := cCriticalColor
-  else if AValue < 66 then
+  else if AValue <= 80 then
     AHealthProgress.Fill.Color := cNormalColor
   else
     AHealthProgress.Fill.Color := cFullColor;
@@ -504,7 +510,12 @@ begin
   // 1 - запрос на выполнение
   FDConn := TFDConnection.Create(nil);
   FDConn.Params.DriverID := 'SQLite';
+
+ // if Assigned(AQuery) then
+  //  FreeQueryAndConn(AQuery);
+
   AQuery := TFDQuery.Create(nil);
+
   AQuery.Connection := FDConn;
   FDConn.Params.Database := System.IOUtils.TPath.Combine(GetUserAppPath, 'base.db');
   try
@@ -543,6 +554,7 @@ end;
 procedure GoToDetector;
 begin
   MainForm.TabControl.ActiveTab := MainForm.TabDetector;
+  MainForm.FFrameDetector.LoadDetector;
   MainForm.FFrameDetector.timerScannerArtefacts.Enabled := true;
   MainForm.layPersonHealth.Visible := true;
   MainForm.recSelect.Parent := nil;
@@ -585,7 +597,7 @@ var
   Bitmap: TBitmap;
   Row: integer;
   Col: integer;
-  vScale: single;
+  vScale: Single;
 begin
   QRCode := TDelphiZXingQRCode.Create;
   try
