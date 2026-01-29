@@ -15,8 +15,8 @@ uses
   uGenericBaseData in 'uGenericBaseData.pas',
   uLocationListener in '..\uLocationListener.pas',
   OAuth2 in '..\OAuth2.pas',
-  classes.data in 'classes.data.pas',
-  classes.answer in 'classes.answer.pas';
+  classes.answer in '..\classes\classes.answer.pas',
+  classes.data in '..\classes\classes.data.pas';
 
 {$R *.res}
 

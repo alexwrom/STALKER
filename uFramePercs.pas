@@ -304,7 +304,7 @@ end;
 
 procedure TFramePercs.btnClosePercsUpClick(Sender: TObject);
 begin
- layPercsUp.Visible := false;
+  layPercsUp.Visible := false;
 end;
 
 procedure TFramePercs.btnInfoClick(Sender: TObject);
@@ -349,7 +349,7 @@ end;
 
 procedure TFramePercs.btnOpenPercsClick(Sender: TObject);
 begin
-layPercsUp.Visible := true;
+  layPercsUp.Visible := true;
 end;
 
 procedure TFramePercs.btnWeaponInfoClick(Sender: TObject);

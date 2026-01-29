@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Graphics, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.StdCtrls, FMX.Edit, FMX.Controls.Presentation, FMX.Effects, FMX.Objects, FMX.Layouts,
   Threading, uGlobal, FireDAC.Comp.Client, Rest.Json, IOUtils,
-  OAuth2, Classes.Data, Classes.answer, Permissions, classes.user;
+  OAuth2, Classes.Data, Classes.answer, Permissions, Classes.user;
 
 type
   TFrameLogin = class(TFrame)
@@ -33,14 +33,19 @@ type
     Label3: TLabel;
     Label4: TLabel;
     ProgressBar: TProgressBar;
+    ePassword: TEdit;
+    Layout1: TLayout;
+    btnShowPassword: TSpeedButton;
+    Image2: TImage;
     procedure btnConfirmNameClick(Sender: TObject);
     procedure eNickNameEnter(Sender: TObject);
     procedure eNickNameExit(Sender: TObject);
     procedure eNickNameKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
+    procedure btnShowPasswordClick(Sender: TObject);
   private
-    procedure GetData;
+    function GetData: boolean;
     procedure GetImage(AHex: UnicodeString);
-    procedure GetMap;
+    function GetMap: boolean;
     procedure GetServerData;
     constructor Create(AOwner: TComponent); override;
     { Private declarations }
@@ -57,17 +62,17 @@ begin
   TTask.Run(
     procedure
     begin
-      try
-        GetData;
-        GetMap;
-      finally
+      if GetData and GetMap then
+        StartApp
+      else
+      begin
+        layEnterName.Visible := true;
         recLoading.Visible := false;
-        StartApp;
       end;
     end);
 end;
 
-procedure TFrameLogin.GetData;
+function TFrameLogin.GetData: boolean;
 var
   AData: TData;
   AAnswer: TAnswer;
@@ -76,47 +81,85 @@ var
   vQuery: TFDQuery;
   vUser: TUser;
 begin
+  Result := false;
   ProgressBar.Value := 0;
   try
-    vUser:= TUser.Create;
+    vUser := TUser.Create;
     vUser.Username := eNickName.Text;
-    vUser.Password := '111';
+    vUser.Password := ePassword.Text;
     vUser.UserID := -1;
-
-    AAnswer := TJSON.JsonToObject<TAnswer>(PostDataServer('api/get_data', TJson.ObjectToJsonString(vUser)));
-    AData := TJSON.JsonToObject<TData>(AAnswer.Json);
-
-    TThread.Synchronize(nil,
-      procedure
-      begin
-        ProgressBar.Max := AData.SQL.Count;
-      end);
-
-    for I := 0 to AData.SQL.Count - 1 do
-    begin
-      vSQL := vSQL + AData.SQL[I];
+    try
+      AAnswer := TJSON.JsonToObject<TAnswer>(PostDataServer('api/get_data', TJSON.ObjectToJsonString(vUser)));
+    except
+      Result := false;
 
       TThread.Synchronize(nil,
         procedure
         begin
-          ProgressBar.Value := ProgressBar.Value + 1;
+          Showmessage('Нет связи с сетью');
         end);
     end;
 
-    ExeExec(vSQL, exExecute, vQuery);
+    if AAnswer.Status = 'success' then
+    begin
+      AData := TJSON.JsonToObject<TData>(AAnswer.Json);
+
+      TThread.Synchronize(nil,
+        procedure
+        begin
+          ProgressBar.Max := AData.SQL.Count;
+        end);
+
+      for I := 0 to AData.SQL.Count - 1 do
+      begin
+        vSQL := vSQL + AData.SQL[I];
+
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            ProgressBar.Value := ProgressBar.Value + 1;
+          end);
+      end;
+
+      try
+        ExeExec(vSQL, exExecute, vQuery);
+        Result := true;
+      except
+        Result := false;
+
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            Showmessage('Ошибка обновления базы');
+          end);
+      end;
+
+    end
+    else
+    begin
+      Result := false;
+
+      TThread.Synchronize(nil,
+        procedure
+        begin
+          Showmessage(AAnswer.Message);
+        end);
+    end;
   finally
     FreeAndNil(AAnswer);
     FreeAndNil(AData);
   end;
 end;
 
-procedure TFrameLogin.GetMap;
+function TFrameLogin.GetMap: boolean;
 var
   AAnswer: TAnswer;
 begin
+  Result := false;
   try
     AAnswer := TJSON.JsonToObject<TAnswer>(GetDataServer('api/get_map'));
     GetImage(AAnswer.Json);
+    Result := true;
   finally
     FreeAndNil(AAnswer);
   end;
@@ -164,16 +207,22 @@ procedure TFrameLogin.btnConfirmNameClick(Sender: TObject);
 begin
   if eNickName.Text = '' then
     Showmessage('Введите ваше имя')
+  else if ePassword.Text = '' then
+    Showmessage('Введите ваш пароль')
   else
   begin
     PermissionsService.RequestPermissions(['android.permission.WRITE_EXTERNAL_STORAGE'],
       procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
+
+      var
+        vQuery: TFDQuery;
       begin
         if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
         begin
-          Person.UserName := eNickName.Text;
+          Person.Username := eNickName.Text;
           layEnterName.Visible := false;
           recLoading.Visible := true;
+
           GetServerData;
         end
         else
@@ -184,6 +233,11 @@ begin
   end;
 end;
 
+procedure TFrameLogin.btnShowPasswordClick(Sender: TObject);
+begin
+  ePassword.Password := Not ePassword.Password;
+end;
+
 constructor TFrameLogin.Create(AOwner: TComponent);
 begin
   inherited;
@@ -192,12 +246,12 @@ end;
 
 procedure TFrameLogin.eNickNameEnter(Sender: TObject);
 begin
-  layPanel.MArgins.Bottom := 180;
+  layPanel.Margins.Bottom := 200;
 end;
 
 procedure TFrameLogin.eNickNameExit(Sender: TObject);
 begin
-  layPanel.MArgins.Bottom := 0;
+  layPanel.Margins.Bottom := 0;
 end;
 
 procedure TFrameLogin.eNickNameKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);

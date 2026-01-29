@@ -33,7 +33,6 @@ type
     TimerSensor: TTimer;
     OrientationMarker: TImage;
     btnMyLocation: TButton;
-    lblZoom: TLabel;
     MarkersPanel: TImage;
     ImageList: TImageList;
     Layout1: TLayout;
@@ -84,6 +83,20 @@ type
     faMarkerX: TFloatAnimation;
     faMarkerY: TFloatAnimation;
     timerScanAnomaliesNextTo: TTimer;
+    Layout2: TLayout;
+    Layout3: TLayout;
+    labTime: TLabel;
+    Layout4: TLayout;
+    GlowEffect1: TGlowEffect;
+    Image3: TImage;
+    BatteryProgress: TRectangle;
+    TimerSystem: TTimer;
+    Layout5: TLayout;
+    btnExit: TSpeedButton;
+    Image4: TImage;
+    layBtnKill: TLayout;
+    btnKill: TSpeedButton;
+    Image5: TImage;
     procedure MapImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure btnZoomInClick(Sender: TObject);
     procedure btnZoomOutClick(Sender: TObject);
@@ -98,6 +111,9 @@ type
     procedure timerCheckCriticalTimer(Sender: TObject);
     procedure ScrollBoxViewportPositionChange(Sender: TObject; const OldViewportPosition, NewViewportPosition: TPointF; const ContentSizeChanged: Boolean);
     procedure timerScanAnomaliesNextToTimer(Sender: TObject);
+    procedure TimerSystemTimer(Sender: TObject);
+    procedure btnExitClick(Sender: TObject);
+    procedure btnKillClick(Sender: TObject);
   private
     FMapLoaded: Boolean;
 
@@ -145,6 +161,7 @@ type
     procedure ScanAnomaliesNextTo;
 {$IFDEF ANDROID}
     procedure SetLocation;
+    function BatteryPercent: integer;
 
 {$ENDIF}
   public
@@ -196,7 +213,6 @@ begin
 
   FMarkerList := TList<TMarkerData>.Create;
   FMarkerIssue := TList<TMarkerData>.Create;
-  FAnomalyList := TList<TAnomalyData>.Create;
 
   LoadMap;
 
@@ -212,7 +228,34 @@ begin
   MediaPlayerStartCritical.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'start_critical.mp3');
   MediaPlayerNotificationCritical.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'notification_critical.mp3');
   MediaPlayerStopCritical.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'barmen_after_surge.mp3');
+  labTime.TextSettings.Font.Family := 'lcd';
 end;
+
+{$IFDEF ANDROID}
+
+function TFrameMap.BatteryPercent: integer;
+var
+  IntentFilter: JIntentFilter;
+  Intent: JIntent;
+  BatteryIntent: JIntent;
+  Level, Scale: integer;
+begin
+  Result := -1;
+  // Создаем фильтр для получения изменений батареи
+  IntentFilter := TJIntentFilter.Create;
+  IntentFilter.addAction(TJIntent.JavaClass.ACTION_BATTERY_CHANGED);
+
+  // Регистрация приемника (null - нет конкретного слушателя, IntentFilter дает состояние)
+  Intent := TAndroidHelper.Context.registerReceiver(nil, IntentFilter);
+
+  // Получаем уровень и масштаб
+  Level := Intent.getIntExtra(StringToJString('level'), -1);
+  Scale := Intent.getIntExtra(StringToJString('scale'), -1);
+
+  if (Level <> -1) and (Scale <> -1) then
+    Result := Round((Level / Scale) * 100);
+end;
+{$ENDIF}
 
 procedure TFrameMap.LoadAnomalies;
 var
@@ -652,6 +695,8 @@ begin
         MediaPlayerDamage.Play;
         StartDamageGlow;
 
+        FKillType := ktAnomaly;
+
         case FAnomalyList[I].AnomalyType of
           atElectro:
             vBlockDamage := Person.ElectroArmor;
@@ -660,11 +705,17 @@ begin
           atPhisic:
             vBlockDamage := Person.PhisicArmor;
           atRadiation:
-            vBlockDamage := Person.RadiationArmor;
+            begin
+              vBlockDamage := Person.RadiationArmor;
+              FKillType := ktRadiation;
+            end;
           atChimishe:
             vBlockDamage := Person.ChimisheArmor;
           atPSI:
-            vBlockDamage := Person.PsiArmor;
+            begin
+              vBlockDamage := Person.PsiArmor;
+              FKillType := ktPSI;
+            end;
         end;
 
         Person.Health := Person.Health - FAnomalyList[I].Power * ((FAnomalyList[I].Radius - vDistance) / FAnomalyList[I].Radius) * ((100 - vBlockDamage) / 100);
@@ -682,7 +733,7 @@ begin
     end;
 end;
 
-procedure TFrameMap.ScanAnomaliesNextTo;
+procedure TFrameMap.ScanAnomaliesNextTo; // Приближение к аномалии
 var
   I: integer;
   vDistance: Double;
@@ -863,7 +914,6 @@ begin
   AMarker.Position.X := Point.X - AMarker.Width / 2;
   AMarker.Position.Y := Point.Y - AMarker.Height / 2;
   AMarker.BringToFront;
-  // AMarker.Visible := True;
 end;
 
 procedure TFrameMap.MapImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
@@ -904,6 +954,34 @@ procedure TFrameMap.btnDelMarkerClick(Sender: TObject);
 begin
   gplDeleteYesNo.Visible := true;
   btnDelMarker.Visible := False;
+end;
+
+procedure TFrameMap.btnExitClick(Sender: TObject);
+begin
+  MessageDlg('Вы хотите покинуть сталкерскую сеть?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
+    procedure(const AResult: TModalResult)
+    begin
+      if (AResult = mrYes) then
+      begin
+        AllStop;
+        CreateFrameLogin;
+      end;
+    end);
+end;
+
+procedure TFrameMap.btnKillClick(Sender: TObject);
+begin
+  MessageDlg('Ты умер в бою?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
+    procedure(const AResult: TModalResult)
+    begin
+      if (AResult = mrYes) then
+      begin
+        // FKillType := ktWeapon;
+        FKillType := ktPSI;
+        Person.Health := 0;
+      end;
+    end);
+
 end;
 
 procedure TFrameMap.btnMyLocationClick(Sender: TObject);
@@ -1068,13 +1146,14 @@ begin
         AMarker.LabelText := 'Радиация';
         CreateBackground;
         CreateIcon(ImageList.Source[9].MultiResBitmap[0].Bitmap);
+        AMarker.Marker.Visible := False;
       end;
     mtAnomaly:
       begin
         AMarker.Marker.Width := FOriginalMapWidth / FMapRealWidth * FAnomalyList[AMarker.Index].Radius * 2 * FCurrentScale;
         AMarker.Marker.Tag := Round(AMarker.Marker.Width / FCurrentScale);
         AMarker.Marker.Height := AMarker.Marker.Width;
-
+        AMarker.Marker.Visible := False;
         CreateBackground;
 
         case FAnomalyList[AMarker.Index].AnomalyType of
@@ -1245,19 +1324,15 @@ begin
         MediaPlayerStopCritical.Play;
 
         for I := FIssueList.Count - 1 downto 0 do
-        begin
           if FIssueList[I].BlockDetail = 'critical' then
-          begin
             FIssueList.Delete(I);
-          end
-          else
-          begin
-            vIssue := FIssueList[I];
-            vIssue.Visible := true;
-            FIssueList[I] := vIssue;
-          end;
-        end;
 
+        for I := FIssueList.Count - 1 downto 0 do
+        begin
+          vIssue := FIssueList[I];
+          vIssue.Visible := true;
+          FIssueList[I] := vIssue;
+        end;
         UpdateIssue;
       end;
     end;
@@ -1324,6 +1399,14 @@ begin
   end;
 end;
 
+procedure TFrameMap.TimerSystemTimer(Sender: TObject);
+begin
+{$IF Defined(ANDROID)}
+  BatteryProgress.Width := BatteryPercent() / 100 * BatteryProgress.Tag;
+{$ENDIF}
+  labTime.Text := FormatDateTime('hh:nn:ss', Time());
+end;
+
 procedure TFrameMap.btnDeleteNoClick(Sender: TObject);
 begin
   gplDeleteYesNo.Visible := False;
@@ -1362,8 +1445,6 @@ end;
 
 procedure TFrameMap.UpdateZoomControls;
 begin
-  lblZoom.Text := Format('%.0f%%', [FCurrentScale * 100]);
-
   // Обновляем состояние кнопок
   btnZoomIn.Enabled := FCurrentScale < FMaxScale;
   btnZoomOut.Enabled := FCurrentScale > FMinScale;

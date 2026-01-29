@@ -353,28 +353,23 @@
         </DelphiCompile>
         <DCCReference Include="uMainForm.pas">
             <Form>MainForm</Form>
-            <FormType>fmx</FormType>
         </DCCReference>
         <DCCReference Include="uFrameMap.pas">
             <Form>FrameMap</Form>
-            <FormType>fmx</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="uGlobal.pas"/>
         <DCCReference Include="uFramePercs.pas">
             <Form>FramePercs</Form>
-            <FormType>fmx</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="uFrameDetector.pas">
             <Form>FrameDetector</Form>
-            <FormType>fmx</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="uScanerWiFi.pas"/>
         <DCCReference Include="uFrameIssuies.pas">
             <Form>FrameIssuies</Form>
-            <FormType>fmx</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="controls.item.pas"/>
@@ -461,7 +456,6 @@
         <DCCReference Include="classes\classes.action.pas"/>
         <DCCReference Include="uFrameQRScaner.pas">
             <Form>FrameQRScanner</Form>
-            <FormType>fmx</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="uLocationListener.pas"/>
@@ -470,11 +464,12 @@
         <DCCReference Include="classes\classes.data.pas"/>
         <DCCReference Include="uFrameLogin.pas">
             <Form>FrameLogin</Form>
-            <FormType>fmx</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="classes\classes.send.pas"/>
         <DCCReference Include="classes\classes.user.pas"/>
+        <DCCReference Include="uGenericBaseData.pas"/>
+        <DCCReference Include="classes\classes.userdata.pas"/>
         <RcItem Include="Resources\font\lcd.ttf">
             <ResourceType>FONT</ResourceType>
             <ResourceId>1</ResourceId>
@@ -2352,6 +2347,7 @@
                 <Platform value="Win32">True</Platform>
                 <Platform value="Win64">True</Platform>
             </Platforms>
+            <ModelSupport>True</ModelSupport>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>

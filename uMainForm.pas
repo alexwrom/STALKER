@@ -24,7 +24,7 @@ uses
   FMX.Platform.Android,
 {$ENDIF}
   uScanerWiFi, FMX.Ani, FMX.Effects, IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer, IdTCPConnection, IdTCPClient, FMX.Edit, FMX.Media,
-  uFrameLogin;
+  uFrameLogin, Classes.answer, OAuth2, Classes.Data, uGenericBaseData, Classes.userdata;
 
 type
 
@@ -79,6 +79,19 @@ type
     layPersonHealth: TLayout;
     recBack: TRectangle;
     MediaPlayer: TMediaPlayer;
+    TimerUpdateData: TTimer;
+    layZombTimer: TLayout;
+    Rectangle8: TRectangle;
+    layPanel: TLayout;
+    Rectangle4: TRectangle;
+    labZombTimer: TLabel;
+    InnerGlowEffect1: TInnerGlowEffect;
+    layBtnKill: TLayout;
+    Image5: TImage;
+    btnKill: TSpeedButton;
+    Layout1: TLayout;
+    Image1: TImage;
+    TimerZombi: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure btnToMapClick(Sender: TObject);
     procedure btnToPercsClick(Sender: TObject);
@@ -89,13 +102,17 @@ type
     procedure IdTCPServerExecute(AContext: TIdContext);
     procedure timerScannerWifiMerchantTimer(Sender: TObject);
     procedure FormActivate(Sender: TObject);
+    procedure TimerUpdateDataTimer(Sender: TObject);
+    procedure btnKillClick(Sender: TObject);
+    procedure TimerZombiTimer(Sender: TObject);
   private
 
     procedure LoadArtefacts;
     procedure LoadPlaces;
     procedure LoadBag;
     procedure LoadCritical;
-    procedure CreateFrameLogin;
+
+    procedure SynhronizeServer;
 
   public
     { Public declarations }
@@ -106,6 +123,7 @@ type
     FFrameIssuies: TFrameIssuies;
     FFrameBag: TFrameBag;
     FFrameLogin: TFrameLogin;
+    procedure CreateFrameLogin;
     procedure StartApp;
     procedure LoadIsuies;
     procedure StopDetector;
@@ -132,6 +150,7 @@ procedure TMainForm.FormCreate(Sender: TObject);
 begin
 {$IF Defined(ANDROID) or Defined(IOS)}
   Self.FullScreen := true;
+  FKillType := ktLive;
 {$ENDIF}
 end;
 
@@ -298,8 +317,9 @@ procedure TMainForm.FormShow(Sender: TObject);
 var
   vUserExists: boolean;
 begin
+  Person := TPerson.Create;
   ExeExec('select Count(1) as cnt from users;', exActive, FDQuery);
-  vUserExists := false; // FDQuery.FieldByName('cnt').AsInteger = 1;
+  vUserExists := FDQuery.FieldByName('cnt').AsInteger > 0;
   FreeQueryAndConn(FDQuery);
 
   if vUserExists then
@@ -308,7 +328,6 @@ begin
   end
   else
   begin
-    Person := TPerson.Create;
     Person.UserId := -1;
     Person.GroupId := 1;
     Person.CountContener := -1;
@@ -316,19 +335,33 @@ begin
   end;
 end;
 
+procedure TMainForm.SynhronizeServer;
+var
+  AAnswer: TAnswer;
+begin
+  try
+    AAnswer := TJSON.JsonToObject<TAnswer>(GetDataServer('api/upload_user_data'));
+  finally
+    FreeAndNil(AAnswer);
+  end;
+end;
+
 procedure TMainForm.CreateFrameLogin;
 begin
-  FFrameLogin := TFrameLogin.Create(Self);
-  FFrameLogin.Parent := Self;
+  if not Assigned(FFrameLogin) then
+  begin
+    FFrameLogin := TFrameLogin.Create(Self);
+    FFrameLogin.Parent := Self;
+  end;
+
+  FFrameLogin.Visible := true;
   FFrameLogin.BringToFront;
 end;
 
 procedure TMainForm.StartApp;
 begin
-  layMenu.Enabled := true;
-
   ExeExec('select user_id, group_id from users limit 1;', exActive, FDQuery);
-  Person := TPerson.Create;
+
   Person.UserId := FDQuery.FieldByName('user_id').AsInteger;
   Person.GroupId := FDQuery.FieldByName('group_id').AsInteger;
   Person.CountContener := -1;
@@ -341,6 +374,7 @@ begin
 
   FFrameMap := TFrameMap.Create(TabMap);
   FFrameMap.Parent := TabMap;
+  FFrameMap.timerCheckCritical.Enabled := true;
 
   FFramePercs := TFramePercs.Create(TabPercs);
   FFramePercs.Parent := TabPercs;
@@ -357,6 +391,9 @@ begin
     FFrameQRScanner := TFrameQRScanner.Create(TabQRScanner);
     FFrameQRScanner.Parent := TabQRScanner;
   end;
+
+  if Assigned(FFrameLogin) then
+    FFrameLogin.Visible := false;
 
   PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.ACCESS_COARSE_LOCATION', 'android.permission.CHANGE_WIFI_STATE', 'android.permission.CAMERA'],
     procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
@@ -388,23 +425,23 @@ begin
         stSell:
           begin
             vSell := TSell.Create;
-            vSell := TJson.JsonToObject<TSell>(FFrameBag.FActiveAction.JSONObject);
+            vSell := TJSON.JsonToObject<TSell>(FFrameBag.FActiveAction.JSONObject);
 
             FFrameBag.FActiveAction.PageCount := 1;
 
-            if TJson.JsonToObject<TPerson>(vAnswerText).Cash - vSell.Cost >= 0 then
+            if TJSON.JsonToObject<TPerson>(vAnswerText).Cash - vSell.Cost >= 0 then
             begin
               ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''' + vSell.TableName + ''' and row_id = ' + vSell.RowID.ToString + ' and health = ' + vSell.Health.ToString + ' limit 1);', exExecute, FDQuery);
               Person.Cash := Person.Cash + vSell.Cost;
 
-              AContext.Connection.Socket.WriteLn(TJson.ObjectToJsonString(FFrameBag.FActiveAction), IndyUTF8Encoding(true));
+              AContext.Connection.Socket.WriteLn(TJSON.ObjectToJsonString(FFrameBag.FActiveAction), IndyUTF8Encoding(true));
               AContext.Connection.Disconnect;
             end
             else
             begin
               FFrameBag.FActiveAction.SendType := stCancelSell;
               FFrameBag.FActiveAction.JSONObject := '0';
-              AContext.Connection.Socket.WriteLn(TJson.ObjectToJsonString(FFrameBag.FActiveAction), IndyUTF8Encoding(true));
+              AContext.Connection.Socket.WriteLn(TJSON.ObjectToJsonString(FFrameBag.FActiveAction), IndyUTF8Encoding(true));
               AContext.Connection.Disconnect;
             end;
           end;
@@ -413,6 +450,22 @@ begin
       FFrameBag.laySellQR.Visible := false;
       ReloadBag;
     end;
+end;
+
+procedure TMainForm.btnKillClick(Sender: TObject);
+begin
+  MessageDlg('Ты умер в бою?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
+    procedure(const AResult: TModalResult)
+    var
+      vQuery: TFDQuery;
+    begin
+      if (AResult = mrYes) then
+      begin
+        TimerZombi.Enabled := false;
+        FKillType := ktStopZombi;
+        layZombTimer.Visible := false;
+      end;
+    end);
 end;
 
 procedure TMainForm.btnToBagClick(Sender: TObject);
@@ -539,11 +592,92 @@ begin
 
             ActiveScaner(FIsMerchantZone);
 
+            if Assigned(Person) and (Person.UserId <> -1) then
+              TimerUpdateData.Enabled := FIsMerchantZone;
           end);
       end;
     end).Start;
 
 {$ENDIF}
+end;
+
+procedure TMainForm.TimerUpdateDataTimer(Sender: TObject);
+begin
+  TTask.Run(
+    procedure
+    var
+      vAnswer: TAnswer;
+      vData: TData;
+      vUserdata: TUserdata;
+      vSQL: Unicodestring;
+      I: Integer;
+      vQuery: TFDQuery;
+    begin
+      try
+        vData := TData.Create;
+        vData.SQL := TList<Unicodestring>.Create;
+        vData.SQL := GoGenericBaseData();
+
+        vUserdata := TUserdata.Create;
+        vUserdata.UserId := Person.UserId;
+        vUserdata.Data := vData;
+
+        vAnswer := TJSON.JsonToObject<TAnswer>(PostDataServer('api/update_data', TJSON.ObjectToJsonString(vUserdata)));
+        {
+          vData := TJSON.JsonToObject<TData>(vAnswer.Json);
+
+          if vData.SQL.Count > 0 then
+          begin
+          for I := 0 to vData.SQL.Count - 1 do
+          vSQL := vSQL + vData.SQL[I];
+
+          ExeExec(vSQL, exExecute, vQuery);
+          end; }
+      finally
+        FreeAndNil(vAnswer);
+        FreeAndNil(vData);
+      end;
+    end);
+end;
+
+procedure TMainForm.TimerZombiTimer(Sender: TObject);
+var
+  TimeParts: TArray<string>;
+  Hours, Minutes, Seconds: Integer;
+  TotalSeconds: Integer;
+begin
+  if labZombTimer.Text = '00:00:00' then
+  begin
+    TimerZombi.Enabled := false;
+    FKillType := ktStopZombi;
+    layZombTimer.Visible := false;
+  end
+  else
+  begin
+    // Разбиваем текущее время из Label на часы, минуты, секунды
+    TimeParts := labZombTimer.Text.Split([':']);
+
+    if Length(TimeParts) = 3 then
+    begin
+      Hours := StrToIntDef(TimeParts[0], 0);
+      Minutes := StrToIntDef(TimeParts[1], 0);
+      Seconds := StrToIntDef(TimeParts[2], 0);
+
+      // Переводим всё в секунды и уменьшаем на 1
+      TotalSeconds := Hours * 3600 + Minutes * 60 + Seconds - 1;
+
+      // Проверяем, не истекло ли время
+      if TotalSeconds >= 0 then
+      begin
+        // Преобразуем обратно в часы, минуты, секунды
+        Hours := TotalSeconds div 3600;
+        Minutes := (TotalSeconds mod 3600) div 60;
+        Seconds := TotalSeconds mod 60;
+
+        labZombTimer.Text := Format('%.2d:%.2d:%.2d', [Hours, Minutes, Seconds]);
+      end;
+    end;
+  end;
 end;
 
 end.

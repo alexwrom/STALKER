@@ -730,16 +730,18 @@ begin
 end;
 
 procedure TFrameMap.CreateMarker(AMarker: TMarkerData);
-  procedure CreateBackground;
+  procedure CreateBackground(AWidth: Single);
   begin
     with TCircle.Create(AMarker.Marker) do
     begin
       Parent := AMarker.Marker;
-      Align := TAlignLayout.Client;
+      Align := TAlignLayout.Center;
       fill.Kind := TBrushKind.Solid;
       fill.Color := TAlphaColors.Alpha;
       Stroke.Kind := TBrushKind.Solid;
       Stroke.Color := TAlphaColors.White;
+      Width := AWidth;
+      Height := AWidth;
       HitTest := False;
       Opacity := 0.5;
     end;
@@ -755,9 +757,13 @@ procedure TFrameMap.CreateMarker(AMarker: TMarkerData);
       Bitmap.Assign(ABitmap);
       Width := AWidth;
       Height := Width;
-      HitTest := False;
+      HitTest := false;
+      BringToFront;
     end;
   end;
+
+var
+  vWidth: Single;
 
 begin
   AMarker.Marker := TImage.Create(MapLayout);
@@ -769,48 +775,38 @@ begin
   case AMarker.MarkerType of
     mtArt:
       begin
-        AMarker.Marker.Width := 30;
-        AMarker.Marker.Height := AMarker.Marker.Width;
-
-        CreateBackground;
+        CreateBackground(30);
         CreateIcon(FArtefactsList[AMarker.Tag].Icon);
-
       end;
     mtBase:
       begin
-        AMarker.Marker.Width := FOriginalMapWidth / FMapRealWidth * FPlacesList[AMarker.Tag].Radius * 2 * FCurrentScale;
-        AMarker.Marker.Height := AMarker.Marker.Width;
-        AMarker.Marker.Tag := Round(AMarker.Marker.Width / FCurrentScale);
+        vWidth := FOriginalMapWidth / FMapRealWidth * FPlacesList[AMarker.Tag].Radius * 2 * FCurrentScale;
+        AMarker.Marker.Tag := Round(vWidth / FCurrentScale);
 
-        CreateBackground;
+        CreateBackground(vWidth);
         CreateIcon(ImageList.Source[1].MultiResBitmap[0].Bitmap, 50);
-
       end;
     mtSafe:
       begin
-        AMarker.Marker.Width := FOriginalMapWidth / FMapRealWidth * FPlacesList[AMarker.Tag].Radius * 2 * FCurrentScale;
-        AMarker.Marker.Height := AMarker.Marker.Width;
-        AMarker.Marker.Tag := Round(AMarker.Marker.Width / FCurrentScale);
+        vWidth := FOriginalMapWidth / FMapRealWidth * FPlacesList[AMarker.Tag].Radius * 2 * FCurrentScale;
+        AMarker.Marker.Tag := Round(vWidth / FCurrentScale);
 
-        CreateBackground;
+        CreateBackground(vWidth);
         CreateIcon(ImageList.Source[1].MultiResBitmap[0].Bitmap);
       end;
     mtRadiation:
       begin
-        AMarker.Marker.Width := FOriginalMapWidth / FMapRealWidth * FAnomalyList[AMarker.Tag].Radius * 2 * FCurrentScale;
-        AMarker.Marker.Height := AMarker.Marker.Width;
-        AMarker.Marker.Tag := Round(AMarker.Marker.Width / FCurrentScale);
+        vWidth := FOriginalMapWidth / FMapRealWidth * FAnomalyList[AMarker.Tag].Radius * 2 * FCurrentScale;
+        AMarker.Marker.Tag := Round(vWidth / FCurrentScale);
         AMarker.LabelText := 'Радиация';
-        CreateBackground;
+        CreateBackground(vWidth);
         CreateIcon(ImageList.Source[3].MultiResBitmap[0].Bitmap);
       end;
     mtAnomaly:
       begin
-        AMarker.Marker.Width := FOriginalMapWidth / FMapRealWidth * FAnomalyList[AMarker.Tag].Radius * 2 * FCurrentScale;
-        AMarker.Marker.Tag := Round(AMarker.Marker.Width / FCurrentScale);
-        AMarker.Marker.Height := AMarker.Marker.Width;
-
-        CreateBackground;
+        vWidth := FOriginalMapWidth / FMapRealWidth * FAnomalyList[AMarker.Tag].Radius * 2 * FCurrentScale;
+        AMarker.Marker.Tag := Round(vWidth / FCurrentScale);
+        CreateBackground(vWidth);
 
         case FAnomalyList[AMarker.Tag].AnomalyType of
           atElectro:
@@ -886,13 +882,23 @@ end;
 procedure TFrameMap.ResetLocationMarkers;
 var
   I: integer;
+
+  function GetBackground: TCircle;
+  var
+    K: integer;
+  begin
+    for K := 0 to FMarkerList[I].Marker.ChildrenCount - 1 do
+      if FMarkerList[I].Marker.Children[K] is TCircle then
+        Result := (FMarkerList[I].Marker.Children[K] as TCircle)
+  end;
+
 begin
   for I := 0 to FMarkerList.Count - 1 do
   begin
     if (FMarkerList[I].MarkerType in [mtAnomaly, mtRadiation, mtBase, mtSafe]) then
     begin
-      FMarkerList[I].Marker.Width := FMarkerList[I].Marker.Tag * FCurrentScale;
-      FMarkerList[I].Marker.Height := FMarkerList[I].Marker.Width;
+      GetBackground.Width := FMarkerList[I].Marker.Tag * FCurrentScale;
+      GetBackground.Height := GetBackground.Width;
     end;
 
     SetMarker(FMarkerList[I].Marker, FMarkerList[I].Coords.Latitude, FMarkerList[I].Coords.Longitude);

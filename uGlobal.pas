@@ -14,7 +14,8 @@ uses
   Androidapi.JNIBridge, Androidapi.Helpers, Androidapi.JNI.Os,
   Androidapi.JNI.Net,
 {$ENDIF}
-  Generics.Collections, DelphiZXingQRCode, FMX.Graphics, System.UITypes, System.Types, FMX.Layouts, Math, FMX.Platform;
+  Generics.Collections, DelphiZXingQRCode, FMX.Graphics, System.UITypes, System.Types, FMX.Layouts, Math, FMX.Platform,
+  DateUtils, System.TimeSpan;
 
 const
   cCriticalColor = $FF890000;
@@ -30,6 +31,12 @@ type
   TAnomalyType = (atElectro, atFire, atPhisic, atRadiation, atChimishe, atPSI);
   TBagType = (btMedical, btArmor, btWeapon, btArt, btDetector);
   TSendType = (stSell, stIssue, stAnswerSell, stCancelSell, stUpdateData, stUserExists, stLoadArmor);
+  TKillType = (ktWeapon, ktAnomaly, ktPSI, ktCritical, ktRadiation, ktStopZombi, ktLive);
+
+  TColumn = record
+    Name: string;
+    TypeCol: string;
+  end;
 
   TMarkerData = record
     Marker: TImage;
@@ -196,6 +203,8 @@ procedure ActiveScaner(AValue: boolean);
 procedure StartApp;
 procedure SetDetector(ID: integer);
 function GetOrientation: Single;
+procedure CreateFrameLogin;
+procedure AllStop;
 {$IF Defined(ANDROID)}
 procedure Vibration(AValue: integer);
 {$ENDIF}
@@ -224,6 +233,8 @@ var
   FBottomRightLat: double;
   FBottomRightLon: double;
 
+  FKillType: TKillType;
+
 implementation
 
 uses uMainForm;
@@ -238,9 +249,9 @@ procedure TPerson.SetHealthArmor(AValue: double);
 begin
   MainForm.FFramePercs.ArmorHealthProgress.Width := AValue * MainForm.FFramePercs.ArmorHealthProgress.Tag / 100;
 
-  if AValue < 33 then
+  if AValue < 40 then
     MainForm.FFramePercs.ArmorHealthProgress.Fill.Color := cCriticalColor
-  else if AValue < 66 then
+  else if AValue < 80 then
     MainForm.FFramePercs.ArmorHealthProgress.Fill.Color := cNormalColor
   else
     MainForm.FFramePercs.ArmorHealthProgress.Fill.Color := cFullColor;
@@ -250,9 +261,9 @@ procedure TPerson.SetHealthWeapon(AValue: double);
 begin
   MainForm.FFramePercs.WeaponHealthProgress.Width := AValue * MainForm.FFramePercs.WeaponHealthProgress.Tag / 100;
 
-  if AValue < 33 then
+  if AValue < 40 then
     MainForm.FFramePercs.WeaponHealthProgress.Fill.Color := cCriticalColor
-  else if AValue < 66 then
+  else if AValue < 80 then
     MainForm.FFramePercs.WeaponHealthProgress.Fill.Color := cNormalColor
   else
     MainForm.FFramePercs.WeaponHealthProgress.Fill.Color := cFullColor;
@@ -366,97 +377,230 @@ procedure TPerson.SetHealth(const Value: double);
 var
   vQuery: TFDQuery;
   vDiff: double;
+  AFormatSettings: TFormatSettings;
+  vIntKillType: integer;
+  vLastActionDateTime: TDateTime;
+  TimeParts: TArray<string>;
+  Hours: integer;
+  Minutes: integer;
+  Seconds: integer;
+  vTimeDiff: TTime;
+  TotalSeconds: Int64;
+  TimeSpan: TTimeSpan;
 begin
-  if (FHealth <> Value) then
-  begin
-    if NOT MainForm.animBlood.Running then
-      MainForm.igeDeadGlow.Enabled := false;
+  AFormatSettings.DateSeparator := '.';
+  AFormatSettings.TimeSeparator := ':';
+  AFormatSettings.ShortDateFormat := 'DD.MM.YYYY';
+  AFormatSettings.LongTimeFormat := 'hh:nn:ss';
 
-    MainForm.layMenu.Enabled := true;
-
-    if MainForm.TabControl.ActiveTab <> MainForm.TabPercs then
-      MainForm.layPersonHealth.Visible := true;
-
-    FIsDead := false;
-
-    if Value < 0 then
+  if NOT MainForm.TimerZombi.Enabled then // Если режим зомби, то нас ничего не лечит
+    if (RoundTo(FHealth, -2) <> RoundTo(Value, -2)) then
     begin
-      vDiff := FHealth;
-      FHealth := 0;
-    end
-    else if Value > 100 then
-    begin
-      vDiff := -100;
-      FHealth := 100;
-    end
-    else
-    begin
-      vDiff := FHealth - Value;
-      FHealth := Value;
-    end;
 
-    if vDiff > 0 then
-    begin
-{$IF Defined(ANDROID)}
-      Vibration(500);
-{$ENDIF}
-      FArmorHealth := FArmorHealth - vDiff * 0.2;
+      if FIsDead then
+        if ((Value > 20) and (RoundTo(FHealth, -2) < RoundTo(Value, -2))) then
+        begin
+          MainForm.layMenu.Enabled := true;
+          MainForm.igeDeadGlow.Enabled := false;
+          FIsDead := false;
+          FKillType := ktLive;
+        end
+        else
+        begin
+          MainForm.layMenu.Enabled := false;
+          MainForm.animBlood.Stop;
+          MainForm.igeDeadGlow.Opacity := 1;
+          MainForm.igeDeadGlow.Enabled := true;
+          FIsDead := true;
+        end;
 
-      if FArmorHealth < 0 then
-        FArmorHealth := 0;
+      if MainForm.TabControl.ActiveTab <> MainForm.TabPercs then
+        MainForm.layPersonHealth.Visible := true;
 
-      FWeaponHealth := FWeaponHealth - vDiff * 0.5;
+      if RoundTo(FHealth, -2) = 0 then
+        ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [6, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]),
+          exExecute, vQuery);
 
-      if FWeaponHealth < 0 then
-        FWeaponHealth := 0;
-
-      ExeExec(Format('update users set health = %s, armor_health = %s, weapon_health = %s;', [StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]), StringReplace(FArmorHealth.ToString, ',', '.', [rfReplaceAll]),
-        StringReplace(FWeaponHealth.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
-
-      SetHealthArmor(FArmorHealth);
-      SetHealthWeapon(FWeaponHealth);
-    end
-    else
-      ExeExec('update users set health = ' + StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]) + ';', exExecute, vQuery);
-
-    SetHealthProgress(MainForm.HealthProgress, FHealth);
-
-    if Assigned(MainForm.FFramePercs) then
-    begin
-      SetHealthProgress(MainForm.FFramePercs.HealthProgress, FHealth);
-      MainForm.FFramePercs.ReloadPercs;
-    end;
-
-  end
-  else
-  begin
-    SetHealthProgress(MainForm.HealthProgress, FHealth);
-
-    if FHealth <= 0 then
-    begin
-      CancelingAllIssuies;
-      FIsDead := true;
-      MainForm.animBlood.Stop;
-      MainForm.recSelect.Parent := MainForm.imgBtnMap;
-      MainForm.igeDeadGlow.Opacity := 1;
-      MainForm.igeDeadGlow.Enabled := true;
-
-      MainForm.layMenu.Enabled := false;
-      MainForm.TabControl.ActiveTab := MainForm.TabMap;
-      MainForm.StopDetector;
-
-      if Assigned(MainForm.FFrameMap) then
+      if Value < 0 then
       begin
-        MainForm.FFrameMap.MediaPlayerDead.CurrentTime := 0;
-        MainForm.FFrameMap.MediaPlayerDead.Play;
-        MainForm.FFrameMap.MediaPlayerRad.Stop;
-        MainForm.FFrameMap.MediaPlayerAnomaly.Stop;
+        vDiff := FHealth;
+        FHealth := 0;
+      end
+      else if Value > 100 then
+      begin
+        vDiff := -100;
+        FHealth := 100;
+      end
+      else
+      begin
+        vDiff := RoundTo(FHealth, -2) - RoundTo(Value, -2);
+        FHealth := RoundTo(Value, -2);
       end;
-    end;
 
-    if Assigned(MainForm.FFramePercs) then
-      SetHealthProgress(MainForm.FFramePercs.HealthProgress, FHealth);
-  end;
+      if vDiff > 0 then
+      begin
+{$IF Defined(ANDROID)}
+        Vibration(500);
+{$ENDIF}
+        FArmorHealth := FArmorHealth - vDiff * 0.2;
+
+        if FArmorHealth < 0 then
+          FArmorHealth := 0;
+
+        FWeaponHealth := FWeaponHealth - vDiff * 0.5;
+
+        if FWeaponHealth < 0 then
+          FWeaponHealth := 0;
+
+        ExeExec(Format('update users set health = %s, armor_health = %s, weapon_health = %s;', [StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]), StringReplace(FArmorHealth.ToString, ',', '.', [rfReplaceAll]),
+          StringReplace(FWeaponHealth.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
+
+        SetHealthArmor(FArmorHealth);
+        SetHealthWeapon(FWeaponHealth);
+      end
+      else
+        ExeExec('update users set health = ' + StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]) + ';', exExecute, vQuery);
+
+      SetHealthProgress(MainForm.HealthProgress, FHealth);
+
+      if Assigned(MainForm.FFramePercs) then
+      begin
+        SetHealthProgress(MainForm.FFramePercs.HealthProgress, FHealth);
+        MainForm.FFramePercs.ReloadPercs;
+      end;
+    end
+    else
+    begin
+      SetHealthProgress(MainForm.HealthProgress, FHealth);
+
+      if (RoundTo(FHealth, -2) = 0) and (not FIsDead) then
+      begin
+        CancelingAllIssuies;
+        FIsDead := true;
+        MainForm.animBlood.Stop;
+        MainForm.recSelect.Parent := MainForm.imgBtnMap;
+        MainForm.igeDeadGlow.Opacity := 1;
+        MainForm.igeDeadGlow.Enabled := true;
+
+        MainForm.layMenu.Enabled := false;
+        MainForm.TabControl.ActiveTab := MainForm.TabMap;
+        MainForm.StopDetector;
+
+        if Assigned(MainForm.FFrameMap) then
+        begin
+          MainForm.FFrameMap.MediaPlayerDead.CurrentTime := 0;
+          MainForm.FFrameMap.MediaPlayerDead.Play;
+          MainForm.FFrameMap.MediaPlayerRad.Stop;
+          MainForm.FFrameMap.MediaPlayerAnomaly.Stop;
+        end;
+
+        if Assigned(MainForm.FFramePercs) then
+        begin
+          SetHealthProgress(MainForm.FFramePercs.HealthProgress, FHealth);
+
+          FArmorHealth := Ifthen(Random(4) in [1, 2, 3], FArmorHealth - 50, FArmorHealth);
+          FWeaponHealth := Ifthen(Random(4) in [1, 2, 3], 0, FWeaponHealth);
+
+          ExeExec(Format('update users set health = %s, armor_health = %s, weapon_health = %s;', [StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]), StringReplace(FArmorHealth.ToString, ',', '.', [rfReplaceAll]),
+          StringReplace(FWeaponHealth.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
+
+          SetHealthArmor(FArmorHealth);
+          SetHealthWeapon(FWeaponHealth);
+        end;
+
+        if FKillType = ktLive then
+        begin
+          ExeExec('select * from last_action_life;', exActive, vQuery);
+          try
+            if vQuery.RecordCount > 0 then
+            begin
+              vLastActionDateTime := StrToDateTime(vQuery.FieldByName('action_date_time').AsString, AFormatSettings);
+
+              case vQuery.FieldByName('action_type_id').AsInteger of
+                1:
+                  FKillType := ktWeapon;
+                2:
+                  begin
+                    FKillType := ktCritical;
+
+                    TotalSeconds := 1 * 60 * 60 - SecondsBetween(NOW(), vLastActionDateTime);
+
+                    // Создаем TTimeSpan
+                    TimeSpan := TTimeSpan.FromSeconds(TotalSeconds);
+
+                    // Получаем компоненты времени
+                    Hours := TimeSpan.Hours;
+                    Minutes := TimeSpan.Minutes;
+                    Seconds := TimeSpan.Seconds;
+
+                    if (Seconds >= 0) then
+                      MainForm.labZombTimer.Text := Format('%.2d:%.2d:%.2d', [Hours, Minutes, Seconds]);
+
+                    MainForm.layZombTimer.Visible := true;
+                    MainForm.TimerZombi.Enabled := true;
+                  end;
+                3:
+                  FKillType := ktAnomaly;
+                4:
+                  FKillType := ktRadiation;
+                5:
+                  begin
+                    FKillType := ktPSI;
+
+                    TotalSeconds := 1 * 60 - SecondsBetween(NOW(), vLastActionDateTime); // 30
+
+                    // Создаем TTimeSpan
+                    TimeSpan := TTimeSpan.FromSeconds(TotalSeconds);
+
+                    // Получаем компоненты времени
+                    Hours := TimeSpan.Hours;
+                    Minutes := TimeSpan.Minutes;
+                    Seconds := TimeSpan.Seconds;
+
+                    if (Seconds >= 0) then
+                      MainForm.labZombTimer.Text := Format('%.2d:%.2d:%.2d', [Hours, Minutes, Seconds]);
+
+                    MainForm.layZombTimer.Visible := true;
+                    MainForm.TimerZombi.Enabled := true;
+                  end;
+              end;
+
+            end;
+          finally
+            FreeQueryAndConn(vQuery);
+          end;
+        end
+        else
+        begin
+          case FKillType of
+            ktWeapon:
+              vIntKillType := 1;
+            ktAnomaly:
+              vIntKillType := 3;
+            ktRadiation:
+              vIntKillType := 4;
+            ktCritical:
+              begin
+                MainForm.layZombTimer.Visible := true;
+                MainForm.labZombTimer.Text := '01:00:00';
+                MainForm.TimerZombi.Enabled := true;
+                vIntKillType := 2;
+              end;
+            ktPSI:
+              begin
+                MainForm.layZombTimer.Visible := true;
+                MainForm.labZombTimer.Text := '00:01:00'; // 00:30:00
+                MainForm.TimerZombi.Enabled := true;
+                vIntKillType := 5;
+              end;
+          end;
+
+          ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [vIntKillType, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.',
+            [rfReplaceAll])]), exExecute, vQuery);
+        end;
+      end;
+
+    end;
 end;
 
 {$IF Defined(ANDROID)}
@@ -472,6 +616,21 @@ begin
     Vibrator.vibrate(AValue);
 end;
 {$ENDIF}
+
+procedure AllStop;
+var
+  vQuery: TFDQuery;
+begin
+  Person.UserId := -1;
+  ExeExec('delete from users;', exExecute, vQuery);
+  MainForm.TimerUpdateData.Enabled := false;
+  MainForm.FFrameMap.TimerSensor.Enabled := false;
+  MainForm.FFrameMap.timerCheckCritical.Enabled := false;
+  MainForm.FFrameMap.timerCritical.Enabled := false;
+  MainForm.FFrameMap.timerScanAnomaliesNextTo.Enabled := false;
+  MainForm.FFrameMap.timerCheckCritical.Enabled := false;
+  MainForm.StopDetector;
+end;
 
 procedure SetHealthProgress(AHealthProgress: TRectangle; AValue: double);
 begin
@@ -511,8 +670,8 @@ begin
   FDConn := TFDConnection.Create(nil);
   FDConn.Params.DriverID := 'SQLite';
 
- // if Assigned(AQuery) then
-  //  FreeQueryAndConn(AQuery);
+  // if Assigned(AQuery) then
+  // FreeQueryAndConn(AQuery);
 
   AQuery := TFDQuery.Create(nil);
 
@@ -542,7 +701,8 @@ begin
           AQuery.SQL.Append(Str);
           AQuery.SQL.Append('commit;');
           AQuery.ExecSQL();
-          FDConn.Connected := false;
+          FDConn.Commit;
+          FreeQueryAndConn(AQuery);
         except
           result := false;
         end;
@@ -587,6 +747,9 @@ end;
 
 procedure FreeQueryAndConn(var AQuery: TFDQuery);
 begin
+  if AQuery.Active then
+    AQuery.Active := false;
+
   AQuery.Connection.Connected := false;
   FreeAndNil(AQuery);
 end;
@@ -680,12 +843,17 @@ end;
 procedure ActiveScaner(AValue: boolean);
 begin
   MainForm.imgBtnQRScanner.Enabled := AValue;
-  MainForm.imgBtnQRScanner.Opacity := IfThen(AValue, 0.7, 0.4);
+  MainForm.imgBtnQRScanner.Opacity := Ifthen(AValue, 0.7, 0.4);
 end;
 
 procedure StartApp;
 begin
   MainForm.StartApp;
+end;
+
+procedure CreateFrameLogin;
+begin
+  MainForm.CreateFrameLogin;
 end;
 
 procedure SetDetector(ID: integer);

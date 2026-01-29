@@ -355,8 +355,8 @@
         <DCCReference Include="uGenericBaseData.pas"/>
         <DCCReference Include="..\uLocationListener.pas"/>
         <DCCReference Include="..\OAuth2.pas"/>
-        <DCCReference Include="classes.data.pas"/>
-        <DCCReference Include="classes.answer.pas"/>
+        <DCCReference Include="..\classes\classes.answer.pas"/>
+        <DCCReference Include="..\classes\classes.data.pas"/>
         <RcItem Include="..\Resources\font\montblancctt.ttf">
             <ResourceType>FONT</ResourceType>
             <ResourceId>1</ResourceId>

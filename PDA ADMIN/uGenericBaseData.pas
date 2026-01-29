@@ -35,6 +35,7 @@ begin
         FDQueryCol.Next;
       end;
 
+      AStrData.Add('delete from ' + ATable + ';');
       ExeExec('select * from ' + ATable + ';', exActive, FDQuery);
 
         try

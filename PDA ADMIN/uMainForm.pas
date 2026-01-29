@@ -299,7 +299,6 @@ var
 begin
   ProgressBar.Value := 0;
   try
-    ExeExec('delete from arts_to_map; delete from anomalies; delete from places; delete from game_data; delete from arts; delete from anomaly_types;', exExecute, vQuery);
     AAnswer := TJSON.JsonToObject<TAnswer>(GetDataServer('api/get_data_admin'));
     AData := TJSON.JsonToObject<TData>(AAnswer.Json);
 
@@ -366,26 +365,26 @@ begin
                     begin
                       Showmessage('Данные отправлены успешно')
                     end)
-              else
-                TThread.Synchronize(nil,
-                  procedure
-                  begin
-                    Showmessage('Ошибка записи данных на стороне сервера');
-                  end);
-            finally
-              FreeAndNil(AAnswer);
-              FreeAndNil(AData);
+                else
+                  TThread.Synchronize(nil,
+                    procedure
+                    begin
+                      Showmessage('Ошибка записи данных на стороне сервера');
+                    end);
+              finally
+                FreeAndNil(AAnswer);
+                FreeAndNil(AData);
+              end;
+            except
+              TThread.Synchronize(nil,
+                procedure
+                begin
+                  Showmessage('Ошибка отправки данных. Повторите позже');
+                end);
             end;
-          except
-            TThread.Synchronize(nil,
-              procedure
-              begin
-                Showmessage('Ошибка отправки данных. Повторите позже');
-              end);
-          end;
-        end);
-    end;
-  end);
+          end);
+      end;
+    end);
 end;
 
 procedure TMainForm.ePlaceNameChange(Sender: TObject);
