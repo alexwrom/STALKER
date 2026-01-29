@@ -194,8 +194,9 @@
         <DCCReference Include="units\uApiServer.pas"/>
         <DCCReference Include="units\uGlobal.pas"/>
         <DCCReference Include="units\uGenericBaseData.pas"/>
-        <DCCReference Include="units\classes.action.pas"/>
-        <DCCReference Include="units\classes.data.pas"/>
+        <DCCReference Include="..\classes\classes.data.pas"/>
+        <DCCReference Include="..\classes\classes.user.pas"/>
+        <DCCReference Include="..\classes\classes.userdata.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

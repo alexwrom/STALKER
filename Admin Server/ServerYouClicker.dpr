@@ -7,8 +7,9 @@ uses
   uApiServer in 'units\uApiServer.pas',
   uGlobal in 'units\uGlobal.pas',
   uGenericBaseData in 'units\uGenericBaseData.pas',
-  classes.action in 'units\classes.action.pas',
-  classes.data in 'units\classes.data.pas';
+  classes.data in '..\classes\classes.data.pas',
+  classes.user in '..\classes\classes.user.pas',
+  classes.userdata in '..\classes\classes.userdata.pas';
 
 var
   ApiServer: TApiServer;
@@ -21,9 +22,9 @@ begin
     try
       ApiServer.Start(2026); // Запускаем сервер на порту 2026
 
-      FullData := GoGenericBaseData();
+      FullData := GoGenericBaseData(-1);
       WriteLn('Full data is loaded');
-      AdminData := GoGenericBaseData(True);
+      AdminData := GoGenericBaseData(-1, True);
       WriteLn('Admin data is loaded');
       ReadLn;
     finally

@@ -11,7 +11,7 @@ uses
   FireDAC.Phys.SQLiteWrapper.Stat, StrUtils,
   System.Threading,
   Generics.Defaults, Generics.Collections, uGlobal,
-  Classes.Data, uGenericBaseData;
+  Classes.Data, Classes.user, uGenericBaseData, Classes.userdata;
 
 type
   TApiServer = class
@@ -20,10 +20,11 @@ type
 
     procedure HandleRequest(AContext: TIdContext; ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
     procedure SendJsonResponse(AResponseInfo: TIdHTTPResponseInfo; AStatusCode: Integer; AJson: TJSONObject);
-    function GetData(aUserName, APassword: string; AUserId: Integer): TJSONObject;
+    function GetData(aUserName, APassword: string): TJSONObject;
     function GetDataAdmin: TJSONObject;
     function GetMap: TJSONObject;
     function UploadData(ASQLList: TList<UnicodeString>): TJSONObject;
+    function UpdateData(AUserId: Integer; ASQLList: TList<UnicodeString>): TJSONObject;
   public
     constructor Create;
     destructor Destroy; override;
@@ -77,6 +78,8 @@ var
   AData: string;
   UserId: Integer;
   vData: TData;
+  vUser: TUser;
+  vUserData: TUserData;
 begin
 
   // Устанавливаем заголовки CORS (для веб-приложений)
@@ -151,17 +154,24 @@ begin
         // Авторизация
         if (vDocument = '/api/get_data') then
         begin
-          Login := (JsonValue as TJSONObject).GetValue('username').Value;
-          Password := (JsonValue as TJSONObject).GetValue('password').Value;
-          UserId := StrToInt((JsonValue as TJSONObject).GetValue('user_id').Value);
+          vUser := TJSON.JsonToObject<TUser>(AData);
 
-          JsonResponse := GetData(Login, Password, UserId);
+          JsonResponse := GetData(vUser.Username, vUser.Password);
         end
         else if (vDocument = '/api/upload_data_from_admin') then
         begin
           vData := TJSON.JsonToObject<TData>(AData);
 
           JsonResponse := UploadData(vData.SQL);
+
+          FullData := GoGenericBaseData(-1);
+          AdminData := GoGenericBaseData(-1, True);
+        end
+        else if (vDocument = '/api/update_data') then
+        begin
+          vUserData := TJSON.JsonToObject<TUserData>(AData);
+
+          JsonResponse := UpdateData(vUserData.UserId, vUserData.Data.SQL);
         end;
 
         SendJsonResponse(AResponseInfo, 200, JsonResponse);
@@ -200,59 +210,67 @@ begin
 end;
 
 // Авторизация по логину и паролю
-function TApiServer.GetData(aUserName: string; APassword: string; AUserId: Integer): TJSONObject;
+function TApiServer.GetData(aUserName: string; APassword: string): TJSONObject;
 var
   vQuery: TFDQuery;
   JsonResponse: TJSONObject;
   AData: TData;
   I: Integer;
+
+  procedure SendDataFromUser(AUserId: Integer = -1);
+  begin
+    AData := TData.Create;
+    AData.SQL := TList<UnicodeString>.Create;
+
+    if AUserId = -1 then
+    begin
+      AData.SQL := FullData;
+      AData.SQL.Insert(0, 'insert into users (user_id, nickname, password, group_id) values (' + vQuery.FieldByName('user_id').AsString + ',' + QuotedStr(aUserName) + ',' + QuotedStr(vQuery.FieldByName('password').AsString) + ', 1);');
+    end
+    else
+    begin
+      AData.SQL := GoGenericBaseData(AUserId);
+    end;
+
+    JsonResponse := TJSONObject.Create;
+    try
+      JsonResponse.AddPair('status', 'success');
+      JsonResponse.AddPair('message', 'Авторизация успешна');
+      JsonResponse.AddPair('JSON', TJSON.ObjectToJsonString(AData));
+      Result := JsonResponse;
+    finally
+    end;
+  end;
+
 begin
   Result := nil;
 
   try
-    ExeExec('select count(*) as cnt from users where nickname = ' + QuotedStr(aUserName) + ';', exActive, vQuery);
+    ExeExec('select * from users where Lowwer(nickname) = ' + QuotedStr(LowerCase(aUserName)) + ';', exActive, vQuery);
 
-    if vQuery.FieldByName('cnt').AsInteger = 0 then // Создаем пользователя и высылаем все данные
+    if vQuery.RecordCount = 0 then // Создаем пользователя и высылаем все данные
     begin
       FreeQueryAndConn(vQuery);
 
-      ExeExec('insert into users (nickname, group_id) values (' + QuotedStr(aUserName) + ', 1);', exExecute, vQuery);
-
-      ExeExec('select user_id from users where nickname = ' + QuotedStr(aUserName) + ';', exActive, vQuery);
-
-      FullData.Insert(0, 'insert into users (user_id, nickname, group_id) values (' + vQuery.FieldByName('user_id').AsString + ',' + QuotedStr(aUserName) + ', 1);');
-
-      AData := TData.Create;
-      AData.SQL := TList<UnicodeString>.Create;
-
-      for I := 0 to FullData.Count - 1 do
-        AData.SQL.Add(FullData[I]);
-
-      JsonResponse := TJSONObject.Create;
-      try
-        JsonResponse.AddPair('status', 'success');
-        JsonResponse.AddPair('message', 'Авторизация успешна');
-        JsonResponse.AddPair('JSON', TJSON.ObjectToJsonString(AData));
-        Result := JsonResponse;
-      finally
-      end;
+      ExeExec('insert into users (nickname, password, group_id) values (' + QuotedStr(aUserName) + ',' + QuotedStr(APassword) + ', 1);', exExecute, vQuery);
+      ExeExec('select user_id, password from users where nickname = ' + QuotedStr(aUserName) + ';', exActive, vQuery);
+      SendDataFromUser();
     end
     else
     begin
-
-      if AUserId = -1 then // Если в базе есть логин, а на телефоне не зарегистрирован, то возвращаем ошибку
+      if vQuery.FieldByName('password').AsString = APassword then
+      begin
+        SendDataFromUser(vQuery.FieldByName('user_id').AsInteger);
+      end
+      else
       begin
         JsonResponse := TJSONObject.Create;
         try
           JsonResponse.AddPair('status', 'error');
-          JsonResponse.AddPair('message', 'Такой сталкер уже существует');
+          JsonResponse.AddPair('message', 'Неверный пароль');
           Result := JsonResponse;
         finally
         end;
-      end
-      else // Ищем для него информацию по уведомлениях
-      begin
-
       end;
     end;
 
@@ -272,9 +290,7 @@ begin
 
   AData := TData.Create;
   AData.SQL := TList<UnicodeString>.Create;
-
-  for I := 0 to AdminData.Count - 1 do
-    AData.SQL.Add(AdminData[I]);
+  AData.SQL := AdminData;
 
   JsonResponse := TJSONObject.Create;
   try
@@ -314,8 +330,42 @@ begin
   Result := nil;
 
   try
-    ExeExec('delete from anomalies; delete from arts_to_map; delete from places;', exExecute, vQuery);
+    for I := 0 to ASQLList.Count - 1 do
+      vSQLText := vSQLText + ASQLList[I];
 
+    ExeExec(vSQLText, exExecute, vQuery);
+
+    JsonResponse := TJSONObject.Create;
+    try
+      JsonResponse.AddPair('status', 'success');
+      JsonResponse.AddPair('message', 'Данные загружены успешно');
+      JsonResponse.AddPair('JSON', '');
+      Result := JsonResponse;
+    finally
+    end;
+
+  except
+    JsonResponse := TJSONObject.Create;
+    try
+      JsonResponse.AddPair('status', 'error');
+      JsonResponse.AddPair('message', 'Данные не загружены');
+      JsonResponse.AddPair('JSON', '');
+      Result := JsonResponse;
+    finally
+    end;
+  end;
+end;
+
+function TApiServer.UpdateData(AUserId: Integer; ASQLList: TList<UnicodeString>): TJSONObject;
+var
+  vQuery: TFDQuery;
+  JsonResponse: TJSONObject;
+  vSQLText: UnicodeString;
+  I: Integer;
+begin
+  Result := nil;
+
+  try
     for I := 0 to ASQLList.Count - 1 do
       vSQLText := vSQLText + ASQLList[I];
 

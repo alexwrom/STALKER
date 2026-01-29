@@ -9,7 +9,7 @@ uses
 const
   cDefLength = 9000;
 
-function GoGenericBaseData(AIsAdmin: boolean = false): TList<UnicodeString>;
+function GoGenericBaseData(AUserID: integer; AIsAdmin: boolean = false): TList<UnicodeString>;
 function AddMapToHex: UnicodeString;
 
 implementation
@@ -40,7 +40,7 @@ begin
   end;
 end;
 
-procedure GenerateTableInsert(ATable: string; var AStrData: TList<UnicodeString>);
+procedure GenerateTableInsert(ATable: string; var AStrData: TList<UnicodeString>; AUserID: integer = -1);
 var
   FDQuery: TFDQuery;
   FDQueryCol: TFDQuery;
@@ -51,8 +51,10 @@ var
   vColValue: UnicodeString;
   vBitmap: TBitmap;
   vStr: string;
+  vUserIDExists: boolean;
 begin
   vColumns := TList<TColumn>.Create;
+  vUserIDExists := false;
   try
     ExeExec('PRAGMA Table_Info(' + QuotedStr(ATable) + ')', exActive, FDQueryCol);
     try
@@ -60,60 +62,66 @@ begin
 
       while not FDQueryCol.Eof do
       begin
-        if FDQueryCol.FieldByName('name').AsString <> 'map_image_path' then
+        if (FDQueryCol.FieldByName('name').AsString <> 'map_image_path') and ((FDQueryCol.FieldByName('name').AsString <> 'user_id') or (ATable = 'users')) then
         begin
           vColumn.Name := FDQueryCol.FieldByName('name').AsString;
           vColumn.TypeCol := FDQueryCol.FieldByName('type').AsString;
           vColumns.Add(vColumn);
         end;
+
+        if FDQueryCol.FieldByName('name').AsString = 'user_id' then
+          vUserIDExists := true;
+
         FDQueryCol.Next;
-      end;
-
-      ExeExec('select * from ' + ATable + ';', exActive, FDQuery);
-      try
-        FDQuery.First;
-        while not FDQuery.Eof do
-        begin
-          vColName := '';
-          vColValue := '';
-
-          for i := 0 to vColumns.Count - 1 do
-          begin
-            vColName := vColName + IfThen(i = 0, '', ',') + vColumns[i].Name;
-
-            if (vColumns[i].TypeCol = 'BOOLEAN') or (vColumns[i].TypeCol = 'INTEGER') or (vColumns[i].TypeCol = 'DOUBLE') then
-            begin
-              if FDQuery.FieldByName(vColumns[i].Name).AsString = '' then
-                vColValue := vColValue + IfThen(i = 0, '', ',') + 'NULL'
-              else
-                vColValue := vColValue + IfThen(i = 0, '', ',') + StringReplace(FDQuery.FieldByName(vColumns[i].Name).AsString, ',', '.', [rfReplaceAll]);
-            end
-            else if (vColumns[i].TypeCol = 'VARCHAR') or (vColumns[i].TypeCol = 'DATETIME') or (vColumns[i].TypeCol = 'TIME') then
-              vColValue := vColValue + IfThen(i = 0, '', ',') + QuotedStr(FDQuery.FieldByName(vColumns[i].Name).AsString)
-
-            else if vColumns[i].TypeCol = 'BLOB' then
-            begin
-              vBitmap := TBitmap.Create;
-              try
-                vBitmap.Assign(FDQuery.FieldByName(vColumns[i].Name));
-                vColValue := vColValue + IfThen(i = 0, '', ',') + 'X' + QuotedStr(BitmapToHexString(vBitmap));
-              except
-                vColValue := vColValue + IfThen(i = 0, '', ',') + 'NULL'
-              end;
-
-            end;
-          end;
-
-          AStrData.Add('insert into ' + ATable + ' (' + vColName + ') values (' + vColValue + ');');
-
-          FDQuery.Next;
-        end;
-
-      finally
-        FreeQueryAndConn(FDQuery);
       end;
     finally
       FreeQueryAndConn(FDQueryCol);
+    end;
+
+    AStrData.Add('delete from ' + ATable + ';');
+
+    ExeExec('select * from ' + ATable + IfThen(vUserIDExists, ' where user_id = ' + AUserID.ToString, '') + ';', exActive, FDQuery);
+    try
+      FDQuery.First;
+      while not FDQuery.Eof do
+      begin
+        vColName := '';
+        vColValue := '';
+
+        for i := 0 to vColumns.Count - 1 do
+        begin
+          vColName := vColName + IfThen(i = 0, '', ',') + vColumns[i].Name;
+
+          if (vColumns[i].TypeCol = 'BOOLEAN') or (vColumns[i].TypeCol = 'INTEGER') or (vColumns[i].TypeCol = 'DOUBLE') then
+          begin
+            if FDQuery.FieldByName(vColumns[i].Name).AsString = '' then
+              vColValue := vColValue + IfThen(i = 0, '', ',') + 'NULL'
+            else
+              vColValue := vColValue + IfThen(i = 0, '', ',') + StringReplace(FDQuery.FieldByName(vColumns[i].Name).AsString, ',', '.', [rfReplaceAll]);
+          end
+          else if (vColumns[i].TypeCol = 'VARCHAR') or (vColumns[i].TypeCol = 'DATETIME') or (vColumns[i].TypeCol = 'TIME') then
+            vColValue := vColValue + IfThen(i = 0, '', ',') + QuotedStr(FDQuery.FieldByName(vColumns[i].Name).AsString)
+
+          else if vColumns[i].TypeCol = 'BLOB' then
+          begin
+            vBitmap := TBitmap.Create;
+            try
+              vBitmap.Assign(FDQuery.FieldByName(vColumns[i].Name));
+              vColValue := vColValue + IfThen(i = 0, '', ',') + 'X' + QuotedStr(BitmapToHexString(vBitmap));
+            except
+              vColValue := vColValue + IfThen(i = 0, '', ',') + 'NULL'
+            end;
+
+          end;
+        end;
+
+        AStrData.Add('insert into ' + ATable + ' (' + vColName + ') values (' + vColValue + ');');
+
+        FDQuery.Next;
+      end;
+
+    finally
+      FreeQueryAndConn(FDQuery);
     end;
   finally
     FreeAndNil(vColumns);
@@ -140,10 +148,13 @@ begin
   end;
 end;
 
-function GoGenericBaseData(AIsAdmin: boolean = false): TList<UnicodeString>;
+function GoGenericBaseData(AUserID: integer; AIsAdmin: boolean = false): TList<UnicodeString>;
 begin
   // Порядок важен
   Result := TList<UnicodeString>.Create;
+
+  if AUserID <> -1 then
+    GenerateTableInsert('users', Result, AUserID);
 
   GenerateTableInsert('arts', Result);
   GenerateTableInsert('places', Result);
@@ -162,13 +173,26 @@ begin
     GenerateTableInsert('issuies_block', Result);
     GenerateTableInsert('issuies', Result);
     GenerateTableInsert('medical', Result);
-    GenerateTableInsert('notifications', Result);
+    // GenerateTableInsert('notifications', Result);
 
     GenerateTableInsert('weapons', Result);
-    GenerateTableInsert('bag', Result);
+    GenerateTableInsert('bag', Result, AUserID);
+    GenerateTableInsert('belt', Result, AUserID);
+    GenerateTableInsert('action_types', Result, AUserID);
   end;
 
   GenerateTableInsert('game_data', Result);
+end;
+
+function GoGenericDataFromUser(AUserID: integer): TList<UnicodeString>;
+begin
+  // Порядок важен
+  Result := TList<UnicodeString>.Create;
+  GenerateTableInsert('arts_to_map', Result);
+
+  GenerateTableInsert('issuies_block', Result, AUserID);
+  GenerateTableInsert('issuies', Result, AUserID);
+  //GenerateTableInsert('notifications', Result, AUserID);
 end;
 
 end.

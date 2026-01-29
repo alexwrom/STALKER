@@ -76,11 +76,16 @@ begin
 
       exExecute:
         try
-          AQuery.SQL.Append('BEGIN TRANSACTION;');
-          AQuery.SQL.Append(Str);
-          AQuery.SQL.Append('commit;');
-          AQuery.ExecSQL();
-          FDConn.Connected := false;
+          try
+            AQuery.SQL.Append('BEGIN TRANSACTION;');
+            AQuery.SQL.Append(Str);
+            AQuery.SQL.Append('commit;');
+            AQuery.ExecSQL();
+            FDConn.Commit;
+          finally
+            FreeQueryAndConn(AQuery);
+          end;
+
         except
           Result := false;
         end;
@@ -101,9 +106,11 @@ end;
 
 procedure FreeQueryAndConn(var AQuery: TFDQuery);
 begin
+  if AQuery.Active then
+    AQuery.Active := false;
+
   AQuery.Connection.Connected := false;
   FreeAndNil(AQuery);
 end;
-
 
 end.
