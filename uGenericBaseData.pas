@@ -7,6 +7,7 @@ uses
   Generics.Collections, FireDAC.Comp.Client, StrUtils, FMX.Graphics, Classes.action;
 
 function GoGenericBaseData(): TList<UnicodeString>;
+function DeleteAllSQL(): UnicodeString;
 
 implementation
 
@@ -29,7 +30,7 @@ begin
       FDQueryCol.First;
       while not FDQueryCol.Eof do
       begin
-        if FDQueryCol.FieldByName('name').AsString <> 'user_id' then  //Нельзя передавать штатное поле user_id, оно добавляется ниже
+        if FDQueryCol.FieldByName('name').AsString <> 'user_id' then // Нельзя передавать штатное поле user_id, оно добавляется ниже
         begin
           vColumn.Name := FDQueryCol.FieldByName('name').AsString;
           vColumn.TypeCol := FDQueryCol.FieldByName('type').AsString;
@@ -68,7 +69,7 @@ begin
             vColValue := vColValue + IfThen(i = 0, '', ',') + QuotedStr(FDQuery.FieldByName(vColumns[i].Name).AsString);
         end;
 
-        vColName := vColName + ',' + 'user_id';  // Вот здесь user_id
+        vColName := vColName + ',' + 'user_id'; // Вот здесь user_id
         vColValue := vColValue + ',' + Person.UserId.ToString;
 
         AStrData.Add('insert into ' + ATable + ' (' + vColName + ') values (' + vColValue + ');');
@@ -93,6 +94,32 @@ begin
   GenerateTableInsert('belt', Result);
   GenerateTableInsert('users', Result);
   GenerateTableInsert('life_log', Result);
+end;
+
+function DeleteAllSQL(): UnicodeString;
+begin
+  // Порядок важен
+Result :=  Result + 'delete from action_types;';
+Result :=  Result + 'delete from anomalies;';
+Result :=  Result + 'delete from anomaly_types;';
+Result :=  Result + 'delete from armors;';
+Result :=  Result + 'delete from arts;';
+Result :=  Result + 'delete from arts_to_map;';
+Result :=  Result + 'delete from bag;';
+Result :=  Result + 'delete from belt;';
+Result :=  Result + 'delete from critical_issuies;';
+Result :=  Result + 'delete from detectors;';
+Result :=  Result + 'delete from game_data;';
+Result :=  Result + 'delete from groups;';
+Result :=  Result + 'delete from issuies;';
+Result :=  Result + 'delete from issuies_block;';
+Result :=  Result + 'delete from life_log;';
+Result :=  Result + 'delete from medical;';
+Result :=  Result + 'delete from notifications;';
+Result :=  Result + 'delete from places;';
+Result :=  Result + 'delete from statuses;';
+Result :=  Result + 'delete from users;';
+Result :=  Result + 'delete from weapons;';
 end;
 
 end.

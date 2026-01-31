@@ -6234,7 +6234,7 @@ object MainForm: TMainForm
     Size.Width = 827.000000000000000000
     Size.Height = 511.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 35
+    TabOrder = 36
     object igeDeadGlow: TInnerGlowEffect
       Softness = 9.000000000000000000
       GlowColor = claDarkred
@@ -18667,15 +18667,6 @@ object MainForm: TMainForm
         end
       end
     end
-  end
-  object FDConn: TFDConnection
-    Left = 622
-    Top = 62
-  end
-  object FDQuery: TFDQuery
-    Connection = FDConn
-    Left = 670
-    Top = 62
   end
   object IdTCPServer: TIdTCPServer
     Active = True

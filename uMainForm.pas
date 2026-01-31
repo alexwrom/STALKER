@@ -36,8 +36,6 @@ type
     Image11: TImage;
     Image13: TImage;
     Image10: TImage;
-    FDConn: TFDConnection;
-    FDQuery: TFDQuery;
     layMenu: TLayout;
     GridPanelLayout1: TGridPanelLayout;
     imgBtnMap: TImage;
@@ -142,7 +140,6 @@ uses
 
 procedure TMainForm.FormActivate(Sender: TObject);
 begin
-  CreateBagFrame;
   timerScannerWifiMerchant.Enabled := true;
 end;
 
@@ -245,7 +242,12 @@ var
   vQuery: TFDQuery;
   vArtefactData: TArtefactData;
 begin
-  FArtefactsList := TList<TArtefactData>.Create;
+if Assigned(FArtefactsList) then
+    FArtefactsList.Clear
+  else
+    FArtefactsList := TList<TArtefactData>.Create;
+
+  FArtefactsList.Clear;
   ExeExec('select * from arts_to_map atm join arts a on a.art_id = atm.art_id;', exActive, vQuery);
   vQuery.First;
 
@@ -266,7 +268,11 @@ var
   vQuery: TFDQuery;
   FCriticalItem: TCritical;
 begin
-  FCritical := TList<TCritical>.Create;
+if Assigned(FCritical) then
+    FCritical.Clear
+  else
+    FCritical := TList<TCritical>.Create;
+
   ExeExec('select * from critical_issuies;', exActive, vQuery);
   vQuery.First;
 
@@ -288,7 +294,11 @@ var
   vQuery: TFDQuery;
   vPlaceData: TPlaceData;
 begin
-  FPlacesList := TList<TPlaceData>.Create;
+if Assigned(FPlacesList) then
+    FPlacesList.Clear
+  else
+    FPlacesList := TList<TPlaceData>.Create;
+
   ExeExec('select * from places;', exActive, vQuery);
   try
     vQuery.First;
@@ -316,6 +326,7 @@ end;
 procedure TMainForm.FormShow(Sender: TObject);
 var
   vUserExists: boolean;
+  FDQuery: TFDQuery;
 begin
   Person := TPerson.Create;
   ExeExec('select Count(1) as cnt from users;', exActive, FDQuery);
@@ -359,6 +370,8 @@ begin
 end;
 
 procedure TMainForm.StartApp;
+var
+  FDQuery: TFDQuery;
 begin
   ExeExec('select user_id, group_id from users limit 1;', exActive, FDQuery);
 
@@ -372,25 +385,37 @@ begin
   LoadPlaces;
   LoadCritical;
 
+  if Assigned(FFrameMap) then
+    FreeAndNil(FFrameMap);
+
   FFrameMap := TFrameMap.Create(TabMap);
   FFrameMap.Parent := TabMap;
   FFrameMap.timerCheckCritical.Enabled := true;
+
+  if Assigned(FFramePercs) then
+    FreeAndNil(FFramePercs);
 
   FFramePercs := TFramePercs.Create(TabPercs);
   FFramePercs.Parent := TabPercs;
   Person.GroupId := Person.GroupId;
 
+  if Assigned(FFrameDetector) then
+    FreeAndNil(FFrameDetector);
+
   FFrameDetector := TFrameDetector.Create(TabDetector);
   FFrameDetector.Parent := TabDetector;
+
+  if Assigned(FFrameIssuies) then
+    FreeAndNil(FFrameIssuies);
 
   FFrameIssuies := TFrameIssuies.Create(TabIssueis);
   FFrameIssuies.Parent := TabIssueis;
 
-  if not Assigned(FFrameQRScanner) then
-  begin
-    FFrameQRScanner := TFrameQRScanner.Create(TabQRScanner);
-    FFrameQRScanner.Parent := TabQRScanner;
-  end;
+  if Assigned(FFrameQRScanner) then
+    FreeAndNil(FFrameQRScanner);
+
+  FFrameQRScanner := TFrameQRScanner.Create(TabQRScanner);
+  FFrameQRScanner.Parent := TabQRScanner;
 
   if Assigned(FFrameLogin) then
     FFrameLogin.Visible := false;
@@ -462,8 +487,10 @@ begin
       if (AResult = mrYes) then
       begin
         TimerZombi.Enabled := false;
-        FKillType := ktStopZombi;
+        FKillType := ktWeapon;
         layZombTimer.Visible := false;
+        FIsDead := false;
+        Person.Health := 0;
       end;
     end);
 end;

@@ -16,7 +16,7 @@ uses
   Androidapi.JNIBridge, Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNI.Location,
   Androidapi.JNI.Net,
 {$ENDIF}
-  uLocationListener;
+  uLocationListener, uGenericBaseData;
 
 type
   TFrameMap = class(TFrame)
@@ -958,13 +958,24 @@ end;
 
 procedure TFrameMap.btnExitClick(Sender: TObject);
 begin
-  MessageDlg('Вы хотите покинуть сталкерскую сеть?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
+  MessageDlg('Ты хочешь покинуть сталкерскую сеть?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
     procedure(const AResult: TModalResult)
+    var
+      vQuery: TFDQuery;
     begin
       if (AResult = mrYes) then
       begin
-        AllStop;
-        CreateFrameLogin;
+        Person.UserId := -1;
+        ExeExec(DeleteAllSQL, exExecute, vQuery);
+
+        MessageDlg('Ты вышел из сети. Для повторного входа войди в приложение.', TMsgDlgType.mtInformation, [TMsgDlgBtn.mbOK], 0,
+          procedure(const AResult: TModalResult)
+          begin
+            if (AResult = mrOk) then
+            begin
+              Application.Terminate;
+            end;
+          end);
       end;
     end);
 end;
@@ -976,8 +987,7 @@ begin
     begin
       if (AResult = mrYes) then
       begin
-        // FKillType := ktWeapon;
-        FKillType := ktPSI;
+        FKillType := ktWeapon;
         Person.Health := 0;
       end;
     end);
@@ -1276,7 +1286,7 @@ begin
     begin
 
       for I := 0 to FCritical.Count - 1 do
-        if FormatDateTime('h:n', Time()) = FormatDateTime('h:n', FCritical[I].TimeStart) then
+        if FormatDateTime('hh:nn', Time()) = FormatDateTime('hh:nn', FCritical[I].TimeStart) then
         begin
           FCurrentCritical := FCritical[I];
           FSecondBeforeStartDamage := FCurrentCritical.MinuteBeforeStartDamage * 60;
@@ -1316,7 +1326,7 @@ begin
     end
     else
     begin
-      if FormatDateTime('h:n', Time()) = FormatDateTime('h:n', FCurrentCritical.TimeStop) then
+      if FormatDateTime('hh:nn', Time()) = FormatDateTime('hh:nn', FCurrentCritical.TimeStop) then
       begin
         FIsCriticalStart := False;
         MediaPlayerStartCritical.Stop;

@@ -3749,9 +3749,12 @@ object FrameLogin: TFrameLogin
         end
         object layBtn: TLayout
           Align = MostBottom
-          Position.Y = 236.000000000000000000
-          Size.Width = 406.000000000000000000
-          Size.Height = 53.000000000000000000
+          Margins.Left = 20.000000000000000000
+          Margins.Right = 20.000000000000000000
+          Position.X = 20.000000000000000000
+          Position.Y = 249.000000000000000000
+          Size.Width = 366.000000000000000000
+          Size.Height = 40.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 5
           object Image4: TImage
@@ -3928,16 +3931,16 @@ object FrameLogin: TFrameLogin
               end>
             Align = Client
             MarginWrapMode = Tile
-            Size.Width = 406.000000000000000000
-            Size.Height = 53.000000000000000000
+            Size.Width = 366.000000000000000000
+            Size.Height = 40.000000000000000000
             Size.PlatformDefault = False
             WrapMode = Stretch
             object btnConfirmName: TCornerButton
               Align = Client
               StyledSettings = []
               Sides = [Top, Left, Bottom, Right]
-              Size.Width = 406.000000000000000000
-              Size.Height = 53.000000000000000000
+              Size.Width = 366.000000000000000000
+              Size.Height = 40.000000000000000000
               Size.PlatformDefault = False
               TabOrder = 0
               Text = #1042#1086#1081#1090#1080' '#1074' '#1089#1077#1090#1100
@@ -3962,13 +3965,13 @@ object FrameLogin: TFrameLogin
           TextSettings.FontColor = xFF8BC98B
           TextSettings.HorzAlign = Center
           Position.X = 20.000000000000000000
-          Position.Y = 137.000000000000000000
+          Position.Y = 153.000000000000000000
           Margins.Left = 20.000000000000000000
           Margins.Right = 20.000000000000000000
           Size.Width = 366.000000000000000000
           Size.Height = 38.000000000000000000
           Size.PlatformDefault = False
-          TextPrompt = #1042#1074#1077#1076#1080#1090#1077' '#1074#1072#1096#1077' '#1080#1084#1103
+          TextPrompt = #1042#1074#1077#1076#1080' '#1089#1102#1076#1072' '#1080#1084#1103
           StyledSettings = []
           OnKeyUp = eNickNameKeyUp
           OnEnter = eNickNameEnter
@@ -3999,14 +4002,14 @@ object FrameLogin: TFrameLogin
           StyledSettings = [Style]
           Position.Y = 104.000000000000000000
           Size.Width = 406.000000000000000000
-          Size.Height = 33.000000000000000000
+          Size.Height = 49.000000000000000000
           Size.PlatformDefault = False
           TextSettings.Font.Family = 'Calibri'
           TextSettings.Font.Size = 18.000000000000000000
           TextSettings.FontColor = claDarkgray
           TextSettings.HorzAlign = Center
           TextSettings.VertAlign = Leading
-          Text = #1042#1074#1077#1076#1080#1090#1077' '#1074#1072#1096#1077' '#1080#1084#1103' '#1080' '#1087#1072#1088#1086#1083#1100
+          Text = #1042#1074#1077#1076#1080' '#1089#1074#1086#1077' '#1080#1084#1103' '#1080' '#1087#1072#1088#1086#1083#1100' '#1076#1083#1103' '#1087#1086#1076#1082#1083#1102#1095#1077#1085#1080#1103' '#1082' '#1089#1090#1072#1083#1082#1077#1088#1089#1082#1086#1081' '#1089#1077#1090#1080
           TabOrder = 3
         end
         object labNotConnect: TLabel
@@ -4038,7 +4041,7 @@ object FrameLogin: TFrameLogin
           TextSettings.FontColor = claDarkgray
           TextSettings.HorzAlign = Center
           TextSettings.VertAlign = Trailing
-          Text = #1044#1086#1073#1088#1086' '#1087#1086#1078#1072#1083#1086#1074#1072#1090#1100' '#1074' '#1063#1047#1054'.'
+          Text = #1047#1076#1072#1088#1086#1074#1086', '#1089#1090#1072#1083#1082#1077#1088'!'
           TabOrder = 2
         end
         object ePassword: TEdit
@@ -4052,14 +4055,14 @@ object FrameLogin: TFrameLogin
           TextSettings.FontColor = xFF8BC98B
           TextSettings.HorzAlign = Center
           Position.X = 20.000000000000000000
-          Position.Y = 185.000000000000000000
+          Position.Y = 201.000000000000000000
           Margins.Left = 20.000000000000000000
           Margins.Top = 10.000000000000000000
           Margins.Right = 20.000000000000000000
           Size.Width = 366.000000000000000000
           Size.Height = 38.000000000000000000
           Size.PlatformDefault = False
-          TextPrompt = #1042#1074#1077#1076#1080#1090#1077' '#1074#1072#1096' '#1087#1072#1088#1086#1083#1100
+          TextPrompt = #1040' '#1089#1102#1076#1072' '#1087#1072#1088#1086#1083#1100
           StyledSettings = []
           OnKeyUp = eNickNameKeyUp
           OnEnter = eNickNameEnter

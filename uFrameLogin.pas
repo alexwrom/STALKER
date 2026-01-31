@@ -133,7 +133,6 @@ begin
             Showmessage('ќшибка обновлени€ базы');
           end);
       end;
-
     end
     else
     begin
@@ -157,9 +156,20 @@ var
 begin
   Result := false;
   try
-    AAnswer := TJSON.JsonToObject<TAnswer>(GetDataServer('api/get_map'));
-    GetImage(AAnswer.Json);
-    Result := true;
+    try
+      AAnswer := TJSON.JsonToObject<TAnswer>(GetDataServer('api/get_map'));
+      GetImage(AAnswer.Json);
+      Result := true;
+    except
+      Result := false;
+
+      TThread.Synchronize(nil,
+        procedure
+        begin
+          Showmessage('ќшибка сохранени€ карты');
+        end);
+    end;
+
   finally
     FreeAndNil(AAnswer);
   end;
@@ -206,9 +216,9 @@ end;
 procedure TFrameLogin.btnConfirmNameClick(Sender: TObject);
 begin
   if eNickName.Text = '' then
-    Showmessage('¬ведите ваше им€')
+    Showmessage('¬веди свое им€')
   else if ePassword.Text = '' then
-    Showmessage('¬ведите ваш пароль')
+    Showmessage('¬веди свой пароль')
   else
   begin
     PermissionsService.RequestPermissions(['android.permission.WRITE_EXTERNAL_STORAGE'],

@@ -204,7 +204,6 @@ procedure StartApp;
 procedure SetDetector(ID: integer);
 function GetOrientation: Single;
 procedure CreateFrameLogin;
-procedure AllStop;
 {$IF Defined(ANDROID)}
 procedure Vibration(AValue: integer);
 {$ENDIF}
@@ -396,7 +395,6 @@ begin
   if NOT MainForm.TimerZombi.Enabled then // Если режим зомби, то нас ничего не лечит
     if (RoundTo(FHealth, -2) <> RoundTo(Value, -2)) then
     begin
-
       if FIsDead then
         if ((Value > 20) and (RoundTo(FHealth, -2) < RoundTo(Value, -2))) then
         begin
@@ -547,7 +545,7 @@ begin
                   begin
                     FKillType := ktPSI;
 
-                    TotalSeconds := 1 * 60 - SecondsBetween(NOW(), vLastActionDateTime); // 30
+                    TotalSeconds := 30 * 60 - SecondsBetween(NOW(), vLastActionDateTime);
 
                     // Создаем TTimeSpan
                     TimeSpan := TTimeSpan.FromSeconds(TotalSeconds);
@@ -573,6 +571,8 @@ begin
         else
         begin
           case FKillType of
+            ktStopZombi:
+              vIntKillType := 7;
             ktWeapon:
               vIntKillType := 1;
             ktAnomaly:
@@ -589,7 +589,7 @@ begin
             ktPSI:
               begin
                 MainForm.layZombTimer.Visible := true;
-                MainForm.labZombTimer.Text := '00:01:00'; // 00:30:00
+                MainForm.labZombTimer.Text := '00:30:00';
                 MainForm.TimerZombi.Enabled := true;
                 vIntKillType := 5;
               end;
@@ -616,21 +616,6 @@ begin
     Vibrator.vibrate(AValue);
 end;
 {$ENDIF}
-
-procedure AllStop;
-var
-  vQuery: TFDQuery;
-begin
-  Person.UserId := -1;
-  ExeExec('delete from users;', exExecute, vQuery);
-  MainForm.TimerUpdateData.Enabled := false;
-  MainForm.FFrameMap.TimerSensor.Enabled := false;
-  MainForm.FFrameMap.timerCheckCritical.Enabled := false;
-  MainForm.FFrameMap.timerCritical.Enabled := false;
-  MainForm.FFrameMap.timerScanAnomaliesNextTo.Enabled := false;
-  MainForm.FFrameMap.timerCheckCritical.Enabled := false;
-  MainForm.StopDetector;
-end;
 
 procedure SetHealthProgress(AHealthProgress: TRectangle; AValue: double);
 begin
@@ -699,7 +684,7 @@ begin
         try
           AQuery.SQL.Append('BEGIN TRANSACTION;');
           AQuery.SQL.Append(Str);
-          AQuery.SQL.Append('commit;');
+          //AQuery.SQL.Append('commit;');
           AQuery.ExecSQL();
           FDConn.Commit;
           FreeQueryAndConn(AQuery);
