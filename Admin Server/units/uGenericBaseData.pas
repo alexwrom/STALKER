@@ -78,7 +78,7 @@ begin
       FreeQueryAndConn(FDQueryCol);
     end;
 
-    AStrData.Add('delete from ' + ATable + ';');
+    //AStrData.Add('delete from ' + ATable + ';');
 
     ExeExec('select * from ' + ATable + IfThen(vUserIDExists, ' where user_id = ' + AUserID.ToString, '') + ';', exActive, FDQuery);
     try

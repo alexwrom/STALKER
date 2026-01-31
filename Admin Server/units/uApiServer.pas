@@ -156,7 +156,7 @@ begin
         begin
           vUser := TJSON.JsonToObject<TUser>(AData);
 
-          JsonResponse := GetData(vUser.Username, vUser.Password);
+          JsonResponse := GetData(AnsiUpperCase(vUser.Username), vUser.Password);
         end
         else if (vDocument = '/api/upload_data_from_admin') then
         begin
@@ -246,7 +246,7 @@ begin
   Result := nil;
 
   try
-    ExeExec('select * from users where Lowwer(nickname) = ' + QuotedStr(LowerCase(aUserName)) + ';', exActive, vQuery);
+    ExeExec('select * from users where nickname = ' + QuotedStr(aUserName) + ';', exActive, vQuery);
 
     if vQuery.RecordCount = 0 then // Создаем пользователя и высылаем все данные
     begin
