@@ -379,6 +379,7 @@ var
   vSend: TSend;
   vSell: TSell;
 begin
+  BtnClickMedia;
   layInfo.Visible := False;
   laySellQR.Visible := true;
 
@@ -406,6 +407,7 @@ var
   vIndex: integer;
   vQuery: TFDQuery;
 begin
+  BtnClickMedia;
   vIndex := layInfo.Tag;
   case FBagList[vIndex].BagType of
     btArmor:
@@ -442,6 +444,7 @@ var
   vIndex: integer;
   str: string;
 begin
+  BtnClickMedia;
   vIndex := layInfo.Tag;
 
   if IsFullBelt then
@@ -549,6 +552,7 @@ end;
 
 procedure TFrameBag.btnArtClick(Sender: TObject);
 begin
+  BtnClickMedia;
   if FArtsList.Count >= (Sender as TSpeedButton).Tag then
   begin
     igfSelect.Enabled := true;
@@ -578,6 +582,7 @@ procedure TFrameBag.btnChooseArtClick(Sender: TObject);
 var
   vQuery: TFDQuery;
 begin
+  BtnClickMedia;
   btnChooseArt.Enabled := False;
   ExeExec('update belt set art_id = ' + FBagList[layInfo.Tag].RowID.ToString + ' where slot = ' + igfSelect.Tag.ToString + ';', exExecute, vQuery);
   ExeExec('insert into bag (table_name, row_id, health) values (''arts'',' + FArtsList[igfSelect.Tag - 1].ID.ToString + ', 100);', exExecute, vQuery);
@@ -588,12 +593,14 @@ end;
 
 procedure TFrameBag.btnCloseChangeSlotClick(Sender: TObject);
 begin
+  BtnClickMedia;
   igfSelect.Parent := nil;
   layChangeSlot.Visible := False;
 end;
 
 procedure TFrameBag.btnCloseInfoClick(Sender: TObject);
 begin
+  BtnClickMedia;
   layInfo.Visible := False;
 end;
 
@@ -602,6 +609,7 @@ var
   vIndex: integer;
   vQuery: TFDQuery;
 begin
+  BtnClickMedia;
   vIndex := layInfo.Tag;
   case FBagList[vIndex].BagType of
     btMedical:
@@ -618,6 +626,7 @@ end;
 
 procedure TFrameBag.btnCloseQRClick(Sender: TObject);
 begin
+  BtnClickMedia;
   laySellQR.Visible := False;
 end;
 
@@ -799,6 +808,7 @@ procedure TFrameBag.OnClickElement(Sender: TObject);
 var
   vIndex: integer;
 begin
+  BtnClickMedia;
   vIndex := (Sender as TSpeedButton).Tag;
   case FBagList[vIndex].BagType of
     btMedical:

@@ -42,7 +42,8 @@ begin
       FreeQueryAndConn(FDQueryCol);
     end;
 
-    AStrData.Add('delete from ' + ATable + ' where user_id = ' + Person.UserId.ToString + ';');
+    if ATable <> 'life_log' then
+     AStrData.Add('delete from ' + ATable + ' where user_id = ' + Person.UserId.ToString + ';');
 
     ExeExec('select * from ' + ATable + ';', exActive, FDQuery);
 
@@ -87,6 +88,8 @@ begin
 end;
 
 function GoGenericBaseData(): TList<UnicodeString>;
+var
+  FDQuery: TFDQuery;
 begin
   // Порядок важен
   Result := TList<UnicodeString>.Create;
@@ -94,32 +97,40 @@ begin
   GenerateTableInsert('belt', Result);
   GenerateTableInsert('users', Result);
   GenerateTableInsert('life_log', Result);
+
+  if FIsSendMarkers then
+   begin
+     GenerateTableInsert('markers', Result);
+     FIsSendMarkers := false;
+   end;
 end;
 
 function DeleteAllSQL(): UnicodeString;
 begin
   // Порядок важен
-Result :=  Result + 'delete from action_types;';
-Result :=  Result + 'delete from anomalies;';
-Result :=  Result + 'delete from anomaly_types;';
-Result :=  Result + 'delete from armors;';
-Result :=  Result + 'delete from arts;';
-Result :=  Result + 'delete from arts_to_map;';
-Result :=  Result + 'delete from bag;';
-Result :=  Result + 'delete from belt;';
-Result :=  Result + 'delete from critical_issuies;';
-Result :=  Result + 'delete from detectors;';
-Result :=  Result + 'delete from game_data;';
-Result :=  Result + 'delete from groups;';
-Result :=  Result + 'delete from issuies;';
-Result :=  Result + 'delete from issuies_block;';
-Result :=  Result + 'delete from life_log;';
-Result :=  Result + 'delete from medical;';
-Result :=  Result + 'delete from notifications;';
-Result :=  Result + 'delete from places;';
-Result :=  Result + 'delete from statuses;';
-Result :=  Result + 'delete from users;';
-Result :=  Result + 'delete from weapons;';
+  Result :=  Result + 'delete from action_types;';
+  Result :=  Result + 'delete from anomalies;';
+  Result :=  Result + 'delete from anomaly_types;';
+  Result :=  Result + 'delete from armors;';
+  Result :=  Result + 'delete from arts;';
+  Result :=  Result + 'delete from arts_to_map;';
+  Result :=  Result + 'delete from bag;';
+  Result :=  Result + 'delete from belt;';
+  Result :=  Result + 'delete from critical_issuies;';
+  Result :=  Result + 'delete from detectors;';
+  Result :=  Result + 'delete from game_data;';
+  Result :=  Result + 'delete from groups;';
+  Result :=  Result + 'delete from issuies;';
+  Result :=  Result + 'delete from issuies_block;';
+  //Result :=  Result + 'delete from life_log;';
+  Result :=  Result + 'delete from medical;';
+  Result :=  Result + 'delete from notifications;';
+  Result :=  Result + 'delete from places;';
+  Result :=  Result + 'delete from statuses;';
+  Result :=  Result + 'delete from markers;';
+  Result :=  Result + 'delete from marker_types;';
+  Result :=  Result + 'delete from users;';
+  Result :=  Result + 'delete from weapons;';
 end;
 
 end.

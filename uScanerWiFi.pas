@@ -28,8 +28,8 @@ var
 {$ENDIF}
 
 const
-  MERCHANT_WIFI = '52';//'Merchant';
-  MERCHANT_PASS = '12091988';
+  MERCHANT_WIFI = 'Merchant';
+  MERCHANT_PASS = '12345678';
 
 implementation
 
@@ -249,7 +249,7 @@ function ConnectToNetworkAndroid10Plus: boolean;
 begin
   Result := False;
 
-  PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.CHANGE_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION'],
+  PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.CHANGE_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.NEARBY_WIFI_DEVICES', 'android.permission.CHANGE_WIFI_MULTICAST_STATE'],
     procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
     var
       ConnectivityManager: JConnectivityManager;
@@ -394,6 +394,7 @@ begin
             Break;
           end;
       except
+
       end;
     end);
 end;

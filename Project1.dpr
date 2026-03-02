@@ -5,16 +5,16 @@ program Project1;
 uses
   System.StartUpCopy,
   FMX.Forms,
-{$IF Defined(ANDROID)}
+  {$IF Defined(ANDROID)}
   Androidapi.Helpers, Androidapi.JNI.App, Androidapi.JNI.GraphicsContentViewText,
-{$ENDIF}
-  uMainForm in 'uMainForm.pas' {MainForm} ,
-  uFrameMap in 'uFrameMap.pas' {FrameMap: TFrame} ,
+  {$ENDIF }
+  uMainForm in 'uMainForm.pas' {MainForm},
+  uFrameMap in 'uFrameMap.pas' {FrameMap: TFrame},
   uGlobal in 'uGlobal.pas',
-  uFramePercs in 'uFramePercs.pas' {FramePercs: TFrame} ,
-  uFrameDetector in 'uFrameDetector.pas' {FrameDetector: TFrame} ,
+  uFramePercs in 'uFramePercs.pas' {FramePercs: TFrame},
+  uFrameDetector in 'uFrameDetector.pas' {FrameDetector: TFrame},
   uScanerWiFi in 'uScanerWiFi.pas',
-  uFrameIssuies in 'uFrameIssuies.pas' {FrameIssuies: TFrame} ,
+  uFrameIssuies in 'uFrameIssuies.pas' {FrameIssuies: TFrame},
   controls.item in 'controls.item.pas',
   controls.listitem in 'controls.listitem.pas',
   uFrameBag in 'uFrameBag.pas',
@@ -23,7 +23,7 @@ uses
   ZXing.Binarizer in '..\ZXing.Delphi-3.10.0\Lib\Classes\Filtering\ZXing.Binarizer.pas',
   ZXing.BinaryBitmap in '..\ZXing.Delphi-3.10.0\Lib\Classes\Filtering\ZXing.BinaryBitmap.pas',
   ZXing.BitSource in '..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.BitSource.pas',
-  ZXing.ByteSegments in '..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXIng.ByteSegments.pas',
+  ZXIng.ByteSegments in '..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXIng.ByteSegments.pas',
   ZXing.CharacterSetECI in '..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.CharacterSetECI.pas',
   ZXing.Common.BitArray in '..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.Common.BitArray.pas',
   ZXing.Common.BitArrayImplementation in '..\ZXing.Delphi-3.10.0\Lib\Classes\Common\ZXing.Common.BitArrayImplementation.pas',
@@ -97,16 +97,17 @@ uses
   DelphiZXIngQRCode in '..\ZXing.Delphi-3.10.0\DelphiZXingQRCode-master\Source\DelphiZXIngQRCode.pas',
   classes.sell in 'classes\classes.sell.pas',
   classes.action in 'classes\classes.action.pas',
-  uFrameQRScaner in 'uFrameQRScaner.pas' {FrameQRScanner: TFrame} ,
+  uFrameQRScaner in 'uFrameQRScaner.pas' {FrameQRScanner: TFrame},
   uLocationListener in 'uLocationListener.pas',
   OAuth2 in 'OAuth2.pas',
   classes.answer in 'classes\classes.answer.pas',
   classes.data in 'classes\classes.data.pas',
-  uFrameLogin in 'uFrameLogin.pas' {FrameLogin: TFrame} ,
+  uFrameLogin in 'uFrameLogin.pas' {FrameLogin: TFrame},
   classes.send in 'classes\classes.send.pas',
   classes.user in 'classes\classes.user.pas',
   uGenericBaseData in 'uGenericBaseData.pas',
-  classes.userdata in 'classes\classes.userdata.pas';
+  classes.userdata in 'classes\classes.userdata.pas',
+  classes.marker in 'classes\classes.marker.pas';
 
 {$R *.res}
 

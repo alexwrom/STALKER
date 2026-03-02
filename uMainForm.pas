@@ -56,8 +56,6 @@ type
     imgPersonHealth: TImage;
     HealthProgress: TRectangle;
     recSelect: TRectangle;
-    igeDeadGlow: TInnerGlowEffect;
-    animBlood: TFloatAnimation;
     layDamage: TLayout;
     imgBtnQRScanner: TImage;
     btnToQRScanner: TSpeedButton;
@@ -76,7 +74,7 @@ type
     InnerGlowEffect7: TInnerGlowEffect;
     layPersonHealth: TLayout;
     recBack: TRectangle;
-    MediaPlayer: TMediaPlayer;
+    MediaPlayerMenu: TMediaPlayer;
     TimerUpdateData: TTimer;
     layZombTimer: TLayout;
     Rectangle8: TRectangle;
@@ -90,6 +88,16 @@ type
     Layout1: TLayout;
     Image1: TImage;
     TimerZombi: TTimer;
+    layDeadGlow: TLayout;
+    Image4: TImage;
+    Image6: TImage;
+    Image16: TImage;
+    Image17: TImage;
+    Image18: TImage;
+    Image19: TImage;
+    Image20: TImage;
+    Image21: TImage;
+    animBlood: TFloatAnimation;
     procedure FormCreate(Sender: TObject);
     procedure btnToMapClick(Sender: TObject);
     procedure btnToPercsClick(Sender: TObject);
@@ -121,6 +129,7 @@ type
     FFrameIssuies: TFrameIssuies;
     FFrameBag: TFrameBag;
     FFrameLogin: TFrameLogin;
+   // FAndroidFullScreen : TAndroidFullScreen;
     procedure CreateFrameLogin;
     procedure StartApp;
     procedure LoadIsuies;
@@ -140,14 +149,17 @@ uses
 
 procedure TMainForm.FormActivate(Sender: TObject);
 begin
-  timerScannerWifiMerchant.Enabled := true;
+   timerScannerWifiMerchant.Enabled := true;
 end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
 {$IF Defined(ANDROID) or Defined(IOS)}
-  Self.FullScreen := true;
+  Self.FullScreen := TOSVersion.Check(11);
+  FIsSendMarkers := false;
+
   FKillType := ktLive;
+  MediaPlayerMenu.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'menu.mp3');
 {$ENDIF}
 end;
 
@@ -242,7 +254,7 @@ var
   vQuery: TFDQuery;
   vArtefactData: TArtefactData;
 begin
-if Assigned(FArtefactsList) then
+  if Assigned(FArtefactsList) then
     FArtefactsList.Clear
   else
     FArtefactsList := TList<TArtefactData>.Create;
@@ -268,7 +280,7 @@ var
   vQuery: TFDQuery;
   FCriticalItem: TCritical;
 begin
-if Assigned(FCritical) then
+  if Assigned(FCritical) then
     FCritical.Clear
   else
     FCritical := TList<TCritical>.Create;
@@ -294,7 +306,7 @@ var
   vQuery: TFDQuery;
   vPlaceData: TPlaceData;
 begin
-if Assigned(FPlacesList) then
+  if Assigned(FPlacesList) then
     FPlacesList.Clear
   else
     FPlacesList := TList<TPlaceData>.Create;
@@ -420,20 +432,9 @@ begin
   if Assigned(FFrameLogin) then
     FFrameLogin.Visible := false;
 
-  PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.ACCESS_COARSE_LOCATION', 'android.permission.CHANGE_WIFI_STATE', 'android.permission.CAMERA'],
-    procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
-    begin
-      if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
-      begin
-{$IFDEF ANDROID}
-        FFrameMap.LocationServiceChanged;
-{$ENDIF}
-      end
-      else
-      begin
-        Showmessage('Необходимы разрешения для сканирования GPS');
-      end;
-    end);
+  {$IFDEF ANDROID}
+    FFrameMap.TimerSensor.Enabled := true;
+  {$ENDIF}
 end;
 
 procedure TMainForm.IdTCPServerExecute(AContext: TIdContext);
@@ -497,6 +498,7 @@ end;
 
 procedure TMainForm.btnToBagClick(Sender: TObject);
 begin
+ BtnClickMedia;
   LoadBag;
   recSelect.Parent := imgBtnBag;
 
@@ -536,6 +538,7 @@ end;
 
 procedure TMainForm.btnToIssuiesClick(Sender: TObject);
 begin
+  BtnClickMedia;
   TabControl.ActiveTab := TabIssueis;
   recSelect.Parent := imgBtnIssuies;
   FFrameDetector.timerScannerArtefacts.Enabled := false;
@@ -550,6 +553,7 @@ end;
 
 procedure TMainForm.btnToMapClick(Sender: TObject);
 begin
+  BtnClickMedia;
   TabControl.ActiveTab := TabMap;
   recSelect.Parent := imgBtnMap;
   FFrameDetector.timerScannerArtefacts.Enabled := false;
@@ -561,6 +565,7 @@ end;
 
 procedure TMainForm.btnToPercsClick(Sender: TObject);
 begin
+  BtnClickMedia;
   SetHealthProgress(FFramePercs.HealthProgress, Person.Health);
   TabControl.ActiveTab := TabPercs;
   recSelect.Parent := ImgBtnPercs;
@@ -572,6 +577,8 @@ end;
 
 procedure TMainForm.btnToQRScannerClick(Sender: TObject);
 begin
+  MediaPlayerMenu.CurrentTime := 0;
+  MediaPlayerMenu.Play;
   TabControl.ActiveTab := TabQRScanner;
   recSelect.Parent := imgBtnQRScanner;
   FFrameQRScanner.StartScan;
@@ -608,7 +615,7 @@ begin
           procedure
           begin
 
-            if Assigned(FFrameLogin) then
+           if Assigned(FFrameLogin) then
             begin
               FFrameLogin.layBtn.Visible := FIsMerchantZone;
               FFrameLogin.labNotConnect.Visible := NOT FIsMerchantZone;
@@ -616,8 +623,6 @@ begin
 
             if Assigned(FFrameBag) then
               FFrameBag.laySells.Visible := FIsMerchantZone;
-
-            ActiveScaner(FIsMerchantZone);
 
             if Assigned(Person) and (Person.UserId <> -1) then
               TimerUpdateData.Enabled := FIsMerchantZone;
@@ -650,6 +655,11 @@ begin
         vUserdata.Data := vData;
 
         vAnswer := TJSON.JsonToObject<TAnswer>(PostDataServer('api/update_data', TJSON.ObjectToJsonString(vUserdata)));
+
+        if vAnswer.Status = 'success' then
+          begin
+            ExeExec('delete from life_log where action_date_time <> (select max(action_date_time) from life_log);', exExecute, vQuery);
+          end;
         {
           vData := TJSON.JsonToObject<TData>(vAnswer.Json);
 

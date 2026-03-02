@@ -167,6 +167,7 @@ begin
             I: Integer;
             Page, vRowID: Integer;
             vStr, vTableName: string;
+            vQuery: TFDQuery;
           begin
             if (ReadResult <> nil) then
             begin
@@ -216,63 +217,84 @@ begin
                 end;
               end
               else
-              begin
-                IdTCPClient.Host := vSend.Ip;
-                IdTCPClient.Port := 2026;
-
-                IdTCPClient.Connect;
-                try
-                  IdTCPClient.IOHandler.WriteLn(TJson.ObjectToJsonString(Person), IndyUTF8Encoding(True));
-                  vStringData := TList<UnicodeString>.Create;
-                  try
-
-                    vAction := TJson.JsonToObject<TAction>(IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(True)));
-                    Page := 1;
-
-                    if vAction.PageCount > 1 then
-                    begin
-                      while Page <> vAction.PageCount do
-                      begin
-                        vStr := IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(True));
-
-                        if vStr[1] = '~' then
-                        begin
-                          vStringData[vStringData.Count - 1] := vStringData[vStringData.Count - 1] + Copy(vStr, 2, Length(vStr) - 1);
-                          Dec(Page);
-                        end
-                        else
-                          vStringData.Add(vStr);
-
-                        inc(Page);
-                      end;
-                    end;
-
-                    case vAction.SendType of
-                      stSell:
-                        begin
-                          vSell := TSell.Create;
-                          vSell := TJson.JsonToObject<TSell>(vAction.JSONObject);
-
-                          ExeExec(Format('insert into bag (table_name, row_id, health) values(''%s'', %d, %d);', [vSell.TableName, vSell.RowID, Round(vSell.Health)]), exExecute, FDQuery);
-                          Person.Cash := Person.Cash - vSell.Cost;
-                          ReloadBag;
-                        end;
-
-                      stCancelSell:
-                        ShowMessage('Недостаточно средств');
-
-                      stLoadArmor:
-                        begin
-
-                        end;
-                    end;
-                  finally
-                    FreeAndNil(vStringData);
+              if Assigned(vSend.Marker) then
+                begin
+                   case vSend.Marker.MarkerType of
+                    0:
+                        NewMarkerToMap(vSend.Marker.Coords, 'Чужая точка', mtPoint, false);
+                    1:
+                        NewMarkerToMap(vSend.Marker.Coords, 'Радиация', mtPointRad, false);
+                    2:
+                        NewMarkerToMap(vSend.Marker.Coords, 'Аномалия', mtPointAnomaly, false);
+                    3:
+                        NewMarkerToMap(vSend.Marker.Coords, 'Чужой схрон', mtPointBag, false);
                   end;
+                  showmessage(TJSON.ObjectToJsonString(vSend));
+                  ExeExec(Format('insert into markers (lat, lon, marker_type_id, is_owner) values (%s, %s, %d, false);',[StringReplace(vSend.Marker.Coords.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(vSend.Marker.Coords.Longitude.ToString, ',', '.', [rfReplaceAll]), vSend.Marker.MarkerType]), exExecute, vQuery);
+                end
+              else
+              begin
+                if FIsMerchantZone then
+                  begin
+                    IdTCPClient.Host := vSend.Ip;
+                    IdTCPClient.Port := 2026;
 
-                finally
-                  IdTCPClient.Disconnect;
-                end;
+                    IdTCPClient.Connect;
+                    try
+                      IdTCPClient.IOHandler.WriteLn(TJson.ObjectToJsonString(Person), IndyUTF8Encoding(True));
+                      vStringData := TList<UnicodeString>.Create;
+                      try
+
+                        vAction := TJson.JsonToObject<TAction>(IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(True)));
+                        Page := 1;
+
+                        if vAction.PageCount > 1 then
+                        begin
+                          while Page <> vAction.PageCount do
+                          begin
+                            vStr := IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(True));
+
+                            if vStr[1] = '~' then
+                            begin
+                              vStringData[vStringData.Count - 1] := vStringData[vStringData.Count - 1] + Copy(vStr, 2, Length(vStr) - 1);
+                              Dec(Page);
+                            end
+                            else
+                              vStringData.Add(vStr);
+
+                            inc(Page);
+                          end;
+                        end;
+
+                        case vAction.SendType of
+                          stSell:
+                            begin
+                              vSell := TSell.Create;
+                              vSell := TJson.JsonToObject<TSell>(vAction.JSONObject);
+
+                              ExeExec(Format('insert into bag (table_name, row_id, health) values(''%s'', %d, %d);', [vSell.TableName, vSell.RowID, Round(vSell.Health)]), exExecute, FDQuery);
+                              Person.Cash := Person.Cash - vSell.Cost;
+                              ReloadBag;
+                            end;
+
+                          stCancelSell:
+                            ShowMessage('Недостаточно средств');
+
+                          stLoadArmor:
+                            begin
+
+                            end;
+                        end;
+                      finally
+                        FreeAndNil(vStringData);
+                      end;
+
+                    finally
+                      IdTCPClient.Disconnect;
+                    end;
+                  end
+                else
+                  ShowMessage('Нет подключения к сталкерской сети.');
               end;
             end;
           end);

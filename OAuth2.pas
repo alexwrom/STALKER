@@ -8,12 +8,22 @@ uses
   System.Net.HttpClient;
 
 const
-  API_url = 'http://192.168.1.22:2026/';
+  API_url = 'http://192.168.4.60:2026/';
 
-  function GetDataServer(aCommand: string; JSON: string = ''): string;
-  function PostDataServer(aCommand: string; JSON: string = ''): string;
+function GetDataServer(aCommand: string; JSON: string = ''): string;
+function PostDataServer(aCommand: string; JSON: string = ''): string;
 
 implementation
+
+function StreamToString(AStream: TStream; AEncoding: TEncoding): string;
+var
+  Bytes: TBytes;
+begin
+  AStream.Position := 0; // ВАЖНО!
+  SetLength(Bytes, AStream.Size);
+  AStream.Read(Bytes, 0, AStream.Size);
+  Result := AEncoding.GetString(Bytes);
+end;
 
 function SendRequest(URL: string; Headers: TDictionary<string, string>; JSON: string; Method: TRESTRequestMethod): string;
 var
@@ -21,6 +31,8 @@ var
   FRequest: TRestrequest;
   FResponse: TRestResponse;
   Key: String;
+  a: Integer;
+  Stream: TStringStream;
 begin
   Result := '';
   FRest := TRestClient.Create(URL);
@@ -43,7 +55,15 @@ begin
             end;
 
         if JSON <> '' then
-          FRequest.AddBody(JSON, 'application/json');
+        begin
+          Stream := TStringStream.Create(JSON, TEncoding.UTF8);
+          try
+            Stream.Position := 0;
+            FRequest.Body.Add(Stream, 'application/json');
+          finally
+            Stream.Free;
+          end;
+        end;
 
         try
           FRequest.Execute;
@@ -85,7 +105,7 @@ begin
   Headers.Add('Accept', 'application/json');
 
   Result := SendRequest(API_url + aCommand, Headers, JSON, rmPOST);
-  Headers.Free
+  Headers.Free;
 end;
 
 end.

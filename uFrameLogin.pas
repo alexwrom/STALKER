@@ -42,12 +42,14 @@ type
     procedure eNickNameExit(Sender: TObject);
     procedure eNickNameKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
     procedure btnShowPasswordClick(Sender: TObject);
+    procedure ePasswordKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
   private
     function GetData: boolean;
     procedure GetImage(AHex: UnicodeString);
     function GetMap: boolean;
     procedure GetServerData;
     constructor Create(AOwner: TComponent); override;
+    procedure NextStepToLoad;
     { Private declarations }
   public
     { Public declarations }
@@ -80,6 +82,7 @@ var
   I: Integer;
   vQuery: TFDQuery;
   vUser: TUser;
+  vJSON : string;
 begin
   Result := false;
   ProgressBar.Value := 0;
@@ -88,52 +91,54 @@ begin
     vUser.Username := eNickName.Text;
     vUser.Password := ePassword.Text;
     vUser.UserID := -1;
-    try
-      AAnswer := TJSON.JsonToObject<TAnswer>(PostDataServer('api/get_data', TJSON.ObjectToJsonString(vUser)));
-    except
-      Result := false;
 
-      TThread.Synchronize(nil,
-        procedure
-        begin
-          Showmessage('Нет связи с сетью');
-        end);
-    end;
+    AAnswer := TJSON.JsonToObject<TAnswer>(PostDataServer('api/get_data',TJSON.ObjectToJsonString(vUser)));
 
-    if AAnswer.Status = 'success' then
-    begin
-      AData := TJSON.JsonToObject<TData>(AAnswer.Json);
-
-      TThread.Synchronize(nil,
-        procedure
-        begin
-          ProgressBar.Max := AData.SQL.Count;
-        end);
-
-      for I := 0 to AData.SQL.Count - 1 do
+    if Assigned(AAnswer) then
+      if (AAnswer.Status = 'success') then
       begin
-        vSQL := vSQL + AData.SQL[I];
+        AData := TJSON.JsonToObject<TData>(AAnswer.Json);
 
         TThread.Synchronize(nil,
           procedure
           begin
-            ProgressBar.Value := ProgressBar.Value + 1;
+            ProgressBar.Max := AData.SQL.Count;
           end);
-      end;
 
-      try
-        ExeExec(vSQL, exExecute, vQuery);
-        Result := true;
-      except
+        for I := 0 to AData.SQL.Count - 1 do
+        begin
+          vSQL := vSQL + AData.SQL[I];
+
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              ProgressBar.Value := ProgressBar.Value + 1;
+            end);
+        end;
+
+        try
+          ExeExec(vSQL, exExecute, vQuery);
+          Result := true;
+        except
+          Result := false;
+
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              Showmessage('Ошибка обновления базы');
+            end);
+        end;
+      end
+      else
+      begin
         Result := false;
 
         TThread.Synchronize(nil,
           procedure
           begin
-            Showmessage('Ошибка обновления базы');
+            Showmessage(AAnswer.Message);
           end);
-      end;
-    end
+      end
     else
     begin
       Result := false;
@@ -141,7 +146,7 @@ begin
       TThread.Synchronize(nil,
         procedure
         begin
-          Showmessage(AAnswer.Message);
+          Showmessage('Нет связи с сетью');
         end);
     end;
   finally
@@ -213,34 +218,41 @@ begin
   end;
 end;
 
+procedure TFrameLogin.NextStepToLoad;
+begin
+   Person.Username := eNickName.Text;
+   layEnterName.Visible := false;
+   recLoading.Visible := true;
+   layPanel.Margins.Bottom := 0;
+
+   GetServerData;
+end;
+
 procedure TFrameLogin.btnConfirmNameClick(Sender: TObject);
 begin
-  if eNickName.Text = '' then
-    Showmessage('Введи свое имя')
-  else if ePassword.Text = '' then
-    Showmessage('Введи свой пароль')
-  else
-  begin
-    PermissionsService.RequestPermissions(['android.permission.WRITE_EXTERNAL_STORAGE'],
-      procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
-
-      var
-        vQuery: TFDQuery;
-      begin
-        if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
+  if (layBtn.Visible) then
+    if eNickName.Text = '' then
+      Showmessage('Введи свое имя')
+    else if ePassword.Text = '' then
+      Showmessage('Введи свой пароль')
+    else
+    begin
+      if TOSVersion.Check(12) then
+        NextStepToLoad
+      else
+      PermissionsService.RequestPermissions(['android.permission.WRITE_EXTERNAL_STORAGE'],
+        procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
+        var
+          vQuery: TFDQuery;
         begin
-          Person.Username := eNickName.Text;
-          layEnterName.Visible := false;
-          recLoading.Visible := true;
-
-          GetServerData;
-        end
-        else
-        begin
-          Showmessage('Необходимы разрешения для к памяти устройства.');
-        end;
-      end);
-  end;
+          if (Length(GrantResults) = 1) and (GrantResults[0] = TPermissionStatus.Granted) then
+            NextStepToLoad
+          else
+          begin
+            Showmessage('Необходимы разрешения к памяти устройства.');
+          end;
+        end);
+    end;
 end;
 
 procedure TFrameLogin.btnShowPasswordClick(Sender: TObject);
@@ -266,7 +278,13 @@ end;
 
 procedure TFrameLogin.eNickNameKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
 begin
-  if (Key = 13) and (btnConfirmName.Visible) then
+  if (Key = 13) then
+    ePassword.SetFocus;
+end;
+
+procedure TFrameLogin.ePasswordKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
+begin
+  if (Key = 13) then
     btnConfirmNameClick(nil);
 end;
 

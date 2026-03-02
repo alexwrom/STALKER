@@ -222,6 +222,7 @@ end;
 
 procedure TFrameIssuies.btnToActiveClick(Sender: TObject);
 begin
+  BtnClickMedia;
   TabControl.ActiveTab := TabIssuies;
   recSelectMenu.Parent := imgBtnActive;
   LoadIssuies(0);
@@ -229,6 +230,7 @@ end;
 
 procedure TFrameIssuies.btnToCancelClick(Sender: TObject);
 begin
+  BtnClickMedia;
   TabControl.ActiveTab := TabIssuies;
   recSelectMenu.Parent := imgBtnCancel;
   LoadIssuies(2);
@@ -236,6 +238,7 @@ end;
 
 procedure TFrameIssuies.btnToCompleteClick(Sender: TObject);
 begin
+  BtnClickMedia;
   TabControl.ActiveTab := TabIssuies;
   recSelectMenu.Parent := imgBtnComplete;
   LoadIssuies(1);
@@ -243,6 +246,7 @@ end;
 
 procedure TFrameIssuies.btnToInfoClick(Sender: TObject);
 begin
+  BtnClickMedia;
   recSelectNotification.Parent := nil;
   labMessageText.Text := '';
   TabControl.ActiveTab := TabInfo;
@@ -319,6 +323,7 @@ procedure TFrameIssuies.ItemNotificationClick(FTagObject: TObject; FItem: TFMXOb
 var
   vQuery: TFDQuery;
 begin
+  BtnClickMedia;
   recSelectNotification.Parent := (FItem as TControlItem).rcBackground;
   recSelectNotification.Align := TAlignLayout.Bottom;
   recSelectNotification.BringToFront;
@@ -356,6 +361,7 @@ var
   end;
 
 begin
+  BtnClickMedia;
   recSelect.Parent := (FItem as TControlItem).rcBackground;
   recSelect.Align := TAlignLayout.Bottom;
   recSelect.BringToFront;

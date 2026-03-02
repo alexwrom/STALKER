@@ -5,9 +5,9 @@ interface
 type
   TUser = class
   private
+    FUsername: string;
     FUserID: integer;
     FPassword: string;
-    FUsername: string;
   published
     property Username: string read FUsername write FUsername;
     property Password: string read FPassword write FPassword;

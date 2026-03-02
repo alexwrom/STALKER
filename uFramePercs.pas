@@ -235,6 +235,7 @@ implementation
 
 procedure TFramePercs.btnArmorInfoClick(Sender: TObject);
 begin
+  BtnClickMedia;
   infoRadiation.Width := infoRadiation.Tag * FArmorPerc.RadiationArmor / 100;
   infoChimishe.Width := infoChimishe.Tag * FArmorPerc.ChimisheArmor / 100;
   infoElectro.Width := infoElectro.Tag * FArmorPerc.ElectroArmor / 100;
@@ -270,6 +271,7 @@ procedure TFramePercs.btnClearArmorWeaponClick(Sender: TObject);
 var
   vQuery: TFDQuery;
 begin
+  BtnClickMedia;
   if layInfo.Tag = 0 then
   begin
     ExeExec('insert into bag (table_name, row_id, health) select ''arts'', art_id, 100 from belt;', exExecute, vQuery);
@@ -290,6 +292,7 @@ procedure TFramePercs.btnClearArtClick(Sender: TObject);
 var
   vQuery: TFDQuery;
 begin
+  BtnClickMedia;
   ExeExec('delete from belt where slot = ' + layInfo.Tag.ToString + ';', exExecute, vQuery);
   ExeExec('update belt set slot = slot - 1 where slot > ' + layInfo.Tag.ToString + ';', exExecute, vQuery);
   ExeExec('insert into bag (table_name, row_id, health) values (''arts'',' + FArtsList[layInfo.Tag - 1].ID.ToString + ', 100);', exExecute, vQuery);
@@ -299,16 +302,19 @@ end;
 
 procedure TFramePercs.btnCloseInfoClick(Sender: TObject);
 begin
+  BtnClickMedia;
   layInfo.Visible := false;
 end;
 
 procedure TFramePercs.btnClosePercsUpClick(Sender: TObject);
 begin
+  BtnClickMedia;
   layPercsUp.Visible := false;
 end;
 
 procedure TFramePercs.btnInfoClick(Sender: TObject);
 begin
+  BtnClickMedia;
   if FArtsList.Count >= (Sender as TSpeedButton).Tag then
   begin
     infoRadiation.Width := infoRadiation.Tag * FArtsList[(Sender as TSpeedButton).Tag - 1].RadiationArmor / 100;
@@ -344,16 +350,19 @@ end;
 
 procedure TFramePercs.btnOpenDetectorClick(Sender: TObject);
 begin
+  BtnClickMedia;
   GoToDetector;
 end;
 
 procedure TFramePercs.btnOpenPercsClick(Sender: TObject);
 begin
+  BtnClickMedia;
   layPercsUp.Visible := true;
 end;
 
 procedure TFramePercs.btnWeaponInfoClick(Sender: TObject);
 begin
+  BtnClickMedia;
   layInfo.Tag := 1;
   layPercs.Visible := false;
   layClearArt.Visible := false;

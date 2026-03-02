@@ -47,6 +47,7 @@ type
     Arrow: TImage;
     Index: integer;
     Radius: integer;
+    IsOwner: boolean;
   end;
 
   TCritical = record
@@ -207,6 +208,8 @@ procedure CreateFrameLogin;
 {$IF Defined(ANDROID)}
 procedure Vibration(AValue: integer);
 {$ENDIF}
+procedure BtnClickMedia;
+procedure NewMarkerToMap(ACoords: TLocationCoord2D; AText: String; AMarkerType: TMarkerType; AIsOwner: boolean);
 
 var
   Person: TPerson;
@@ -233,6 +236,7 @@ var
   FBottomRightLon: double;
 
   FKillType: TKillType;
+  FIsSendMarkers: boolean;
 
 implementation
 
@@ -399,7 +403,7 @@ begin
         if ((Value > 20) and (RoundTo(FHealth, -2) < RoundTo(Value, -2))) then
         begin
           MainForm.layMenu.Enabled := true;
-          MainForm.igeDeadGlow.Enabled := false;
+          MainForm.layDeadGlow.Visible := false;
           FIsDead := false;
           FKillType := ktLive;
         end
@@ -407,8 +411,8 @@ begin
         begin
           MainForm.layMenu.Enabled := false;
           MainForm.animBlood.Stop;
-          MainForm.igeDeadGlow.Opacity := 1;
-          MainForm.igeDeadGlow.Enabled := true;
+          MainForm.layDeadGlow.Opacity := 1;
+          MainForm.layDeadGlow.Visible := true;
           FIsDead := true;
         end;
 
@@ -477,8 +481,8 @@ begin
         FIsDead := true;
         MainForm.animBlood.Stop;
         MainForm.recSelect.Parent := MainForm.imgBtnMap;
-        MainForm.igeDeadGlow.Opacity := 1;
-        MainForm.igeDeadGlow.Enabled := true;
+        MainForm.layDeadGlow.Opacity := 1;
+        MainForm.layDeadGlow.Visible := true;
 
         MainForm.layMenu.Enabled := false;
         MainForm.TabControl.ActiveTab := MainForm.TabMap;
@@ -489,6 +493,7 @@ begin
           MainForm.FFrameMap.MediaPlayerDead.CurrentTime := 0;
           MainForm.FFrameMap.MediaPlayerDead.Play;
           MainForm.FFrameMap.MediaPlayerRad.Stop;
+          MainForm.FFrameMap.MediaPlayerScanAnomaly.Stop;
           MainForm.FFrameMap.MediaPlayerAnomaly.Stop;
         end;
 
@@ -500,7 +505,7 @@ begin
           FWeaponHealth := Ifthen(Random(4) in [1, 2, 3], 0, FWeaponHealth);
 
           ExeExec(Format('update users set health = %s, armor_health = %s, weapon_health = %s;', [StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]), StringReplace(FArmorHealth.ToString, ',', '.', [rfReplaceAll]),
-          StringReplace(FWeaponHealth.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
+            StringReplace(FWeaponHealth.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
 
           SetHealthArmor(FArmorHealth);
           SetHealthWeapon(FWeaponHealth);
@@ -520,6 +525,7 @@ begin
                 2:
                   begin
                     FKillType := ktCritical;
+                    MainForm.layDeadGlow.Visible := false;
 
                     TotalSeconds := 1 * 60 * 60 - SecondsBetween(NOW(), vLastActionDateTime);
 
@@ -544,7 +550,7 @@ begin
                 5:
                   begin
                     FKillType := ktPSI;
-
+                    MainForm.layDeadGlow.Visible := false;
                     TotalSeconds := 30 * 60 - SecondsBetween(NOW(), vLastActionDateTime);
 
                     // Создаем TTimeSpan
@@ -647,7 +653,6 @@ end;
 function ExeExec(Str: UnicodeString; Typ: TExecType; var AQuery: TFDQuery): boolean;
 var
   FDConn: TFDConnection;
-  FilePath: string;
 begin
   result := true;
   // 0 - запрос на отображение списка
@@ -684,7 +689,7 @@ begin
         try
           AQuery.SQL.Append('BEGIN TRANSACTION;');
           AQuery.SQL.Append(Str);
-          //AQuery.SQL.Append('commit;');
+          // AQuery.SQL.Append('commit;');
           AQuery.ExecSQL();
           FDConn.Commit;
           FreeQueryAndConn(AQuery);
@@ -802,7 +807,7 @@ end;
 
 procedure StartDamageGlow;
 begin
-  MainForm.igeDeadGlow.Enabled := true;
+  MainForm.layDeadGlow.Visible := true;
   MainForm.animBlood.Start;
 end;
 
@@ -851,6 +856,21 @@ begin
     MainForm.FFramePercs.SetDetector(vQuery.FieldByName('detector_id').AsInteger, vQuery.FieldByName('radius').AsInteger, vQuery.FieldByName('level').AsInteger);
 
   FreeQueryAndConn(vQuery);
+end;
+
+procedure BtnClickMedia;
+begin
+  MainForm.MediaPlayerMenu.CurrentTime := 0;
+  MainForm.MediaPlayerMenu.Play;
+   MainForm.MediaPlayerMenu.Volume := 5;
+{$IF Defined(ANDROID)}
+  Vibration(50);
+{$ENDIF}
+end;
+
+procedure NewMarkerToMap(ACoords: TLocationCoord2D; AText: String; AMarkerType: TMarkerType; AIsOwner: boolean);
+begin
+  MainForm.FFrameMap.NewMarkerToMap(ACoords, AText, AMarkerType, AIsOwner);
 end;
 
 end.
