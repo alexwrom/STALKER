@@ -212,8 +212,7 @@ begin
           begin
             SSID := JStringToString(ScanResult.SSID);
             BSSID := JStringToString(ScanResult.BSSID);
-            Freq := ScanResult.frequency;
-            rssi := ScanResult.level;
+
             // Пропускаем скрытые сети
             if (SSID = '') or (SSID = '<unknown ssid>') then
               Continue;
@@ -256,7 +255,6 @@ begin
       WifiNetworkSpecifier: JWifiNetworkSpecifier;
       NetworkRequestBuilder: JNetworkRequest_Builder;
       NetworkRequest: JNetworkRequest;
-      NetworkCallback: JConnectivityManager_NetworkCallback;
       Service: JObject;
       Context: JContext;
       FCurrentNetworkRequest: JNetworkRequest;
@@ -264,26 +262,25 @@ begin
       FNetworkCallback: JConnectivityManager_NetworkCallback;
       Suggestion: JWifiNetworkSuggestion;
       SuggestionsList: JArrayList;
-      Status: Integer;
       Intent: JIntent;
     begin
       if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
       begin
         try // Создаем предложение сети (WifiNetworkSuggestion)
-          Suggestion := TJWifiNetworkSuggestion_Builder.JavaClass.init.setSsid(StringToJString(MERCHANT_WIFI)).setWpa2Passphrase(StringToJString(MERCHANT_PASS)).setIsAppInteractionRequired(False).setIsHiddenSsid(False).build;
+          Suggestion := TJWifiNetworkSuggestion_Builder.JavaClass.init.setSsid(StringToJString(MERCHANT_WIFI)).setWpa2Passphrase(StringToJString(MERCHANT_PASS)).setIsAppInteractionRequired(True).setIsHiddenSsid(True).build;
 
           // Создаем список предложений
           SuggestionsList := TJArrayList.JavaClass.init;
           SuggestionsList.Add(Suggestion);
 
           // Добавляем предложения в систему
-          Status := WiFiManager.addNetworkSuggestions(JList(SuggestionsList));
+          WiFiManager.addNetworkSuggestions(JList(SuggestionsList));
 
           // Получаем ConnectivityManager
           Context := TAndroidHelper.Context;
           Service := Context.getSystemService(TJContext.JavaClass.CONNECTIVITY_SERVICE);
 
-          if true then // Assigned(Service) then
+          if Assigned(Service) then
           begin
             ConnectivityManager := TJConnectivityManager.Wrap((Service as ILocalObject).GetObjectID);
             // Создаем спецификацию Wi-Fi сети

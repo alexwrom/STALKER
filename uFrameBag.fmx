@@ -1,7 +1,7 @@
 object FrameBag: TFrameBag
   Align = Client
-  Size.Width = 624.000000000000000000
-  Size.Height = 340.000000000000000000
+  Size.Width = 681.000000000000000000
+  Size.Height = 498.000000000000000000
   Size.PlatformDefault = False
   object recSkin: TRectangle
     Align = Contents
@@ -2485,24 +2485,24 @@ object FrameBag: TFrameBag
       FA48A3E2FF1C9BED6DEB7F017CD9E484923AAE0F0000000049454E44AE426082}
     Fill.Bitmap.WrapMode = Tile
     Fill.Kind = Bitmap
-    Size.Width = 624.000000000000000000
-    Size.Height = 340.000000000000000000
+    Size.Width = 681.000000000000000000
+    Size.Height = 498.000000000000000000
     Size.PlatformDefault = False
     Stroke.Kind = None
   end
   object TabControl: TTabControl
     Align = Client
-    Size.Width = 624.000000000000000000
-    Size.Height = 265.000000000000000000
+    Size.Width = 681.000000000000000000
+    Size.Height = 423.000000000000000000
     Size.PlatformDefault = False
     TabIndex = 0
     TabOrder = 6
     TabPosition = None
     Sizes = (
-      624s
-      265s
-      624s
-      265s)
+      681s
+      423s
+      681s
+      423s)
     object TabClassic: TTabItem
       CustomIcon = <
         item
@@ -4998,8 +4998,8 @@ object FrameBag: TFrameBag
           FA48A3E2FF1C9BED6DEB7F017CD9E484923AAE0F0000000049454E44AE426082}
         Fill.Bitmap.WrapMode = Tile
         Fill.Kind = Bitmap
-        Size.Width = 624.000000000000000000
-        Size.Height = 265.000000000000000000
+        Size.Width = 681.000000000000000000
+        Size.Height = 423.000000000000000000
         Size.PlatformDefault = False
         Stroke.Kind = None
         object InnerGlowEffect14: TInnerGlowEffect
@@ -5010,16 +5010,16 @@ object FrameBag: TFrameBag
       end
       object VertScrollBox: TVertScrollBox
         Align = Client
-        Size.Width = 624.000000000000000000
-        Size.Height = 265.000000000000000000
+        Size.Width = 681.000000000000000000
+        Size.Height = 423.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
-        Viewport.Width = 624.000000000000000000
-        Viewport.Height = 265.000000000000000000
+        Viewport.Width = 681.000000000000000000
+        Viewport.Height = 423.000000000000000000
         object layBag: TLayout
           Align = Top
           HitTest = True
-          Size.Width = 624.000000000000000000
+          Size.Width = 681.000000000000000000
           Size.Height = 121.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 0
@@ -5027,7 +5027,7 @@ object FrameBag: TFrameBag
             Align = Contents
             ClipChildren = True
             HitTest = False
-            Size.Width = 624.000000000000000000
+            Size.Width = 681.000000000000000000
             Size.Height = 121.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 1
@@ -5037,7 +5037,7 @@ object FrameBag: TFrameBag
           end
           object flElements: TFlowLayout
             Align = Client
-            Size.Width = 624.000000000000000000
+            Size.Width = 681.000000000000000000
             Size.Height = 121.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 0
@@ -7543,8 +7543,8 @@ object FrameBag: TFrameBag
           FA48A3E2FF1C9BED6DEB7F017CD9E484923AAE0F0000000049454E44AE426082}
         Fill.Bitmap.WrapMode = Tile
         Fill.Kind = Bitmap
-        Size.Width = 624.000000000000000000
-        Size.Height = 265.000000000000000000
+        Size.Width = 681.000000000000000000
+        Size.Height = 423.000000000000000000
         Size.PlatformDefault = False
         Stroke.Kind = None
         object InnerGlowEffect13: TInnerGlowEffect
@@ -7555,8 +7555,8 @@ object FrameBag: TFrameBag
       end
       object VertScrollBox2: TVertScrollBox
         Align = Client
-        Size.Width = 624.000000000000000000
-        Size.Height = 265.000000000000000000
+        Size.Width = 681.000000000000000000
+        Size.Height = 423.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
         Viewport.Width = 608.000000000000000000
@@ -10902,7 +10902,7 @@ object FrameBag: TFrameBag
   end
   object layTopBorder: TLayout
     Align = Top
-    Size.Width = 624.000000000000000000
+    Size.Width = 681.000000000000000000
     Size.Height = 40.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 5
@@ -12160,14 +12160,14 @@ object FrameBag: TFrameBag
         end>
       Align = Client
       Opacity = 0.899999976158142100
-      Size.Width = 624.000000000000000000
+      Size.Width = 681.000000000000000000
       Size.Height = 40.000000000000000000
       Size.PlatformDefault = False
       WrapMode = Stretch
       object Label4: TLabel
         Align = Client
         StyledSettings = [Style]
-        Size.Width = 624.000000000000000000
+        Size.Width = 681.000000000000000000
         Size.Height = 40.000000000000000000
         Size.PlatformDefault = False
         TextSettings.Font.Family = 'YouTube Sans Dark'
@@ -12183,7 +12183,7 @@ object FrameBag: TFrameBag
           Margins.Top = 5.000000000000000000
           Margins.Right = 5.000000000000000000
           Margins.Bottom = 5.000000000000000000
-          Position.X = 541.000000000000000000
+          Position.X = 598.000000000000000000
           Position.Y = 5.000000000000000000
           Size.Width = 78.000000000000000000
           Size.Height = 30.000000000000000000
@@ -12197,8 +12197,8 @@ object FrameBag: TFrameBag
   object recCash: TRectangle
     Align = Bottom
     Fill.Color = xB4111611
-    Position.Y = 305.000000000000000000
-    Size.Width = 624.000000000000000000
+    Position.Y = 463.000000000000000000
+    Size.Width = 681.000000000000000000
     Size.Height = 35.000000000000000000
     Size.PlatformDefault = False
     Stroke.Kind = None
@@ -12241,23 +12241,23 @@ object FrameBag: TFrameBag
   object layInfo: TLayout
     Align = Contents
     Margins.Left = -1.000000000000000000
-    Size.Width = 625.000000000000000000
-    Size.Height = 340.000000000000000000
+    Size.Width = 682.000000000000000000
+    Size.Height = 498.000000000000000000
     Size.PlatformDefault = False
     Visible = False
     TabOrder = 4
     object recBackground: TRectangle
       Align = Contents
       Fill.Color = xD2000000
-      Size.Width = 625.000000000000000000
-      Size.Height = 340.000000000000000000
+      Size.Width = 682.000000000000000000
+      Size.Height = 498.000000000000000000
       Size.PlatformDefault = False
       Stroke.Kind = None
     end
     object btnCloseInfo: TSpeedButton
       Align = Contents
-      Size.Width = 625.000000000000000000
-      Size.Height = 340.000000000000000000
+      Size.Width = 682.000000000000000000
+      Size.Height = 498.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = 'stoptoolbutton'
       OnClick = btnCloseInfoClick

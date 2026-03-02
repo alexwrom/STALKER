@@ -20,7 +20,6 @@ var
   i: integer;
   vColName: string;
   vColValue: UnicodeString;
-  vStr: string;
 begin
   vColumns := TList<TColumn>.Create;
   try
@@ -88,8 +87,6 @@ begin
 end;
 
 function GoGenericBaseData(): TList<UnicodeString>;
-var
-  FDQuery: TFDQuery;
 begin
   // Порядок важен
   Result := TList<UnicodeString>.Create;

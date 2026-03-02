@@ -149,7 +149,7 @@ uses
 
 procedure TMainForm.FormActivate(Sender: TObject);
 begin
-   timerScannerWifiMerchant.Enabled := true;
+  timerScannerWifiMerchant.Enabled := true;
 end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
@@ -451,24 +451,29 @@ begin
         stSell:
           begin
             vSell := TSell.Create;
-            vSell := TJSON.JsonToObject<TSell>(FFrameBag.FActiveAction.JSONObject);
 
-            FFrameBag.FActiveAction.PageCount := 1;
+            try
+              vSell := TJSON.JsonToObject<TSell>(FFrameBag.FActiveAction.JSONObject);
 
-            if TJSON.JsonToObject<TPerson>(vAnswerText).Cash - vSell.Cost >= 0 then
-            begin
-              ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''' + vSell.TableName + ''' and row_id = ' + vSell.RowID.ToString + ' and health = ' + vSell.Health.ToString + ' limit 1);', exExecute, FDQuery);
-              Person.Cash := Person.Cash + vSell.Cost;
+              FFrameBag.FActiveAction.PageCount := 1;
 
-              AContext.Connection.Socket.WriteLn(TJSON.ObjectToJsonString(FFrameBag.FActiveAction), IndyUTF8Encoding(true));
-              AContext.Connection.Disconnect;
-            end
-            else
-            begin
-              FFrameBag.FActiveAction.SendType := stCancelSell;
-              FFrameBag.FActiveAction.JSONObject := '0';
-              AContext.Connection.Socket.WriteLn(TJSON.ObjectToJsonString(FFrameBag.FActiveAction), IndyUTF8Encoding(true));
-              AContext.Connection.Disconnect;
+              if TJSON.JsonToObject<TPerson>(vAnswerText).Cash - vSell.Cost >= 0 then
+              begin
+                ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''' + vSell.TableName + ''' and row_id = ' + vSell.RowID.ToString + ' and health = ' + vSell.Health.ToString + ' limit 1);', exExecute, FDQuery);
+                Person.Cash := Person.Cash + vSell.Cost;
+
+                AContext.Connection.Socket.WriteLn(TJSON.ObjectToJsonString(FFrameBag.FActiveAction), IndyUTF8Encoding(true));
+                AContext.Connection.Disconnect;
+              end
+              else
+              begin
+                FFrameBag.FActiveAction.SendType := stCancelSell;
+                FFrameBag.FActiveAction.JSONObject := '0';
+                AContext.Connection.Socket.WriteLn(TJSON.ObjectToJsonString(FFrameBag.FActiveAction), IndyUTF8Encoding(true));
+                AContext.Connection.Disconnect;
+              end;
+            finally
+              vSell.Free;
             end;
           end;
       end;
@@ -482,8 +487,6 @@ procedure TMainForm.btnKillClick(Sender: TObject);
 begin
   MessageDlg('Ты умер в бою?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
     procedure(const AResult: TModalResult)
-    var
-      vQuery: TFDQuery;
     begin
       if (AResult = mrYes) then
       begin
@@ -498,7 +501,7 @@ end;
 
 procedure TMainForm.btnToBagClick(Sender: TObject);
 begin
- BtnClickMedia;
+  BtnClickMedia;
   LoadBag;
   recSelect.Parent := imgBtnBag;
 
@@ -514,26 +517,37 @@ end;
 
 procedure TMainForm.CreateBagFrame;
 begin
-  if Assigned(FFrameBag) then
+  TTask.Run(procedure
   begin
-    FFrameBag.Parent := nil;
-    FFrameBag.Visible := false;
-    FreeAndNil(FFrameBag);
-  end;
+    if Assigned(FFrameBag) then
+      begin
+        FFrameBag.Parent := nil;
+        FFrameBag.Visible := false;
 
-  FFrameBag := TFrameBag.Create(TabBag);
-  FFrameBag.Parent := TabBag;
-  FFrameBag.layBag.Height := FFrameBag.Height - FFrameBag.layTopBorder.Height - FFrameBag.recCash.Height + 63;
-  FFrameBag.layBag.Width := FFrameBag.Width;
-  FFrameBag.CreateElements(true);
+        while Assigned(FFrameBag) do
+          FreeAndNil(FFrameBag);
+      end;
 
-  FFrameBag.LoadBagElements;
+      TThread.Synchronize(nil,
+      procedure
+      begin
+        FFrameBag := TFrameBag.Create(TabBag);
+        FFrameBag.Parent := TabBag;
+        FFrameBag.layBag.Height := FFrameBag.Height - FFrameBag.layTopBorder.Height - FFrameBag.recCash.Height + 63;
+        FFrameBag.layBag.Width := FFrameBag.Width;
+        FFrameBag.CreateElements(true);
 
-  FFrameBag.SwitchStyle.IsChecked := Person.IsClassicBag;
-  FFrameBag.BringToFront;
+        FFrameBag.LoadBagElements;
 
-  Person.Cash := Person.Cash;
-  Person.GroupId := Person.GroupId;
+        FFrameBag.SwitchStyle.IsChecked := Person.IsClassicBag;
+        FFrameBag.BringToFront;
+
+        Person.Cash := Person.Cash;
+        Person.GroupId := Person.GroupId;
+      end);
+
+  end);
+
 end;
 
 procedure TMainForm.btnToIssuiesClick(Sender: TObject);
@@ -604,7 +618,7 @@ end;
 procedure TMainForm.timerScannerWifiMerchantTimer(Sender: TObject);
 begin
 {$IFDEF ANDROID}
-  TThread.CreateAnonymousThread(
+  TTask.Run(
     procedure
     begin
       if Assigned(Self) then
@@ -628,7 +642,7 @@ begin
               TimerUpdateData.Enabled := FIsMerchantZone;
           end);
       end;
-    end).Start;
+    end);
 
 {$ENDIF}
 end;
@@ -642,7 +656,6 @@ begin
       vData: TData;
       vUserdata: TUserdata;
       vSQL: Unicodestring;
-      I: Integer;
       vQuery: TFDQuery;
     begin
       try

@@ -383,11 +383,9 @@ var
   AFormatSettings: TFormatSettings;
   vIntKillType: integer;
   vLastActionDateTime: TDateTime;
-  TimeParts: TArray<string>;
   Hours: integer;
   Minutes: integer;
   Seconds: integer;
-  vTimeDiff: TTime;
   TotalSeconds: Int64;
   TimeSpan: TTimeSpan;
 begin

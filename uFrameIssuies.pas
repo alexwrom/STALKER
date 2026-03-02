@@ -137,7 +137,6 @@ end;
 procedure TFrameIssuies.LoadInfo;
 var
   I: integer;
-  vItem: TListViewItem;
   listitem: TControlItem;
 begin
   LoadInfoData;
@@ -275,7 +274,6 @@ end;
 procedure TFrameIssuies.LoadIssuies(AStatus: integer);
 var
   I: integer;
-  vItem: TListViewItem;
   listitem: TControlItem;
 begin
   ClearSelection;

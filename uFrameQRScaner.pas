@@ -159,12 +159,10 @@ begin
           procedure
           var
             FDQuery: TFDQuery;
-            vAnswer: string;
             vSend: TSend;
             vAction: TAction;
             vSell: TSell;
             vStringData: TList<UnicodeString>;
-            I: Integer;
             Page, vRowID: Integer;
             vStr, vTableName: string;
             vQuery: TFDQuery;
@@ -177,126 +175,138 @@ begin
               StopScan;
 
               vSend := TSend.Create;
-              vSend := TJson.JsonToObject<TSend>(ReadResult.Text);
 
-              if vSend.Code <> '' then
-              begin
-                case Length(vSend.Code) of
-                  2: // Детектор      {"code":"01"}
-                    begin
-                      SetDetector(vSend.Code.ToInteger());
-                      ExeExec(Format('update users set detector_id = %d;', [vSend.Code.ToInteger()]), exExecute, FDQuery);
-                    end;
-                  3: // Смена группировки  {"code":"001"}
-                    begin
-                      Person.GroupId := vSend.Code.ToInteger;
-                      ExeExec(Format('update users set group_id = %d;', [vSend.Code.ToInteger()]), exExecute, FDQuery);
-                    end;
-                  5: // Добавление в сумку   {"code":"01001"}
-                    begin
-                      case Copy(vSend.Code, 1, 2).ToInteger of
-                        1:
-                          vTableName := 'armors';
-                        2:
-                          vTableName := 'arts';
-                        3:
-                          vTableName := 'medical';
-                        4:
-                          vTableName := 'weapons';
-                      end;
+              try
+                vSend := TJson.JsonToObject<TSend>(ReadResult.Text);
 
-                      vRowID := Copy(vSend.Code, 3, 3).ToInteger;
-
-                      ExeExec(Format('insert into bag (table_name, row_id, health) values(''%s'', %d, 100);', [vTableName, vRowID]), exExecute, FDQuery);
-                    end;
-                  7: // Деньги      {"code":"0050000"}
-                    begin
-                      Person.Cash := Person.Cash + vSend.Code.ToInteger;
-                      ExeExec(Format('update users set cash = %d;', [Round(Person.Cash)]), exExecute, FDQuery);
-                    end;
-                end;
-              end
-              else
-              if Assigned(vSend.Marker) then
+                if vSend.Code <> '' then
                 begin
-                   case vSend.Marker.MarkerType of
-                    0:
-                        NewMarkerToMap(vSend.Marker.Coords, 'Чужая точка', mtPoint, false);
-                    1:
-                        NewMarkerToMap(vSend.Marker.Coords, 'Радиация', mtPointRad, false);
-                    2:
-                        NewMarkerToMap(vSend.Marker.Coords, 'Аномалия', mtPointAnomaly, false);
-                    3:
-                        NewMarkerToMap(vSend.Marker.Coords, 'Чужой схрон', mtPointBag, false);
-                  end;
-                  showmessage(TJSON.ObjectToJsonString(vSend));
-                  ExeExec(Format('insert into markers (lat, lon, marker_type_id, is_owner) values (%s, %s, %d, false);',[StringReplace(vSend.Marker.Coords.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(vSend.Marker.Coords.Longitude.ToString, ',', '.', [rfReplaceAll]), vSend.Marker.MarkerType]), exExecute, vQuery);
-                end
-              else
-              begin
-                if FIsMerchantZone then
-                  begin
-                    IdTCPClient.Host := vSend.Ip;
-                    IdTCPClient.Port := 2026;
-
-                    IdTCPClient.Connect;
-                    try
-                      IdTCPClient.IOHandler.WriteLn(TJson.ObjectToJsonString(Person), IndyUTF8Encoding(True));
-                      vStringData := TList<UnicodeString>.Create;
-                      try
-
-                        vAction := TJson.JsonToObject<TAction>(IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(True)));
-                        Page := 1;
-
-                        if vAction.PageCount > 1 then
-                        begin
-                          while Page <> vAction.PageCount do
-                          begin
-                            vStr := IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(True));
-
-                            if vStr[1] = '~' then
-                            begin
-                              vStringData[vStringData.Count - 1] := vStringData[vStringData.Count - 1] + Copy(vStr, 2, Length(vStr) - 1);
-                              Dec(Page);
-                            end
-                            else
-                              vStringData.Add(vStr);
-
-                            inc(Page);
-                          end;
-                        end;
-
-                        case vAction.SendType of
-                          stSell:
-                            begin
-                              vSell := TSell.Create;
-                              vSell := TJson.JsonToObject<TSell>(vAction.JSONObject);
-
-                              ExeExec(Format('insert into bag (table_name, row_id, health) values(''%s'', %d, %d);', [vSell.TableName, vSell.RowID, Round(vSell.Health)]), exExecute, FDQuery);
-                              Person.Cash := Person.Cash - vSell.Cost;
-                              ReloadBag;
-                            end;
-
-                          stCancelSell:
-                            ShowMessage('Недостаточно средств');
-
-                          stLoadArmor:
-                            begin
-
-                            end;
-                        end;
-                      finally
-                        FreeAndNil(vStringData);
+                  case Length(vSend.Code) of
+                    2: // Детектор      {"code":"01"}
+                      begin
+                        SetDetector(vSend.Code.ToInteger());
+                        ExeExec(Format('update users set detector_id = %d;', [vSend.Code.ToInteger()]), exExecute, FDQuery);
                       end;
+                    3: // Смена группировки  {"code":"001"}
+                      begin
+                        Person.GroupId := vSend.Code.ToInteger;
+                        ExeExec(Format('update users set group_id = %d;', [vSend.Code.ToInteger()]), exExecute, FDQuery);
+                      end;
+                    5: // Добавление в сумку   {"code":"01001"}
+                      begin
+                        case Copy(vSend.Code, 1, 2).ToInteger of
+                          1:
+                            vTableName := 'armors';
+                          2:
+                            vTableName := 'arts';
+                          3:
+                            vTableName := 'medical';
+                          4:
+                            vTableName := 'weapons';
+                        end;
 
-                    finally
-                      IdTCPClient.Disconnect;
+                        vRowID := Copy(vSend.Code, 3, 3).ToInteger;
+
+                        ExeExec(Format('insert into bag (table_name, row_id, health) values(''%s'', %d, 100);', [vTableName, vRowID]), exExecute, FDQuery);
+                      end;
+                    7: // Деньги      {"code":"0050000"}
+                      begin
+                        Person.Cash := Person.Cash + vSend.Code.ToInteger;
+                        ExeExec(Format('update users set cash = %d;', [Round(Person.Cash)]), exExecute, FDQuery);
+                      end;
+                  end;
+                end
+                else
+                if Assigned(vSend.Marker) then
+                  begin
+                     case vSend.Marker.MarkerType of
+                      0:
+                          NewMarkerToMap(vSend.Marker.Coords, 'Чужая точка', mtPoint, false);
+                      1:
+                          NewMarkerToMap(vSend.Marker.Coords, 'Радиация', mtPointRad, false);
+                      2:
+                          NewMarkerToMap(vSend.Marker.Coords, 'Аномалия', mtPointAnomaly, false);
+                      3:
+                          NewMarkerToMap(vSend.Marker.Coords, 'Чужой схрон', mtPointBag, false);
                     end;
+                    showmessage(TJSON.ObjectToJsonString(vSend));
+                    ExeExec(Format('insert into markers (lat, lon, marker_type_id, is_owner) values (%s, %s, %d, false);',[StringReplace(vSend.Marker.Coords.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(vSend.Marker.Coords.Longitude.ToString, ',', '.', [rfReplaceAll]), vSend.Marker.MarkerType]), exExecute, vQuery);
                   end
                 else
-                  ShowMessage('Нет подключения к сталкерской сети.');
+                begin
+                  if FIsMerchantZone then
+                    begin
+                      IdTCPClient.Host := vSend.Ip;
+                      IdTCPClient.Port := 2026;
+
+                      IdTCPClient.Connect;
+                      try
+                        IdTCPClient.IOHandler.WriteLn(TJson.ObjectToJsonString(Person), IndyUTF8Encoding(True));
+                        vStringData := TList<UnicodeString>.Create;
+                        try
+
+                          vAction := TJson.JsonToObject<TAction>(IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(True)));
+                          Page := 1;
+
+                          if vAction.PageCount > 1 then
+                          begin
+                            while Page <> vAction.PageCount do
+                            begin
+                              vStr := IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(True));
+
+                              if vStr[1] = '~' then
+                              begin
+                                vStringData[vStringData.Count - 1] := vStringData[vStringData.Count - 1] + Copy(vStr, 2, Length(vStr) - 1);
+                                Dec(Page);
+                              end
+                              else
+                                vStringData.Add(vStr);
+
+                              inc(Page);
+                            end;
+                          end;
+
+                          case vAction.SendType of
+                            stSell:
+                              begin
+                                vSell := TSell.Create;
+
+                                try
+                                  vSell := TJson.JsonToObject<TSell>(vAction.JSONObject);
+
+                                  ExeExec(Format('insert into bag (table_name, row_id, health) values(''%s'', %d, %d);', [vSell.TableName, vSell.RowID, Round(vSell.Health)]), exExecute, FDQuery);
+                                  Person.Cash := Person.Cash - vSell.Cost;
+                                finally
+                                  vSell.Free;
+                                end;
+
+                                ReloadBag;
+                              end;
+
+                            stCancelSell:
+                              ShowMessage('Недостаточно средств');
+
+                            stLoadArmor:
+                              begin
+
+                              end;
+                          end;
+                        finally
+                          FreeAndNil(vStringData);
+                        end;
+
+                      finally
+                        IdTCPClient.Disconnect;
+                      end;
+                    end
+                  else
+                    ShowMessage('Нет подключения к сталкерской сети.');
+                end;
+              finally
+                vSend.Free;
               end;
             end;
+
           end);
 
       finally

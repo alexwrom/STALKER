@@ -1781,7 +1781,7 @@ object FrameMap: TFrameMap
               Size.Width = 40.000000000000000000
               Size.Height = 40.000000000000000000
               Size.PlatformDefault = False
-              StyleLookup = 'organizetoolbutton'
+              StyleLookup = 'actiontoolbutton'
               OnClick = btnSendMarkerClick
               object InnerGlowEffect5: TInnerGlowEffect
                 Softness = 0.400000005960464500
@@ -2627,8 +2627,8 @@ object FrameMap: TFrameMap
     object timerCheckCritical: TTimer
       Enabled = False
       OnTimer = timerCheckCriticalTimer
-      Left = 310
-      Top = 357
+      Left = 342
+      Top = 373
     end
     object timerCritical: TTimer
       Enabled = False
@@ -3424,20 +3424,6 @@ object FrameMap: TFrameMap
           OnClick = btnKillClick
         end
       end
-      object Button1: TButton
-        Position.X = 136.000000000000000000
-        Position.Y = 8.000000000000000000
-        TabOrder = 3
-        Text = #1041#1088#1077#1089#1090
-        OnClick = Button1Click
-      end
-      object Button2: TButton
-        Position.X = 224.000000000000000000
-        Position.Y = 8.000000000000000000
-        TabOrder = 2
-        Text = #1050#1086#1073#1088#1080#1085
-        OnClick = Button2Click
-      end
     end
     object imgArrowMan: TImage
       MultiResBitmap.Height = 20
@@ -3660,6 +3646,11 @@ object FrameMap: TFrameMap
         Size.PlatformDefault = False
         StyleLookup = 'escapetoolbutton'
         OnClick = btnExitClick
+        object InnerGlowEffect6: TInnerGlowEffect
+          Softness = 0.400000005960464500
+          GlowColor = claTomato
+          Opacity = 1.000000000000000000
+        end
       end
     end
     object Layout3: TLayout
@@ -3674,8 +3665,13 @@ object FrameMap: TFrameMap
         Size.Width = 50.000000000000000000
         Size.Height = 33.000000000000000000
         Size.PlatformDefault = False
-        StyleLookup = 'organizetoolbutton'
+        StyleLookup = 'actiontoolbutton'
         OnClick = btnSendMarkersClick
+        object InnerGlowEffect7: TInnerGlowEffect
+          Softness = 0.400000005960464500
+          GlowColor = claSpringgreen
+          Opacity = 1.000000000000000000
+        end
       end
     end
   end

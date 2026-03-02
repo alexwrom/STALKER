@@ -409,6 +409,7 @@ var
 begin
   BtnClickMedia;
   vIndex := layInfo.Tag;
+
   case FBagList[vIndex].BagType of
     btArmor:
       begin
@@ -424,7 +425,7 @@ begin
     btWeapon:
       begin
         if Person.WeaponId <> 0 then
-          ExeExec('insert into bag (table_name, row_id, health) values (''weapons'',' + Person.WeaponId.ToString + ',' + Person.WeaponHealth.ToString + ',' + Person.UserId.ToString + ');', exExecute, vQuery);
+          ExeExec('insert into bag (table_name, row_id, health) values (''weapons'',' + Person.WeaponId.ToString + ',' + Person.WeaponHealth.ToString + ');', exExecute, vQuery);
 
         ExeExec('update users set weapon_id = ' + FBagList[vIndex].RowID.ToString + ', weapon_health = ' + FBagList[vIndex].Health.ToString + ';', exExecute, vQuery);
         ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''weapons'' and row_id = ' + FBagList[vIndex].RowID.ToString + ' and health = ' + FBagList[vIndex].Health.ToString + ' limit 1);', exExecute, vQuery);
@@ -442,7 +443,6 @@ procedure TFrameBag.btnAddArtClick(Sender: TObject);
 var
   vQuery: TFDQuery;
   vIndex: integer;
-  str: string;
 begin
   BtnClickMedia;
   vIndex := layInfo.Tag;

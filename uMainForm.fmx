@@ -14,7 +14,7 @@ object MainForm: TMainForm
   OnActivate = FormActivate
   OnCreate = FormCreate
   OnShow = FormShow
-  DesignerMasterStyle = 0
+  DesignerMasterStyle = 3
   object recSkin: TRectangle
     Align = Contents
     Fill.Bitmap.Bitmap.PNG = {
@@ -6194,7 +6194,7 @@ object MainForm: TMainForm
     Size.Width = 827.000000000000000000
     Size.Height = 511.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 47
+    TabOrder = 48
     object layMenu: TLayout
       Align = Right
       Position.X = 779.000000000000000000

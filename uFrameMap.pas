@@ -94,8 +94,6 @@ type
     btnKill: TSpeedButton;
     Image5: TImage;
     MediaPlayerScanAnomaly: TMediaPlayer;
-    Button1: TButton;
-    Button2: TButton;
     Layout3: TLayout;
     btnSendMarkers: TSpeedButton;
     laySendQR: TLayout;
@@ -111,6 +109,8 @@ type
     InnerGlowEffect3: TInnerGlowEffect;
     btnSendMarker: TSpeedButton;
     InnerGlowEffect5: TInnerGlowEffect;
+    InnerGlowEffect6: TInnerGlowEffect;
+    InnerGlowEffect7: TInnerGlowEffect;
     procedure MapImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure btnZoomInClick(Sender: TObject);
     procedure btnZoomOutClick(Sender: TObject);
@@ -128,8 +128,6 @@ type
     procedure TimerSystemTimer(Sender: TObject);
     procedure btnExitClick(Sender: TObject);
     procedure btnKillClick(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
-    procedure Button2Click(Sender: TObject);
     procedure btnSendMarkersClick(Sender: TObject);
     procedure btnSendMarkerClick(Sender: TObject);
     procedure LayClientClick(Sender: TObject);
@@ -588,6 +586,7 @@ begin
   begin
     if (FSecondBeforeStartDamage <= 0) and (NOT FIsDead) then
     begin
+      FKillType := ktCritical;
       StartDamageGlow;
       Person.Health := Person.Health - 2;
       MediaPlayerDamage.CurrentTime := 0;
@@ -655,8 +654,7 @@ var
   vQuery: TFDQuery;
 begin
   try
-   // MapImage.Bitmap.LoadFromFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'map_image.png'));
-    MapImage.Bitmap.LoadFromFile(System.IOUtils.TPath.Combine(GetUserAppPath, 'брест.png'));
+    MapImage.Bitmap.LoadFromFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'map_image.png'));
     FMapLoaded := true;
 
     // Сохраняем оригинальные размеры
@@ -675,15 +673,10 @@ begin
     // Обновляем границы карты
     ExeExec('select * from game_data;', exActive, vQuery);
     try
-     { FTopLeftLat := vQuery.FieldByName('map_left_top_lat').AsFloat;
+      FTopLeftLat := vQuery.FieldByName('map_left_top_lat').AsFloat;
       FTopLeftLon := vQuery.FieldByName('map_left_top_lon').AsFloat;
       FBottomRightLat := vQuery.FieldByName('map_right_bottom_lat').AsFloat;
-      FBottomRightLon := vQuery.FieldByName('map_right_bottom_lon').AsFloat;}
-
-      FTopLeftLat := 52.159658;
-      FTopLeftLon := 23.547848;
-      FBottomRightLat := 52.043765;
-      FBottomRightLon := 23.852184;
+      FBottomRightLon := vQuery.FieldByName('map_right_bottom_lon').AsFloat;
 
       FMapRealWidth := Round(CalculateFastDistance(FTopLeftLat, FTopLeftLon, FTopLeftLat, FBottomRightLon));
     finally
@@ -767,7 +760,7 @@ begin
       if (vDistance <= FAnomalyList[I].Radius) then
       begin
         MediaPlayerDamage.CurrentTime := 0;
-        MediaPlayerDamage.Volume := 10;
+        MediaPlayerDamage.Volume := 1;
         MediaPlayerDamage.Play;
         StartDamageGlow;
 
@@ -1049,46 +1042,6 @@ begin
   ZoomOut;
   ScrollBox.ViewportPosition := TPointF.Create(vOldViewportPositionX, vOldViewportPositionY);
   ResetLocationMarkers;
-end;
-
-procedure TFrameMap.Button1Click(Sender: TObject);
-begin
-  MapImage.Bitmap.LoadFromFile(System.IOUtils.TPath.Combine(GetUserAppPath, 'брест.png'));
-  FOriginalMapWidth := MapImage.Bitmap.Width;
-  FOriginalMapHeight := MapImage.Bitmap.Height;
-
-  // Устанавливаем размер Image под размер карты
-  MapImage.Width := FOriginalMapWidth;
-  MapImage.Height := FOriginalMapHeight;
-  MapLayout.Width := FOriginalMapWidth;
-  MapLayout.Height := FOriginalMapHeight;
-
-  FTopLeftLat := 52.159658;
-  FTopLeftLon := 23.547848;
-  FBottomRightLat := 52.043765;
-  FBottomRightLon := 23.852184;
-
-  FMapRealWidth := Round(CalculateFastDistance(FTopLeftLat, FTopLeftLon, FTopLeftLat, FBottomRightLon));
-end;
-
-procedure TFrameMap.Button2Click(Sender: TObject);
-begin
-MapImage.Bitmap.LoadFromFile(System.IOUtils.TPath.Combine(GetUserAppPath, 'кобрин.png'));
-  FOriginalMapWidth := MapImage.Bitmap.Width;
-  FOriginalMapHeight := MapImage.Bitmap.Height;
-
-  // Устанавливаем размер Image под размер карты
-  MapImage.Width := FOriginalMapWidth;
-  MapImage.Height := FOriginalMapHeight;
-  MapLayout.Width := FOriginalMapWidth;
-  MapLayout.Height := FOriginalMapHeight;
-
-  FTopLeftLat := 52.222572;
-  FTopLeftLon := 24.316532;
-  FBottomRightLat := 52.20206;
-  FBottomRightLon := 24.392236;
-
-  FMapRealWidth := Round(CalculateFastDistance(FTopLeftLat, FTopLeftLon, FTopLeftLat, FBottomRightLon));
 end;
 
 procedure TFrameMap.btnDelMarkerClick(Sender: TObject);
@@ -1620,7 +1573,7 @@ begin
       if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
       begin
         {$IFDEF ANDROID}
-           LocationServiceChanged;
+          // LocationServiceChanged;
         {$ENDIF}
 
          if Assigned(Person) then
@@ -1657,7 +1610,7 @@ procedure TFrameMap.btnDeleteNoClick(Sender: TObject);
 begin
   BtnClickMedia;
   gplDeleteYesNo.Visible := False;
-  btnDelMarker.Visible := true;
+  gplMenuMarker.Visible := true;
 end;
 
 procedure TFrameMap.btnDeleteYesClick(Sender: TObject);
@@ -1672,7 +1625,7 @@ begin
   AMarker.Visible := False;
   FMarkerList.Delete(GetNumberMarker(AMarker));
   gplDeleteYesNo.Visible := False;
-  btnDelMarker.Visible := true;
+  gplMenuMarker.Visible := true;
 end;
 
 procedure TFrameMap.ApplyZoom(ACenterX: Single = -1; ACenterY: Single = -1);

@@ -4,8 +4,8 @@
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
     <PropertyGroup>
-        <DeviceId Condition="'$(Platform)'=='Android'">AC4TJK5718C00517</DeviceId>
-        <DeviceId Condition="'$(Platform)'=='Android64'">AC4TJK5718C00517</DeviceId>
+        <DeviceId Condition="'$(Platform)'=='Android'">222ca14c0411</DeviceId>
+        <DeviceId Condition="'$(Platform)'=='Android64'">222ca14c0411</DeviceId>
         <DeviceId Condition="'$(Platform)'=='iOSDevice64'"/>
         <DeviceId Condition="'$(Platform)'=='iOSSimARM64'"/>
     </PropertyGroup>
@@ -190,24 +190,6 @@
             <RemoteName>colors.xml</RemoteName>
             <DeployClass>Android_ColorsDark</DeployClass>
             <Operation>1</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\user\Desktop\кобрин.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>Project1\assets\internal\</RemoteDir>
-            <RemoteName>кобрин.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\user\Desktop\брест.png" Condition="'$(Config)'=='Release'">
-            <RemoteDir>Project1\assets\internal\</RemoteDir>
-            <RemoteName>брест.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -671,29 +653,11 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\user\Desktop\кобрин.png" Condition="'$(Config)'=='Release'">
-            <RemoteDir>Project1\assets\internal\</RemoteDir>
-            <RemoteName>кобрин.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
         <DeployFile Include="Android64\Debug\colors.xml" Condition="'$(Config)'=='Debug'">
             <RemoteDir>Project1\res\values\</RemoteDir>
             <RemoteName>colors.xml</RemoteName>
             <DeployClass>Android_Colors</DeployClass>
             <Operation>1</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\user\Desktop\брест.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>Project1\assets\internal\</RemoteDir>
-            <RemoteName>брест.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -2057,15 +2021,6 @@
         <DeployFile Include="Resources\music\barmen_after_surge.mp3" Condition="'$(Config)'=='Debug'">
             <RemoteDir>Project1\assets\internal\</RemoteDir>
             <RemoteName>barmen_after_surge.mp3</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\user\Desktop\брест.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>Project1\assets\internal\</RemoteDir>
-            <RemoteName>брест.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>

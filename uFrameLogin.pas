@@ -82,7 +82,6 @@ var
   I: Integer;
   vQuery: TFDQuery;
   vUser: TUser;
-  vJSON : string;
 begin
   Result := false;
   ProgressBar.Value := 0;
@@ -242,8 +241,6 @@ begin
       else
       PermissionsService.RequestPermissions(['android.permission.WRITE_EXTERNAL_STORAGE'],
         procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
-        var
-          vQuery: TFDQuery;
         begin
           if (Length(GrantResults) = 1) and (GrantResults[0] = TPermissionStatus.Granted) then
             NextStepToLoad

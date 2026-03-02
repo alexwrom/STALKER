@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants, System.StrUtils,
-  FMX.Controls, System.IOUtils, FMX.Forms, FMX.Graphics, FMX.Dialogs, JSON, Rest.Client, Generics.Collections, Rest.Types, Rest.Exception,
+  FMX.Controls, System.IOUtils, FMX.Forms, FMX.Graphics, FMX.Dialogs, JSON, Rest.Client, Generics.Collections, Rest.Types,
   System.Net.HttpClient;
 
 const
@@ -31,7 +31,6 @@ var
   FRequest: TRestrequest;
   FResponse: TRestResponse;
   Key: String;
-  a: Integer;
   Stream: TStringStream;
 begin
   Result := '';
