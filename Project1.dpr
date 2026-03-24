@@ -6,7 +6,9 @@ uses
   System.StartUpCopy,
   FMX.Forms,
   {$IF Defined(ANDROID)}
-  Androidapi.Helpers, Androidapi.JNI.App, Androidapi.JNI.GraphicsContentViewText,
+  Androidapi.Helpers,
+  Androidapi.JNI.App,
+  Androidapi.JNI.GraphicsContentViewText,
   {$ENDIF }
   uMainForm in 'uMainForm.pas' {MainForm},
   uFrameMap in 'uFrameMap.pas' {FrameMap: TFrame},
@@ -107,7 +109,8 @@ uses
   classes.user in 'classes\classes.user.pas',
   uGenericBaseData in 'uGenericBaseData.pas',
   classes.userdata in 'classes\classes.userdata.pas',
-  classes.marker in 'classes\classes.marker.pas';
+  classes.marker in 'classes\classes.marker.pas',
+  uFrameSettings in 'uFrameSettings.pas' {FrameSettings: TFrame};
 
 {$R *.res}
 

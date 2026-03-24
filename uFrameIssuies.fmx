@@ -3912,16 +3912,27 @@ object FrameIssuies: TFrameIssuies
             Size.Height = 35.000000000000000000
             Size.PlatformDefault = False
           end
+          object recNotification: TRectangle
+            Align = Contents
+            Fill.Color = x6925FD02
+            HitTest = False
+            Opacity = 0.000000000000000000
+            Size.Width = 204.500000000000000000
+            Size.Height = 36.000000000000000000
+            Size.PlatformDefault = False
+            Stroke.Kind = None
+            object animNotification: TFloatAnimation
+              AnimationType = InOut
+              Duration = 0.500000000000000000
+              Loop = True
+              PropertyName = 'Opacity'
+              StartValue = 0.000000000000000000
+              StopValue = 1.000000000000000000
+            end
+          end
         end
       end
     end
-  end
-  object Layout3: TLayout
-    Align = Client
-    Size.Width = 846.000000000000000000
-    Size.Height = 483.000000000000000000
-    Size.PlatformDefault = False
-    TabOrder = 2
   end
   object Image2: TImage
     MultiResBitmap.Height = 14
@@ -4578,8 +4589,8 @@ object FrameIssuies: TFrameIssuies
     Size.Width = 846.000000000000000000
     Size.Height = 483.000000000000000000
     Size.PlatformDefault = False
-    TabIndex = 0
-    TabOrder = 4
+    TabIndex = 1
+    TabOrder = 3
     TabPosition = None
     Sizes = (
       846s
@@ -4590,7 +4601,7 @@ object FrameIssuies: TFrameIssuies
       CustomIcon = <
         item
         end>
-      IsSelected = True
+      IsSelected = False
       Size.Width = 8.000000000000000000
       Size.Height = 8.000000000000000000
       Size.PlatformDefault = False
@@ -8778,7 +8789,7 @@ object FrameIssuies: TFrameIssuies
       CustomIcon = <
         item
         end>
-      IsSelected = False
+      IsSelected = True
       Size.Width = 8.000000000000000000
       Size.Height = 8.000000000000000000
       Size.PlatformDefault = False
@@ -12319,8 +12330,8 @@ object FrameIssuies: TFrameIssuies
           TabOrder = 0
           object layDownload: TLayout
             Align = Bottom
-            Position.Y = 396.000000000000000000
-            Size.Width = 493.000000000000000000
+            Position.Y = 401.000000000000000000
+            Size.Width = 494.000000000000000000
             Size.Height = 34.000000000000000000
             Size.PlatformDefault = False
             Visible = False
@@ -12499,7 +12510,7 @@ object FrameIssuies: TFrameIssuies
               Align = Right
               MarginWrapMode = Tile
               Margins.Right = 5.000000000000000000
-              Position.X = 240.000000000000000000
+              Position.X = 241.000000000000000000
               Size.Width = 248.000000000000000000
               Size.Height = 34.000000000000000000
               Size.PlatformDefault = False
@@ -12514,11 +12525,12 @@ object FrameIssuies: TFrameIssuies
                 TabOrder = 0
                 Text = #1047#1072#1075#1088#1091#1079#1080#1090#1100' '#1076#1072#1085#1085#1099#1077
                 TextSettings.Font.Family = 'YouTube Sans Dark'
-                TextSettings.Font.Size = 20.000000000000000000
+                TextSettings.Font.Size = 16.000000000000000000
                 TextSettings.Font.StyleExt = {00070000000000000004000000}
                 TextSettings.FontColor = xFFC1BFBF
                 XRadius = 3.000000000000000000
                 YRadius = 3.000000000000000000
+                OnClick = btnDownloadInfoClick
               end
             end
           end

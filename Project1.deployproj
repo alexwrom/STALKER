@@ -4,7 +4,7 @@
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
     <PropertyGroup>
-        <DeviceId Condition="'$(Platform)'=='Android'">222ca14c0411</DeviceId>
+        <DeviceId Condition="'$(Platform)'=='Android'"/>
         <DeviceId Condition="'$(Platform)'=='Android64'">222ca14c0411</DeviceId>
         <DeviceId Condition="'$(Platform)'=='iOSDevice64'"/>
         <DeviceId Condition="'$(Platform)'=='iOSSimARM64'"/>
@@ -518,6 +518,24 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
+        <DeployFile Include="Resources\music\zombi.mp3" Condition="'$(Config)'=='Release'">
+            <RemoteDir>Project1\assets\internal\</RemoteDir>
+            <RemoteName>zombi.mp3</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="Resources\music\notification.mp3" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>Project1\assets\internal\</RemoteDir>
+            <RemoteName>notification.mp3</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="Android64\Debug\styles-v21.xml" Condition="'$(Config)'=='Debug'">
             <RemoteDir>Project1\res\values-v21\</RemoteDir>
             <RemoteName>styles.xml</RemoteName>
@@ -1002,6 +1020,24 @@
             <RemoteName>ic_notification.png</RemoteName>
             <DeployClass>Android_NotificationIcon36</DeployClass>
             <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="Resources\music\zombi.mp3" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>Project1\assets\internal\</RemoteDir>
+            <RemoteName>zombi.mp3</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="Resources\music\notification.mp3" Condition="'$(Config)'=='Release'">
+            <RemoteDir>Project1\assets\internal\</RemoteDir>
+            <RemoteName>notification.mp3</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -1523,6 +1559,15 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
+        <DeployFile Include="Resources\music\zombi.mp3" Condition="'$(Config)'=='Release'">
+            <RemoteDir>Project1\assets\internal\</RemoteDir>
+            <RemoteName>zombi.mp3</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="Resources\music\damage.mp3" Condition="'$(Config)'=='Debug'">
             <RemoteDir>Project1\assets\internal\</RemoteDir>
             <RemoteName>damage.mp3</RemoteName>
@@ -2021,6 +2066,15 @@
         <DeployFile Include="Resources\music\barmen_after_surge.mp3" Condition="'$(Config)'=='Debug'">
             <RemoteDir>Project1\assets\internal\</RemoteDir>
             <RemoteName>barmen_after_surge.mp3</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="Resources\music\zombi.mp3" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>Project1\assets\internal\</RemoteDir>
+            <RemoteName>zombi.mp3</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>

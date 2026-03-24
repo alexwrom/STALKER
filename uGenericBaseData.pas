@@ -29,7 +29,7 @@ begin
       FDQueryCol.First;
       while not FDQueryCol.Eof do
       begin
-        if FDQueryCol.FieldByName('name').AsString <> 'user_id' then // Нельзя передавать штатное поле user_id, оно добавляется ниже
+        if (FDQueryCol.FieldByName('name').AsString <> 'user_id') and (FDQueryCol.FieldByName('name').AsString <> 'notification_id') and (FDQueryCol.FieldByName('name').AsString <> 'is_owner') and (FDQueryCol.FieldByName('name').AsString <> 'is_open') then // Нельзя передавать штатное поле user_id, оно добавляется ниже
         begin
           vColumn.Name := FDQueryCol.FieldByName('name').AsString;
           vColumn.TypeCol := FDQueryCol.FieldByName('type').AsString;
@@ -41,7 +41,7 @@ begin
       FreeQueryAndConn(FDQueryCol);
     end;
 
-    if ATable <> 'life_log' then
+     if (ATable <> 'life_log') and (ATable <> 'notifications') then
      AStrData.Add('delete from ' + ATable + ' where user_id = ' + Person.UserId.ToString + ';');
 
     ExeExec('select * from ' + ATable + ';', exActive, FDQuery);
@@ -69,8 +69,11 @@ begin
             vColValue := vColValue + IfThen(i = 0, '', ',') + QuotedStr(FDQuery.FieldByName(vColumns[i].Name).AsString);
         end;
 
-        vColName := vColName + ',' + 'user_id'; // Вот здесь user_id
-        vColValue := vColValue + ',' + Person.UserId.ToString;
+        if (ATable <> 'notifications') then
+        begin
+          vColName := vColName + ',' + 'user_id'; // Вот здесь user_id
+          vColValue := vColValue + ',' + Person.UserId.ToString;
+        end;
 
         AStrData.Add('insert into ' + ATable + ' (' + vColName + ') values (' + vColValue + ');');
         FDQuery.Next;
@@ -95,9 +98,10 @@ begin
   GenerateTableInsert('users', Result);
   GenerateTableInsert('life_log', Result);
 
+
   if FIsSendMarkers then
    begin
-     GenerateTableInsert('markers', Result);
+     GenerateTableInsert('notifications', Result);
      FIsSendMarkers := false;
    end;
 end;

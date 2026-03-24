@@ -344,6 +344,7 @@ begin
       ExistingConfig: JWifiConfiguration;
       Config: JWifiConfiguration;
     begin
+    if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
       try
         for j := 0 to FNetworks.Count - 1 do
           if FNetworks[j].SSID = MERCHANT_WIFI then

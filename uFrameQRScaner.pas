@@ -166,6 +166,8 @@ begin
             Page, vRowID: Integer;
             vStr, vTableName: string;
             vQuery: TFDQuery;
+            vPercName : string;
+            vLevelPerc : integer;
           begin
             if (ReadResult <> nil) then
             begin
@@ -191,6 +193,25 @@ begin
                       begin
                         Person.GroupId := vSend.Code.ToInteger;
                         ExeExec(Format('update users set group_id = %d;', [vSend.Code.ToInteger()]), exExecute, FDQuery);
+                      end;
+                    4: // Смена специальности  {"code":"0101"}
+                      begin
+                        vLevelPerc := Copy(vSend.Code, 3, 2).ToInteger;
+
+                        case Copy(vSend.Code, 1, 2).ToInteger of
+                          1:
+                            begin
+                              vPercName := 'level_medic';
+                              Person.LevelMedic := vLevelPerc;
+                            end;
+                          2:
+                            begin
+                              vPercName := 'level_tehnic';
+                              Person.LevelTehnic := vLevelPerc;
+                            end;
+                        end;
+
+                        ExeExec(Format('update users set %s = %d;', [vPercName, vLevelPerc]), exExecute, FDQuery);
                       end;
                     5: // Добавление в сумку   {"code":"01001"}
                       begin

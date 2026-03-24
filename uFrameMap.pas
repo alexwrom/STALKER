@@ -16,7 +16,7 @@ uses
   Androidapi.JNIBridge, Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNI.Location,
   Androidapi.JNI.Net,
 {$ENDIF}
-  uLocationListener, uGenericBaseData, classes.send, classes.marker, REST.Json;
+  uLocationListener, uGenericBaseData, classes.send, classes.marker, REST.Json, FMX.Surfaces;
 
 type
   TFrameMap = class(TFrame)
@@ -111,6 +111,9 @@ type
     InnerGlowEffect5: TInnerGlowEffect;
     InnerGlowEffect6: TInnerGlowEffect;
     InnerGlowEffect7: TInnerGlowEffect;
+    imgFog: TImage;
+    imgFogDefault: TImage;
+    Rectangle5: TRectangle;
     procedure MapImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure btnZoomInClick(Sender: TObject);
     procedure btnZoomOutClick(Sender: TObject);
@@ -154,7 +157,6 @@ type
     function CoordinatesToPixels(Lat, Lon: Double): TPointF;
     function PixelsToCoordinates(X, Y: Single): TLocationCoord2D;
     procedure UpdateZoomControls;
-    procedure ApplyZoom(ACenterX: Single = -1; ACenterY: Single = -1);
     procedure ZoomIn;
     procedure ZoomOut;
     procedure SetZoom(AScale: Double; ACenterX: Single = -1; ACenterY: Single = -1);
@@ -174,15 +176,18 @@ type
     procedure SetArrows(AArrow: TImage; ATarget: TControl);
     procedure UpdateAnomalies;
     procedure ScanAnomaliesNextTo;
-    procedure LoadMarkers;
+    procedure EraseCircleFromImage(AImage: TImage; CenterX, CenterY, Radius: single);
+    procedure SetBitmap(ABitmap: TBitmap);
 {$IFDEF ANDROID}
     procedure SetLocation;
     function BatteryPercent: integer;
 {$ENDIF}
+
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure ResetLocationMarkers;
+    procedure LoadMarkers;
 {$IFDEF ANDROID}
     procedure LocationServiceChanged;
     procedure LocationisChanged(Location: JLocation);
@@ -325,7 +330,16 @@ var
   vQuery: TFDQuery;
   ACoords: TLocationCoord2D;
   vIsOwner: Boolean;
+  I: integer;
 begin
+  for I := FMarkerList.Count - 1 downto 0 do
+  if FMarkerList[I].MarkerType in [mtPoint, mtPointRad, mtPointAnomaly, mtPointBag] then
+  begin
+    FMarkerList[I].Marker.Parent := nil;
+    FMarkerList[I].Marker.Visible := False;
+    FMarkerList.Delete(I);
+  end;
+
   ExeExec('select * from markers;', exActive, vQuery);
   vQuery.First;
 
@@ -652,10 +666,10 @@ end;
 procedure TFrameMap.LoadMap;
 var
   vQuery: TFDQuery;
+  vBitmapFog: TBitmap;
 begin
   try
     MapImage.Bitmap.LoadFromFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'map_image.png'));
-    FMapLoaded := true;
 
     // Сохраняем оригинальные размеры
     FOriginalMapWidth := MapImage.Bitmap.Width;
@@ -683,6 +697,29 @@ begin
       FreeQueryAndConn(vQuery);
     end;
 
+   vBitmapFog := TBitmap.Create(Round(FOriginalMapWidth), Round(FOriginalMapHeight));
+
+   try
+     if FileExists(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'fog.png')) then
+         vBitmapFog.LoadFromFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'fog.png'))
+     else
+     begin
+       vBitmapFog := TBitmap.Create(Round(FOriginalMapWidth), Round(FOriginalMapHeight));
+       vBitmapFog.Canvas.BeginScene;
+       vBitmapFog.Canvas.DrawBitmap(imgFogDefault.Bitmap,RectF(0, 0, imgFogDefault.Bitmap.Width, imgFogDefault.Bitmap.Height),RectF(0, 0, FOriginalMapWidth, FOriginalMapHeight),1);
+       vBitmapFog.Canvas.EndScene;
+     end;
+
+     ImgFog.Bitmap.Assign(vBitmapFog);
+     ImgFog.Repaint;
+
+     FSurfaceFog := TBitmapSurface.Create;
+     FSurfaceFog.Assign(vBitmapFog);
+   finally
+     vBitmapFog.Free;
+   end;
+
+   FMapLoaded := true;
   except
     on E: Exception do
     begin
@@ -736,9 +773,17 @@ begin
 end;
 
 procedure TFrameMap.SetLocation;
+var
+ Point: TPointF;
 begin
   LocationMarker.Visible := true;
   SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
+
+  Point := CoordinatesToPixels(FLocation.Latitude, FLocation.Longitude);
+
+  if (Point.X <> 0) and FMapLoaded then
+    EraseCircleFromImage(ImgFog, Point.X, Point.Y , 50 / FMapRealWidth * FOriginalMapWidth);
+
   OrientationMarker.RotationAngle := 135 + CalculateBearing(FOldLocation, FLocation);
   FOldLocation := FLocation;
 end;
@@ -759,6 +804,7 @@ begin
 
       if (vDistance <= FAnomalyList[I].Radius) then
       begin
+        SetMediaVolume(100);
         MediaPlayerDamage.CurrentTime := 0;
         MediaPlayerDamage.Volume := 1;
         MediaPlayerDamage.Play;
@@ -824,6 +870,14 @@ begin
       else
         FMarkerList[I].Marker.Visible := False;
     end;
+
+    if (MediaPlayerAnomaly.State = TMediaState.Playing)  then
+      TTask.Run(
+      procedure
+      begin
+        while (MediaPlayerAnomaly.State = TMediaState.Playing)  do
+          continue;
+      end);
 end;
 
 procedure TFrameMap.ScanAnomaliesNextTo; // Приближение к аномалии
@@ -932,6 +986,56 @@ begin
   SetArrows(imgArrowMan, LocationMarker);
 end;
 
+procedure TFrameMap.EraseCircleFromImage(AImage: TImage; CenterX, CenterY, Radius: single);
+var
+  X, Y: Integer;
+  DistSqr, RadiusSqr: Single;
+  MinX, MaxX, MinY, MaxY: Integer;
+  PixelPtr: PAlphaColor;
+begin
+  RadiusSqr := Radius * Radius;
+
+  try
+    MinX := Round(Max(0, CenterX - Radius));
+    MaxX := Round(Min(AImage.Bitmap.Width - 1, CenterX + Radius));
+    MinY := Round(Max(0, CenterY - Radius));
+    MaxY := Round(Min(AImage.Bitmap.Height - 1, CenterY + Radius));
+
+    for Y := MinY to MaxY do
+    begin
+      PixelPtr := FSurfaceFog.Scanline[Y];
+      Inc(PixelPtr, MinX);
+
+      for X := MinX to MaxX do
+      begin
+        DistSqr := (X - CenterX) * (X - CenterX) + (Y - CenterY) * (Y - CenterY);
+
+        if DistSqr <= RadiusSqr then
+          begin
+            if PixelPtr^ <> TAlphaColorRec.Null then
+              PixelPtr^ := TAlphaColorRec.Null;
+          end;
+        Inc(PixelPtr);
+      end;
+    end;
+
+    TTask.Run(procedure
+    begin
+      AImage.Bitmap.Assign(FSurfaceFog);
+      AImage.Repaint;
+    end)
+
+  finally
+  end;
+  
+end;
+
+procedure TFrameMap.SetBitmap(ABitmap: TBitmap);
+begin
+ImgFog.Visible := true;
+  ImgFog.Bitmap.Assign(ABitmap);
+end;
+
 function TFrameMap.CoordinatesToPixels(Lat, Lon: Double): TPointF;
 var
   X, Y: Double;
@@ -976,7 +1080,7 @@ procedure TFrameMap.MapImageGesture(Sender: TObject; const EventInfo: TGestureEv
     Result := 0;
 
     for I := 0 to FMarkerList.Count - 1 do
-      if FMarkerList[I].MarkerType in [mtPoint, mtPointRad, mtPointAnomaly, mtPointBag] then
+      if (FMarkerList[I].MarkerType in [mtPoint, mtPointRad, mtPointAnomaly, mtPointBag]) and (FMarkerList[I].IsOwner = true) then
         Result := Result + 1;
   end;
 
@@ -1020,28 +1124,126 @@ end;
 
 procedure TFrameMap.btnZoomInClick(Sender: TObject);
 var
-  vOldViewportPositionX: Single;
-  vOldViewportPositionY: Single;
+    vOldViewportPositionX: Single;
+    vOldViewportPositionY: Single;
 begin
   BtnClickMedia;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  LayDetailMarker.Visible := false;
+  layDetailIssue.Visible := false;
   vOldViewportPositionX := ScrollBox.ViewportPosition.X / FCurrentScale * (FCurrentScale + FZoomStep);
   vOldViewportPositionY := ScrollBox.ViewportPosition.Y / FCurrentScale * (FCurrentScale + FZoomStep);
-  ZoomIn;
-  ScrollBox.ViewportPosition := TPointF.Create(vOldViewportPositionX, vOldViewportPositionY);
-  ResetLocationMarkers;
+  
+  TTask.Run(procedure
+  begin
+    MapLayout.Visible := false;
+    ZoomIn;
+
+
+    TThread.Synchronize(nil,
+    procedure
+    begin
+      ResetLocationMarkers;
+      MapLayout.Visible := true;
+      ScrollBox.ViewportPosition := TPointF.Create(vOldViewportPositionX, vOldViewportPositionY);
+    end)
+  end)
 end;
 
 procedure TFrameMap.btnZoomOutClick(Sender: TObject);
-var
-  vOldViewportPositionX: Single;
-  vOldViewportPositionY: Single;
-begin
+ var
+    vOldViewportPositionX: Single;
+    vOldViewportPositionY: Single;
+ begin
   BtnClickMedia;
+  LayDetailMarker.Visible := false;
+  layDetailIssue.Visible := false;
   vOldViewportPositionX := ScrollBox.ViewportPosition.X / FCurrentScale * (FCurrentScale - FZoomStep);
   vOldViewportPositionY := ScrollBox.ViewportPosition.Y / FCurrentScale * (FCurrentScale - FZoomStep);
-  ZoomOut;
-  ScrollBox.ViewportPosition := TPointF.Create(vOldViewportPositionX, vOldViewportPositionY);
-  ResetLocationMarkers;
+
+
+  TTask.Run(procedure
+  begin
+    MapLayout.Visible := false;
+    ZoomOut;
+
+
+    TThread.Synchronize(nil,
+    procedure
+    begin
+      ResetLocationMarkers;
+      MapLayout.Visible := true;
+      ScrollBox.ViewportPosition := TPointF.Create(vOldViewportPositionX, vOldViewportPositionY);
+    end)
+  end)
 end;
 
 procedure TFrameMap.btnDelMarkerClick(Sender: TObject);
@@ -1054,7 +1256,7 @@ end;
 procedure TFrameMap.btnExitClick(Sender: TObject);
 begin
   BtnClickMedia;
-  MessageDlg('Ты хочешь покинуть сталкерскую сеть?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
+  MessageDlg('Выйдя из сети твой профиль будет удален. Ты хочешь покинуть сталкерскую сеть?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
     procedure(const AResult: TModalResult)
     var
       vQuery: TFDQuery;
@@ -1062,7 +1264,12 @@ begin
       if (AResult = mrYes) then
       begin
         Person.UserId := -1;
+        ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [10, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]),
+          exExecute, vQuery);
         ExeExec(DeleteAllSQL, exExecute, vQuery);
+
+        if FileExists(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'fog.png')) then
+          DeleteFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'fog.png'));
 
         MessageDlg('Ты вышел из сети. Для повторного входа войди в ПДА.', TMsgDlgType.mtInformation, [TMsgDlgBtn.mbOK], 0,
           procedure(const AResult: TModalResult)
@@ -1078,14 +1285,15 @@ end;
 
 procedure TFrameMap.btnKillClick(Sender: TObject);
 begin
-  Person.Health := 100;
+  Person.Health := 80;
   BtnClickMedia;
   MessageDlg('Ты умер в бою?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
     procedure(const AResult: TModalResult)
     begin
       if (AResult = mrYes) then
       begin
-        FKillType := ktWeapon;
+       // FKillType := ktWeapon;
+        FKillType := ktPSI;
         Person.Health := 0;
       end;
     end);
@@ -1150,10 +1358,13 @@ procedure TFrameMap.btnSendMarkersClick(Sender: TObject);
 begin
   MessageDlg('Ты отправляешь свои маркеры всей своей группировке. Эти данные может скачать любой сталкер из твоей группировки. Данные будут переданы при подключении к сталкерской сети. Ты согласен?', TMsgDlgType.mtInformation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
           procedure(const AResult: TModalResult)
+          var
+            vQuery: TFDQuery;
           begin
             if (AResult = mrYes) then
             begin
               FIsSendMarkers := true;
+              ExeExec(Format('insert into notifications(name, detail, is_open, group_id, is_owner, data) values (''Доступны новые маркеры'', ''Создал: %s \n\nСообщение: \nЯ делюсь своими маркерами с вами:\nвсего маркеров - '' || (select count(1) from markers where is_owner = true), false, %d, true, (select data from notifications_out));',[Person.UserName ,Person.GroupId]), exExecute, vQuery);
             end;
           end);
 end;
@@ -1364,30 +1575,26 @@ begin
 end;
 
 procedure TFrameMap.ResetLocationMarkers;
+
+begin
+
+TTask.Run(
+procedure
 var
   I: integer;
 begin
+   for I := 0 to FMarkerList.Count - 1 do
+   begin
 
-    TTask.Run(procedure
-    var
-      I: integer;
-      vVisible: boolean;
-    begin
-      for I := 0 to FMarkerList.Count - 1 do
-      begin
-        vVisible := FMarkerList[I].Marker.Visible;
-        FMarkerList[I].Marker.Visible := false;
+     if (FMarkerList[I].MarkerType in [mtAnomaly, mtRadiation, mtBase, mtSafe]) then
+     begin
+       FMarkerList[I].Marker.Width := FMarkerList[I].Marker.Tag * FCurrentScale;
+       FMarkerList[I].Marker.Height := FMarkerList[I].Marker.Width;
+     end;
 
-        if (FMarkerList[I].MarkerType in [mtAnomaly, mtRadiation, mtBase, mtSafe]) then
-        begin
-          FMarkerList[I].Marker.Width := FMarkerList[I].Marker.Tag * FCurrentScale;
-          FMarkerList[I].Marker.Height := FMarkerList[I].Marker.Width;
-        end;
-        SetMarker(FMarkerList[I].Marker, FMarkerList[I].Coords.Latitude, FMarkerList[I].Coords.Longitude);
-        FMarkerList[I].Marker.Visible := vVisible;
-      end;
-    end);
-  
+     SetMarker(FMarkerList[I].Marker, FMarkerList[I].Coords.Latitude, FMarkerList[I].Coords.Longitude);
+   end;
+
 
   for I := 0 to FMarkerIssue.Count - 1 do
     SetMarker(FMarkerIssue[I].Marker, FMarkerIssue[I].Coords.Latitude, FMarkerIssue[I].Coords.Longitude);
@@ -1402,6 +1609,8 @@ begin
 
   if MarkersPanel.Visible then
     SetMarker(MarkersPanel, FCoords.Latitude, FCoords.Longitude);
+end);
+  
 end;
 
 procedure TFrameMap.ZoomIn;
@@ -1428,18 +1637,13 @@ begin
     begin
       FCurrentScale := AScale;
       // Обновляем размеры карты
+
       MapImage.Width := FOriginalMapWidth * FCurrentScale;
       MapImage.Height := FOriginalMapHeight * FCurrentScale;
       MapLayout.Width := FOriginalMapWidth * FCurrentScale;
       MapLayout.Height := FOriginalMapHeight * FCurrentScale;
 
       UpdateZoomControls;
-
-      // Если указана точка центра, корректируем позицию прокрутки
-      if (ACenterX >= 0) and (ACenterY >= 0) then
-      begin
-        ApplyZoom(ACenterX, ACenterY);
-      end;
     end;
   end;
 end;
@@ -1567,30 +1771,20 @@ end;
 
 procedure TFrameMap.TimerSensorTimer(Sender: TObject);
 begin
-  PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.CHANGE_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.NEARBY_WIFI_DEVICES', 'android.permission.CHANGE_WIFI_MULTICAST_STATE'],
-    procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
+
+   {$IFDEF ANDROID}
+      LocationServiceChanged;
+   {$ENDIF}
+
+    if Assigned(Person) then
+      if Person.Health < 100 then
+        ScanBaseSafeDead;
+
+   if Not FIsDead then
     begin
-      if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
-      begin
-        {$IFDEF ANDROID}
-          // LocationServiceChanged;
-        {$ENDIF}
-
-         if Assigned(Person) then
-           if Person.Health < 100 then
-             ScanBaseSafeDead;
-
-         if Not FIsDead then
-         begin
-           ScanAnomalies;
-           ScanIssuies;
-         end;
-      end
-      else
-      begin
-        ShowMessage('Необходимы разрешения для сканирования Wi-Fi');
-      end;
-    end);
+      ScanAnomalies;
+      ScanIssuies;
+    end;
 end;
 
 procedure TFrameMap.TimerSystemTimer(Sender: TObject);
@@ -1626,20 +1820,6 @@ begin
   FMarkerList.Delete(GetNumberMarker(AMarker));
   gplDeleteYesNo.Visible := False;
   gplMenuMarker.Visible := true;
-end;
-
-procedure TFrameMap.ApplyZoom(ACenterX: Single = -1; ACenterY: Single = -1);
-var
-  ViewportX, ViewportY: Single;
-begin
-  if (ACenterX >= 0) and (ACenterY >= 0) then
-  begin
-    // Ограничиваем позицию прокрутки
-    ViewportX := Max(0, Min(ACenterX, MapLayout.Width - ScrollBox.Width));
-    ViewportY := Max(0, Min(ACenterY, MapLayout.Height - ScrollBox.Height));
-
-    ScrollBox.ViewportPosition := PointF(ViewportX, ViewportY);
-  end;
 end;
 
 procedure TFrameMap.ZoomToPoint(APoint: TPointF; AScale: Double);

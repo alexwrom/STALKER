@@ -12,10 +12,10 @@ uses
 {$IFDEF ANDROID}
   Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText,
   Androidapi.JNIBridge, Androidapi.Helpers, Androidapi.JNI.Os,
-  Androidapi.JNI.Net,
+  Androidapi.JNI.Net,  Androidapi.JNI.Media,
 {$ENDIF}
   Generics.Collections, DelphiZXingQRCode, FMX.Graphics, System.UITypes, System.Types, FMX.Layouts, Math, FMX.Platform,
-  DateUtils, System.TimeSpan;
+  DateUtils, System.TimeSpan, FMX.Surfaces;
 
 const
   cCriticalColor = $FF890000;
@@ -99,7 +99,7 @@ type
     ID: integer;
     MessageText: string;
     IsOpen: boolean;
-    LoadData: string;
+    Data: string;
   end;
 
   TArtefactData = record
@@ -157,14 +157,17 @@ type
     FWeaponId: integer;
     FUserName: string;
     FUserId: integer;
+    FLevelMedic: integer;
+    FLevelTehnic: integer;
+    FWeaponLevel: integer;
     procedure SetHealth(const Value: double);
-    procedure SetHealthArmor(AValue: double);
-    procedure SetHealthWeapon(AValue: double);
+    
     procedure SetCash(const Value: Extended);
     procedure SetIsClassicBag(const Value: boolean);
     procedure SetGroupId(const Value: integer);
     procedure SetUserId(const Value: integer);
-
+    procedure SetHealthArmor(AValue: double);
+    procedure SetHealthWeapon(AValue: double);
   public
     constructor Create;
     property UserName: string read FUserName write FUserName;
@@ -172,9 +175,10 @@ type
     property UserId: integer read FUserId write SetUserId;
     property Health: double read FHealth write SetHealth;
     property ArmorId: integer read FArmorId write FArmorId;
-    property ArmorHealth: double read FArmorHealth write FArmorHealth;
+    property ArmorHealth: double read FArmorHealth write SetHealthArmor;
     property WeaponId: integer read FWeaponId write FWeaponId;
-    property WeaponHealth: double read FWeaponHealth write FWeaponHealth;
+    property WeaponHealth: double read FWeaponHealth write SetHealthWeapon;
+    property WeaponLevel: integer read FWeaponLevel write FWeaponLevel;
     property PsiArmor: double read FPsiArmor write FPsiArmor;
     property ElectroArmor: double read FElectroArmor write FElectroArmor;
     property FireArmor: double read FFireArmor write FFireArmor;
@@ -185,6 +189,10 @@ type
     property CountContener: integer read FCountContener write FCountContener;
     property IsClassicBag: boolean read FIsClassicBag write SetIsClassicBag;
     property Detector: TDetector read FDetector write FDetector;
+    property LevelMedic: integer read FLevelMedic write FLevelMedic;
+    property LevelTehnic: integer read FLevelTehnic write FLevelTehnic;
+
+    
   end;
 
 function GetUserAppPath: string;
@@ -205,11 +213,15 @@ procedure StartApp;
 procedure SetDetector(ID: integer);
 function GetOrientation: Single;
 procedure CreateFrameLogin;
+procedure SetMediaVolume(VolumePercent: Integer);
 {$IF Defined(ANDROID)}
 procedure Vibration(AValue: integer);
 {$ENDIF}
 procedure BtnClickMedia;
 procedure NewMarkerToMap(ACoords: TLocationCoord2D; AText: String; AMarkerType: TMarkerType; AIsOwner: boolean);
+procedure SetNotifications;
+procedure ReloadNotificationData;
+procedure ReloadMarkers;
 
 var
   Person: TPerson;
@@ -237,6 +249,8 @@ var
 
   FKillType: TKillType;
   FIsSendMarkers: boolean;
+  FVolume: integer;
+  FSurfaceFog: TBitmapSurface;
 
 implementation
 
@@ -250,26 +264,36 @@ end;
 
 procedure TPerson.SetHealthArmor(AValue: double);
 begin
-  MainForm.FFramePercs.ArmorHealthProgress.Width := AValue * MainForm.FFramePercs.ArmorHealthProgress.Tag / 100;
+  FArmorHealth := AValue;
 
-  if AValue < 40 then
-    MainForm.FFramePercs.ArmorHealthProgress.Fill.Color := cCriticalColor
-  else if AValue < 80 then
-    MainForm.FFramePercs.ArmorHealthProgress.Fill.Color := cNormalColor
-  else
-    MainForm.FFramePercs.ArmorHealthProgress.Fill.Color := cFullColor;
+  if Assigned(MainForm.FFramePercs) then
+  begin
+    MainForm.FFramePercs.ArmorHealthProgress.Width := AValue * MainForm.FFramePercs.ArmorHealthProgress.Tag / 100;
+
+    if AValue < 40 then
+      MainForm.FFramePercs.ArmorHealthProgress.Fill.Color := cCriticalColor
+    else if AValue < 80 then
+      MainForm.FFramePercs.ArmorHealthProgress.Fill.Color := cNormalColor
+    else
+      MainForm.FFramePercs.ArmorHealthProgress.Fill.Color := cFullColor;
+  end;
 end;
 
 procedure TPerson.SetHealthWeapon(AValue: double);
 begin
-  MainForm.FFramePercs.WeaponHealthProgress.Width := AValue * MainForm.FFramePercs.WeaponHealthProgress.Tag / 100;
+  FWeaponHealth := AValue;
 
-  if AValue < 40 then
-    MainForm.FFramePercs.WeaponHealthProgress.Fill.Color := cCriticalColor
-  else if AValue < 80 then
-    MainForm.FFramePercs.WeaponHealthProgress.Fill.Color := cNormalColor
-  else
-    MainForm.FFramePercs.WeaponHealthProgress.Fill.Color := cFullColor;
+  if Assigned(MainForm.FFramePercs) then
+  begin
+    MainForm.FFramePercs.WeaponHealthProgress.Width := AValue * MainForm.FFramePercs.WeaponHealthProgress.Tag / 100;
+
+    if AValue < 40 then
+      MainForm.FFramePercs.WeaponHealthProgress.Fill.Color := cCriticalColor
+    else if AValue < 80 then
+      MainForm.FFramePercs.WeaponHealthProgress.Fill.Color := cNormalColor
+    else
+      MainForm.FFramePercs.WeaponHealthProgress.Fill.Color := cFullColor;
+  end;
 end;
 
 procedure TPerson.SetIsClassicBag(const Value: boolean);
@@ -291,8 +315,8 @@ procedure CancelingAllIssuies;
 var
   vQuery: TFDQuery;
 begin
-  ExeExec('update issuies set status_id = 2 where status_id = 0);', exExecute, vQuery);
-  ExeExec('update issuies_block set status_id = 2 where status_id = 0);', exExecute, vQuery);
+  ExeExec('update issuies set status_id = 2 where status_id = 0;', exExecute, vQuery);
+  ExeExec('update issuies_block set status_id = 2 where status_id = 0;', exExecute, vQuery);
 
   ReloadIssuies;
   MainForm.FFrameMap.UpdateIssue;
@@ -369,6 +393,9 @@ begin
       SetSkin(MainForm.FFrameBag.recSkin5);
     end;
 
+    if Assigned(MainForm.FFrameSettings) then
+      SetSkin(MainForm.FFrameSettings.recSkin);
+
     SetSkin(MainForm.recSkin);
     SetSkin(MainForm.recSkin1);
   finally
@@ -388,6 +415,7 @@ var
   Seconds: integer;
   TotalSeconds: Int64;
   TimeSpan: TTimeSpan;
+  vActionTypeID : integer;
 begin
   AFormatSettings.DateSeparator := '.';
   AFormatSettings.TimeSeparator := ':';
@@ -442,21 +470,19 @@ begin
 {$IF Defined(ANDROID)}
         Vibration(500);
 {$ENDIF}
-        FArmorHealth := FArmorHealth - vDiff * 0.2;
+        ArmorHealth := ArmorHealth - vDiff * 0.2;
 
-        if FArmorHealth < 0 then
-          FArmorHealth := 0;
+        if ArmorHealth < 0 then
+          ArmorHealth := 0;
 
-        FWeaponHealth := FWeaponHealth - vDiff * 0.5;
+        WeaponHealth := WeaponHealth - vDiff * 0.5;
 
-        if FWeaponHealth < 0 then
-          FWeaponHealth := 0;
+        if WeaponHealth < 0 then
+          WeaponHealth := 0;
 
-        ExeExec(Format('update users set health = %s, armor_health = %s, weapon_health = %s;', [StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]), StringReplace(FArmorHealth.ToString, ',', '.', [rfReplaceAll]),
-          StringReplace(FWeaponHealth.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
+        ExeExec(Format('update users set health = %s, armor_health = %s, weapon_health = %s;', [StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]), StringReplace(ArmorHealth.ToString, ',', '.', [rfReplaceAll]),
+          StringReplace(WeaponHealth.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
 
-        SetHealthArmor(FArmorHealth);
-        SetHealthWeapon(FWeaponHealth);
       end
       else
         ExeExec('update users set health = ' + StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]) + ';', exExecute, vQuery);
@@ -475,6 +501,7 @@ begin
 
       if (RoundTo(FHealth, -2) = 0) and (not FIsDead) then
       begin
+        SetMediaVolume(100);
         CancelingAllIssuies;
         FIsDead := true;
         MainForm.animBlood.Stop;
@@ -499,14 +526,12 @@ begin
         begin
           SetHealthProgress(MainForm.FFramePercs.HealthProgress, FHealth);
 
-          FArmorHealth := Ifthen(Random(4) in [1, 2, 3], FArmorHealth - 50, FArmorHealth);
-          FWeaponHealth := Ifthen(Random(4) in [1, 2, 3], 0, FWeaponHealth);
+          ArmorHealth := Ifthen(Random(4) in [1, 2, 3], IfThen(ArmorHealth - 50 < 0, 0, ArmorHealth - 50), ArmorHealth);
+          WeaponHealth := Ifthen(Random(4) in [1, 2, 3], 0, WeaponHealth);
 
-          ExeExec(Format('update users set health = %s, armor_health = %s, weapon_health = %s;', [StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]), StringReplace(FArmorHealth.ToString, ',', '.', [rfReplaceAll]),
-            StringReplace(FWeaponHealth.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
+          ExeExec(Format('update users set health = %s, armor_health = %s, weapon_health = %s;', [StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]), StringReplace(ArmorHealth.ToString, ',', '.', [rfReplaceAll]),
+            StringReplace(WeaponHealth.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
 
-          SetHealthArmor(FArmorHealth);
-          SetHealthWeapon(FWeaponHealth);
         end;
 
         if FKillType = ktLive then
@@ -516,8 +541,9 @@ begin
             if vQuery.RecordCount > 0 then
             begin
               vLastActionDateTime := StrToDateTime(vQuery.FieldByName('action_date_time').AsString, AFormatSettings);
+              vActionTypeID := vQuery.FieldByName('action_type_id').AsInteger;
 
-              case vQuery.FieldByName('action_type_id').AsInteger of
+              case vActionTypeID of
                 1:
                   FKillType := ktWeapon;
                 2:
@@ -545,25 +571,26 @@ begin
                   FKillType := ktAnomaly;
                 4:
                   FKillType := ktRadiation;
-                5:
-                  begin
-                    FKillType := ktPSI;
-                    MainForm.layDeadGlow.Visible := false;
-                    TotalSeconds := 30 * 60 - SecondsBetween(NOW(), vLastActionDateTime);
+                5, 9:     //Если вышел с приложения более чем на 1 минуту, то ты зомби на 30 минут
+                  if ((vActionTypeID = 9) and (SecondsBetween(NOW(), vLastActionDateTime) > 60)) or (vActionTypeID = 5) then
+                    begin
+                      FKillType := ktPSI;
+                      MainForm.layDeadGlow.Visible := false;
+                      TotalSeconds := 30 * 60 - SecondsBetween(NOW(), vLastActionDateTime);
 
-                    // Создаем TTimeSpan
-                    TimeSpan := TTimeSpan.FromSeconds(TotalSeconds);
+                      // Создаем TTimeSpan
+                      TimeSpan := TTimeSpan.FromSeconds(TotalSeconds);
 
-                    // Получаем компоненты времени
-                    Hours := TimeSpan.Hours;
-                    Minutes := TimeSpan.Minutes;
-                    Seconds := TimeSpan.Seconds;
+                      // Получаем компоненты времени
+                      Hours := TimeSpan.Hours;
+                      Minutes := TimeSpan.Minutes;
+                      Seconds := TimeSpan.Seconds;
 
-                    if (Seconds >= 0) then
-                      MainForm.labZombTimer.Text := Format('%.2d:%.2d:%.2d', [Hours, Minutes, Seconds]);
+                      if (Seconds >= 0) then
+                        MainForm.labZombTimer.Text := Format('%.2d:%.2d:%.2d', [Hours, Minutes, Seconds]);
 
-                    MainForm.layZombTimer.Visible := true;
-                    MainForm.TimerZombi.Enabled := true;
+                      MainForm.layZombTimer.Visible := true;
+                      MainForm.TimerZombi.Enabled := true;
                   end;
               end;
 
@@ -605,6 +632,36 @@ begin
       end;
 
     end;
+end;
+
+procedure SetMediaVolume(VolumePercent: Integer);
+{$IF Defined(ANDROID)}
+var
+  AudioManager: JAudioManager;
+  MaxVolume, NewVolume: Integer;
+  Obj: JObject;
+{$ENDIF}
+begin
+{$IF Defined(ANDROID)}
+  // Получаем сервиз AUDIO_SERVICE из контекста Activity
+  Obj := SharedActivityContext.getSystemService(TJContext.JavaClass.AUDIO_SERVICE);
+  // Преобразуем полученный объект в интерфейс JAudioManager
+  AudioManager := TJAudioManager.Wrap((Obj as ILocalObject).GetObjectID);
+
+  if AudioManager <> nil then
+  begin
+    // Получаем максимальную громкость для музыкального потока
+    MaxVolume := AudioManager.getStreamMaxVolume(TJAudioManager.JavaClass.STREAM_MUSIC);
+
+    // Рассчитываем новое значение (VolumePercent от 0 до 100)
+    NewVolume := Round(MaxVolume * (VolumePercent / 100));
+
+    // Устанавливаем новую громкость
+    // Третий параметр (flags) обычно 0, но можно передать, например,
+    // TJAudioManager.JavaClass.FLAG_SHOW_UI, чтобы показать системный индикатор громкости
+    AudioManager.setStreamVolume(TJAudioManager.JavaClass.STREAM_MUSIC, NewVolume, 0);
+  end;
+  {$ENDIF}
 end;
 
 {$IF Defined(ANDROID)}
@@ -858,17 +915,35 @@ end;
 
 procedure BtnClickMedia;
 begin
+  SetMediaVolume(FVolume);
   MainForm.MediaPlayerMenu.CurrentTime := 0;
   MainForm.MediaPlayerMenu.Play;
-   MainForm.MediaPlayerMenu.Volume := 5;
 {$IF Defined(ANDROID)}
   Vibration(50);
 {$ENDIF}
 end;
 
+procedure ReloadMarkers;
+begin
+  MainForm.FFrameMap.LoadMarkers;
+end;
+
 procedure NewMarkerToMap(ACoords: TLocationCoord2D; AText: String; AMarkerType: TMarkerType; AIsOwner: boolean);
 begin
   MainForm.FFrameMap.NewMarkerToMap(ACoords, AText, AMarkerType, AIsOwner);
+end;
+
+procedure SetNotifications;
+begin
+  MainForm.MediaPlayerNotification.CurrentTime := 0;
+  MainForm.MediaPlayerNotification.Play;
+  MainForm.animNotification.Enabled := true;
+  MainForm.FFrameIssuies.animNotification.Enabled := true;
+end;
+
+procedure ReloadNotificationData;
+begin
+  MainForm.FFrameIssuies.LoadInfoData;
 end;
 
 end.

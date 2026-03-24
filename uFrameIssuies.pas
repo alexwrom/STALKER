@@ -15,7 +15,6 @@ type
   TFrameIssuies = class(TFrame)
     ImageList: TImageList;
     layTopMenu: TLayout;
-    Layout3: TLayout;
     GridPanelLayout1: TGridPanelLayout;
     imgBtnActive: TImage;
     btnToActive: TSpeedButton;
@@ -65,25 +64,30 @@ type
     Rectangle1: TRectangle;
     InnerGlowEffect6: TInnerGlowEffect;
     recSkin2: TRectangle;
+    recNotification: TRectangle;
+    animNotification: TFloatAnimation;
     procedure btnToActiveClick(Sender: TObject);
     procedure btnToCompleteClick(Sender: TObject);
     procedure btnToCancelClick(Sender: TObject);
     procedure btnToInfoClick(Sender: TObject);
+    procedure btnDownloadInfoClick(Sender: TObject);
   private
     FAllIssueList: TList<TIssueData>;
     FNotificationsList: TList<TNotificationData>;
     FControlListIssuies: TControlListItem;
     FControlListAdditional: TControlListItem;
     FControlListNotifications: TControlListItem;
+    FNotificationSelID: integer;
     procedure LoadIssuiesData;
     procedure ItemClick(FTagObject: TObject; FItem: TFMXObject);
     procedure LoadInfo;
-    procedure LoadInfoData;
     procedure ItemNotificationClick(FTagObject: TObject; FItem: TFMXObject);
+    function GetNotification(AID: integer): TNotificationData;
 
     { Private declarations }
   public
     { Public declarations }
+    procedure LoadInfoData;
     procedure LoadIssuies(AStatus: integer);
     procedure ClearSelection;
     constructor Create(AObject: TFMXObject);
@@ -139,7 +143,8 @@ var
   I: integer;
   listitem: TControlItem;
 begin
-  LoadInfoData;
+  if Not Assigned(FNotificationsList) then
+    LoadInfoData;
 
   recSelectNotification.Parent := nil;
 
@@ -169,7 +174,6 @@ begin
       Tag := FNotificationsList[I].ID;
       TagObject := listitem;
       ShowHint := false;
-      Hint := FNotificationsList[I].MessageText;
 
       if FNotificationsList[I].IsOpen then
       begin
@@ -192,17 +196,20 @@ procedure TFrameIssuies.LoadInfoData;
 var
   vQuery: TFDQuery;
   vNotifItem: TNotificationData;
+  countNotOpen: integer;
 begin
   if Assigned(FNotificationsList) then
     FNotificationsList.Clear
   else
     FNotificationsList := TList<TNotificationData>.Create;
 
-  ExeExec('select * from notifications_for_me where group_id = ' + Person.GroupId.ToString + ';', exActive, vQuery);
+  ExeExec('select * from notifications_for_me where is_owner = false;', exActive, vQuery);
 
   if vQuery.RecordCount > 0 then
   begin
     vQuery.First;
+
+    countNotOpen := 0;
 
     while Not vQuery.Eof do
     begin
@@ -210,13 +217,34 @@ begin
       vNotifItem.Name := vQuery.FieldByName('name').AsString;
       vNotifItem.MessageText := vQuery.FieldByName('message').AsString;
       vNotifItem.IsOpen := vQuery.FieldByName('is_open').AsBoolean;
-      vNotifItem.LoadData := vQuery.FieldByName('load_data').AsString;
+      vNotifItem.Data := vQuery.FieldByName('data').AsString;
+
+      if Not vNotifItem.IsOpen then
+        Inc(countNotOpen);
+
       FNotificationsList.Add(vNotifItem);
       vQuery.Next;
     end;
+
+    if countNotOpen > 0 then
+      SetNotifications;
   end;
 
   FreeQueryAndConn(vQuery);
+end;
+
+procedure TFrameIssuies.btnDownloadInfoClick(Sender: TObject);
+begin
+  MessageDlg('«агрузить все метки из этого сообщени€?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
+    procedure(const AResult: TModalResult)
+    var
+      vQuery: TFDQuery;
+      vNotification : TNotificationData;
+    begin
+      vNotification := GetNotification(FNotificationSelID);
+      ExeExec(vNotification.Data, exExecute, vQuery);
+      ReloadMarkers;
+    end);
 end;
 
 procedure TFrameIssuies.btnToActiveClick(Sender: TObject);
@@ -250,6 +278,8 @@ begin
   labMessageText.Text := '';
   TabControl.ActiveTab := TabInfo;
   recSelectMenu.Parent := ImgBtnInfo;
+  animNotification.Enabled := false;
+  recNotification.Opacity := 0;
   LoadInfo;
 end;
 
@@ -317,20 +347,35 @@ begin
   FControlListIssuies.Repaint;
 end;
 
+function TFrameIssuies.GetNotification(AID: integer): TNotificationData;
+  var
+   vNotification : TNotificationData;
+  begin
+    for vNotification in FNotificationsList do
+      if vNotification.ID = AID then
+        begin
+          Result := vNotification;
+          break;
+        end;
+  end;
+
 procedure TFrameIssuies.ItemNotificationClick(FTagObject: TObject; FItem: TFMXObject);
 var
   vQuery: TFDQuery;
+  vNotification : TNotificationData;
 begin
+  FNotificationSelID := (FItem as TControlItem).Tag;
+  vNotification := GetNotification(FNotificationSelID);
   BtnClickMedia;
   recSelectNotification.Parent := (FItem as TControlItem).rcBackground;
   recSelectNotification.Align := TAlignLayout.Bottom;
   recSelectNotification.BringToFront;
   recSelectNotification.Visible := true;
-  labMessageText.Text := (FItem as TControlItem).Hint;
+  labMessageText.Text := StringReplace(vNotification.MessageText, '\n', #13#10,[rfReplaceAll]);
   (FItem as TControlItem).GetImage.Assign(ImageList.Source[4].MultiResBitmap[0].Bitmap);
   (FItem as TControlItem).labCenterText.TextSettings.FontColor := TAlphaColors.Darkgray;
-  layDownload.Visible := Pos('#download', labMessageText.Text) > 0;
-  ExeExec('update notifications set is_open = true where notification_id = ' + (FItem as TControlItem).Tag.ToString + ';', exExecute, vQuery);
+  layDownload.Visible := vNotification.Data <> '';
+  ExeExec('update notifications set is_open = true where notification_id = ' + FNotificationSelID.ToString + ';', exExecute, vQuery);
 end;
 
 procedure TFrameIssuies.ItemClick(FTagObject: TObject; FItem: TFMXObject);

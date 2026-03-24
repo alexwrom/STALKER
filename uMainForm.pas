@@ -24,7 +24,7 @@ uses
   FMX.Platform.Android,
 {$ENDIF}
   uScanerWiFi, FMX.Ani, FMX.Effects, IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer, IdTCPConnection, IdTCPClient, FMX.Edit, FMX.Media,
-  uFrameLogin, Classes.answer, OAuth2, Classes.Data, uGenericBaseData, Classes.userdata;
+  uFrameLogin, Classes.answer, OAuth2, Classes.Data, uGenericBaseData, Classes.userdata, uFrameSettings;
 
 type
 
@@ -98,6 +98,15 @@ type
     Image20: TImage;
     Image21: TImage;
     animBlood: TFloatAnimation;
+    MediaPlayerZombi: TMediaPlayer;
+    MediaPlayerNotification: TMediaPlayer;
+    recNotification: TRectangle;
+    animNotification: TFloatAnimation;
+    ImgSettings: TImage;
+    btnSettings: TSpeedButton;
+    Image22: TImage;
+    InnerGlowEffect8: TInnerGlowEffect;
+    TabSettings: TTabItem;
     procedure FormCreate(Sender: TObject);
     procedure btnToMapClick(Sender: TObject);
     procedure btnToPercsClick(Sender: TObject);
@@ -111,6 +120,8 @@ type
     procedure TimerUpdateDataTimer(Sender: TObject);
     procedure btnKillClick(Sender: TObject);
     procedure TimerZombiTimer(Sender: TObject);
+    procedure FormDeactivate(Sender: TObject);
+    procedure btnSettingsClick(Sender: TObject);
   private
 
     procedure LoadArtefacts;
@@ -129,7 +140,7 @@ type
     FFrameIssuies: TFrameIssuies;
     FFrameBag: TFrameBag;
     FFrameLogin: TFrameLogin;
-   // FAndroidFullScreen : TAndroidFullScreen;
+    FFrameSettings: TFrameSettings;
     procedure CreateFrameLogin;
     procedure StartApp;
     procedure LoadIsuies;
@@ -154,13 +165,36 @@ end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
+  labZombTimer.TextSettings.Font.Family := 'montblancctt';
+
 {$IF Defined(ANDROID) or Defined(IOS)}
   Self.FullScreen := TOSVersion.Check(11);
   FIsSendMarkers := false;
-
   FKillType := ktLive;
   MediaPlayerMenu.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'menu.mp3');
+  MediaPlayerZombi.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'zombi.mp3');
+  MediaPlayerNotification.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'notification.mp3');
 {$ENDIF}
+end;
+
+procedure TMainForm.FormDeactivate(Sender: TObject);
+var
+  vQuery: TFDQuery;
+  vBitmapFog: TBitmap;
+begin
+  ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [9, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]),
+          exExecute, vQuery);
+
+  if FileExists(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'fog.png')) then
+    DeleteFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'fog.png'));
+
+    vBitmapFog:= TBitmap.Create;
+    try
+      vBitmapFog.Assign(FSurfaceFog);
+      vBitmapFog.SaveToFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'fog.png')) ;
+    finally
+      vBitmapFog.Free;
+    end;
 end;
 
 procedure TMainForm.LoadBag;
@@ -397,12 +431,26 @@ begin
   LoadPlaces;
   LoadCritical;
 
-  if Assigned(FFrameMap) then
+  if Assigned(FFrameLogin) then
+    FFrameLogin.Visible := false;
+
+  TabControl.Repaint;
+
+  TThread.Synchronize(nil,procedure
+  begin
+    if Assigned(FFrameMap) then
     FreeAndNil(FFrameMap);
 
   FFrameMap := TFrameMap.Create(TabMap);
   FFrameMap.Parent := TabMap;
   FFrameMap.timerCheckCritical.Enabled := true;
+  end);
+
+  if Assigned(FFrameSettings) then
+    FreeAndNil(FFrameSettings);
+
+  FFrameSettings := TFrameSettings.Create(TabSettings);
+  FFrameSettings.Parent := TabSettings;
 
   if Assigned(FFramePercs) then
     FreeAndNil(FFramePercs);
@@ -429,11 +477,21 @@ begin
   FFrameQRScanner := TFrameQRScanner.Create(TabQRScanner);
   FFrameQRScanner.Parent := TabQRScanner;
 
-  if Assigned(FFrameLogin) then
-    FFrameLogin.Visible := false;
+  
 
   {$IFDEF ANDROID}
-    FFrameMap.TimerSensor.Enabled := true;
+  PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.CHANGE_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.NEARBY_WIFI_DEVICES', 'android.permission.CHANGE_WIFI_MULTICAST_STATE'],
+    procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
+    begin
+      if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
+        begin
+           FFrameMap.TimerSensor.Enabled := true;
+        end
+      else
+        begin
+          ShowMessage('Необходимы разрешения для сканирования Wi-Fi');
+        end;
+    end);
   {$ENDIF}
 end;
 
@@ -490,6 +548,9 @@ begin
     begin
       if (AResult = mrYes) then
       begin
+        MediaPlayerZombi.CurrentTime := 0;
+        MediaPlayerZombi.Stop;
+        SetMediaVolume(100);
         TimerZombi.Enabled := false;
         FKillType := ktWeapon;
         layZombTimer.Visible := false;
@@ -497,6 +558,15 @@ begin
         Person.Health := 0;
       end;
     end);
+end;
+
+procedure TMainForm.btnSettingsClick(Sender: TObject);
+begin
+  BtnClickMedia;
+  TabControl.ActiveTab := TabSettings;
+  recSelect.Parent := ImgSettings;
+  StopDetector;
+  layPersonHealth.Visible := false;
 end;
 
 procedure TMainForm.btnToBagClick(Sender: TObject);
@@ -512,7 +582,6 @@ begin
   layPersonHealth.Visible := false;
 
   CreateBagFrame;
-  TabControl.ActiveTab := TabBag;
 end;
 
 procedure TMainForm.CreateBagFrame;
@@ -544,6 +613,7 @@ begin
 
         Person.Cash := Person.Cash;
         Person.GroupId := Person.GroupId;
+        TabControl.ActiveTab := TabBag;
       end);
 
   end);
@@ -563,6 +633,8 @@ begin
   FFrameIssuies.btnToActiveClick(nil);
   FFrameIssuies.ClearSelection;
   Person.GroupId := Person.GroupId;
+  animNotification.Enabled := false;
+  recNotification.Opacity := 0;
 end;
 
 procedure TMainForm.btnToMapClick(Sender: TObject);
@@ -587,12 +659,13 @@ begin
   StopDetector;
   layPersonHealth.Visible := false;
   Person.GroupId := Person.GroupId;
+  Person.ArmorHealth := Person.ArmorHealth;
+  Person.WeaponHealth := Person.WeaponHealth;
 end;
 
 procedure TMainForm.btnToQRScannerClick(Sender: TObject);
 begin
-  MediaPlayerMenu.CurrentTime := 0;
-  MediaPlayerMenu.Play;
+  BtnClickMedia;
   TabControl.ActiveTab := TabQRScanner;
   recSelect.Parent := imgBtnQRScanner;
   FFrameQRScanner.StartScan;
@@ -657,6 +730,7 @@ begin
       vUserdata: TUserdata;
       vSQL: Unicodestring;
       vQuery: TFDQuery;
+      I: integer;
     begin
       try
         vData := TData.Create;
@@ -671,18 +745,20 @@ begin
 
         if vAnswer.Status = 'success' then
           begin
-            ExeExec('delete from life_log where action_date_time <> (select max(action_date_time) from life_log);', exExecute, vQuery);
+            ExeExec('delete from life_log where action_date_time <> (select max(action_date_time) from life_log); delete from notifications where is_owner = true;', exExecute, vQuery);
           end;
-        {
+
           vData := TJSON.JsonToObject<TData>(vAnswer.Json);
 
           if vData.SQL.Count > 0 then
           begin
-          for I := 0 to vData.SQL.Count - 1 do
-          vSQL := vSQL + vData.SQL[I];
+            for I := 0 to vData.SQL.Count - 1 do
+              vSQL := vSQL + vData.SQL[I];
 
-          ExeExec(vSQL, exExecute, vQuery);
-          end; }
+              ExeExec(vSQL, exExecute, vQuery);
+          end;
+
+          ReloadNotificationData;
       finally
         FreeAndNil(vAnswer);
         FreeAndNil(vData);
@@ -698,12 +774,20 @@ var
 begin
   if labZombTimer.Text = '00:00:00' then
   begin
+    MediaPlayerZombi.CurrentTime := 0;
+    MediaPlayerZombi.Stop;
     TimerZombi.Enabled := false;
     FKillType := ktStopZombi;
     layZombTimer.Visible := false;
+    SetMediaVolume(FVolume);
   end
   else
   begin
+    SetMediaVolume(100);
+    MediaPlayerZombi.Play;
+
+    if MediaPlayerZombi.CurrentTime = MediaPlayerZombi.Duration then
+      MediaPlayerZombi.CurrentTime := 0;
     // Разбиваем текущее время из Label на часы, минуты, секунды
     TimeParts := labZombTimer.Text.Split([':']);
 
