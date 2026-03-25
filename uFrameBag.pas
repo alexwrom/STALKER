@@ -194,21 +194,19 @@ type
     Layout15: TLayout;
     Image30: TImage;
     laySellQR: TLayout;
-    recSkin5: TRectangle;
-    InnerGlowEffect16: TInnerGlowEffect;
+    recBackQR: TRectangle;
     imgQR: TImage;
     btnCloseChangeSlot: TSpeedButton;
     btnCloseInfo: TSpeedButton;
     btnCloseQR: TSpeedButton;
-    InnerGlowEffect9: TInnerGlowEffect;
     InnerGlowEffect11: TInnerGlowEffect;
     InnerGlowEffect17: TInnerGlowEffect;
     Layout5: TLayout;
-    Layout9: TLayout;
     Layout16: TLayout;
     recBackArt: TRectangle;
     layPercs: TLayout;
     recBackInfo: TRectangle;
+    Layout9: TLayout;
     procedure SwitchStyleSwitch(Sender: TObject);
     procedure btnCloseInfoClick(Sender: TObject);
     procedure btnAddArmorClick(Sender: TObject);
@@ -378,6 +376,7 @@ procedure TFrameBag.bntSellsClick(Sender: TObject);
 var
   vSend: TSend;
   vSell: TSell;
+  vStrSend: string;
 begin
   BtnClickMedia;
   layInfo.Visible := False;
@@ -399,7 +398,10 @@ begin
 {$IFDEF ANDROID}
   vSend.Ip := GetMyIP;
 {$ENDIF}
-  GenerateQRCode(TJson.ObjectToJsonString(vSend), imgQR);
+  vStrSend := TJson.ObjectToJsonString(vSend);
+  vStrSend := StringReplace(vStrSend,'"code":"",','',[]);
+  vStrSend := StringReplace(vStrSend,',"marker":null','',[]);
+  GenerateQRCode(vStrSend, imgQR);
 end;
 
 procedure TFrameBag.btnAddArmorClick(Sender: TObject);

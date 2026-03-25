@@ -30,7 +30,7 @@ type
   TMarkerType = (mtPoint, mtPointRad, mtPointAnomaly, mtPointBag, mtIssue, mtBase, mtSafe, mtRadiation, mtAnomaly, mtArtefact);
   TAnomalyType = (atElectro, atFire, atPhisic, atRadiation, atChimishe, atPSI);
   TBagType = (btMedical, btArmor, btWeapon, btArt, btDetector);
-  TSendType = (stSell, stIssue, stAnswerSell, stCancelSell, stUpdateData, stUserExists, stLoadArmor);
+  TSendType = (stSell, stCancelSell, stMedic, stTehnic);
   TKillType = (ktWeapon, ktAnomaly, ktPSI, ktCritical, ktRadiation, ktStopZombi, ktLive);
 
   TColumn = record
@@ -160,6 +160,7 @@ type
     FLevelMedic: integer;
     FLevelTehnic: integer;
     FWeaponLevel: integer;
+    FIsDead: boolean;
     procedure SetHealth(const Value: double);
     
     procedure SetCash(const Value: Extended);
@@ -168,6 +169,7 @@ type
     procedure SetUserId(const Value: integer);
     procedure SetHealthArmor(AValue: double);
     procedure SetHealthWeapon(AValue: double);
+    procedure SetIsDead(const Value: boolean);
   public
     constructor Create;
     property UserName: string read FUserName write FUserName;
@@ -191,7 +193,7 @@ type
     property Detector: TDetector read FDetector write FDetector;
     property LevelMedic: integer read FLevelMedic write FLevelMedic;
     property LevelTehnic: integer read FLevelTehnic write FLevelTehnic;
-
+    property IsDead: boolean read FIsDead write SetIsDead;
     
   end;
 
@@ -222,6 +224,8 @@ procedure NewMarkerToMap(ACoords: TLocationCoord2D; AText: String; AMarkerType: 
 procedure SetNotifications;
 procedure ReloadNotificationData;
 procedure ReloadMarkers;
+procedure OpenMap;
+procedure OpenPercs;
 
 var
   Person: TPerson;
@@ -231,7 +235,6 @@ var
   FIssueList: TList<TIssueData>;
   FPlacesList: TList<TPlaceData>;
   FBagList: TList<TBagData>;
-  FIsDead: boolean;
   FIsMerchantZone: boolean;
   FArmorPerc: TPerc;
   FCritical: TList<TCritical>;
@@ -304,6 +307,16 @@ begin
 
   if Assigned(Person) then
     ExeExec('update users set is_classic_bag = ' + FIsClassicBag.ToString + ';', exExecute, vQuery);
+end;
+
+procedure TPerson.SetIsDead(const Value: boolean);
+begin
+  FIsDead := Value;
+  MainForm.FFrameMap.layBtnKill.Visible := not FIsDead;
+  MainForm.ImgBtnPercs.Enabled := not FIsDead;
+  MainForm.imgBtnBag.Enabled := not FIsDead;
+  MainForm.imgBtnIssuies.Enabled := not FIsDead;
+  MainForm.FFrameMap.btnSendMarkers.Enabled := not FIsDead;
 end;
 
 procedure TPerson.SetUserId(const Value: integer);
@@ -390,7 +403,6 @@ begin
       SetSkin(MainForm.FFrameBag.recSkin2);
       SetSkin(MainForm.FFrameBag.recSkin3);
       SetSkin(MainForm.FFrameBag.recSkin4);
-      SetSkin(MainForm.FFrameBag.recSkin5);
     end;
 
     if Assigned(MainForm.FFrameSettings) then
@@ -425,21 +437,19 @@ begin
   if NOT MainForm.TimerZombi.Enabled then // Если режим зомби, то нас ничего не лечит
     if (RoundTo(FHealth, -2) <> RoundTo(Value, -2)) then
     begin
-      if FIsDead then
+      if  Person.IsDead then
         if ((Value > 20) and (RoundTo(FHealth, -2) < RoundTo(Value, -2))) then
         begin
-          MainForm.layMenu.Enabled := true;
           MainForm.layDeadGlow.Visible := false;
-          FIsDead := false;
+          Person.IsDead := false;
           FKillType := ktLive;
         end
         else
         begin
-          MainForm.layMenu.Enabled := false;
           MainForm.animBlood.Stop;
           MainForm.layDeadGlow.Opacity := 1;
           MainForm.layDeadGlow.Visible := true;
-          FIsDead := true;
+          Person.IsDead := true;
         end;
 
       if MainForm.TabControl.ActiveTab <> MainForm.TabPercs then
@@ -499,17 +509,16 @@ begin
     begin
       SetHealthProgress(MainForm.HealthProgress, FHealth);
 
-      if (RoundTo(FHealth, -2) = 0) and (not FIsDead) then
+      if (RoundTo(FHealth, -2) = 0) and (not Person.IsDead) then
       begin
         SetMediaVolume(100);
         CancelingAllIssuies;
-        FIsDead := true;
+        Person.IsDead := true;
         MainForm.animBlood.Stop;
         MainForm.recSelect.Parent := MainForm.imgBtnMap;
         MainForm.layDeadGlow.Opacity := 1;
         MainForm.layDeadGlow.Visible := true;
 
-        MainForm.layMenu.Enabled := false;
         MainForm.TabControl.ActiveTab := MainForm.TabMap;
         MainForm.StopDetector;
 
@@ -944,6 +953,16 @@ end;
 procedure ReloadNotificationData;
 begin
   MainForm.FFrameIssuies.LoadInfoData;
+end;
+
+procedure OpenMap;
+begin
+  MainForm.btnToMapClick(nil);
+end;
+
+procedure OpenPercs;
+begin
+  MainForm.btnToPercsClick(nil);
 end;
 
 end.

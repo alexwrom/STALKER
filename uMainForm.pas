@@ -122,6 +122,7 @@ type
     procedure TimerZombiTimer(Sender: TObject);
     procedure FormDeactivate(Sender: TObject);
     procedure btnSettingsClick(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
   private
 
     procedure LoadArtefacts;
@@ -163,6 +164,27 @@ begin
   timerScannerWifiMerchant.Enabled := true;
 end;
 
+procedure TMainForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+var
+  vBitmapFog: TBitmap;
+begin
+  TThread.Synchronize(nil, procedure
+  begin
+    FFrameMap.ScrollBox.ViewportPosition := TPointF.Create(FFrameMap.MapLayout.Width, FFrameMap.MapLayout.Height);
+
+    if FileExists(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'fog.png')) then
+      DeleteFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'fog.png'));
+
+      vBitmapFog:= TBitmap.Create;
+      try
+        vBitmapFog.Assign(FSurfaceFog);
+        vBitmapFog.SaveToFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'fog.png')) ;
+      finally
+        vBitmapFog.Free;
+      end;
+  end);
+end;
+
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   labZombTimer.TextSettings.Font.Family := 'montblancctt';
@@ -180,21 +202,8 @@ end;
 procedure TMainForm.FormDeactivate(Sender: TObject);
 var
   vQuery: TFDQuery;
-  vBitmapFog: TBitmap;
 begin
-  ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [9, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]),
-          exExecute, vQuery);
-
-  if FileExists(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'fog.png')) then
-    DeleteFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'fog.png'));
-
-    vBitmapFog:= TBitmap.Create;
-    try
-      vBitmapFog.Assign(FSurfaceFog);
-      vBitmapFog.SaveToFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'fog.png')) ;
-    finally
-      vBitmapFog.Free;
-    end;
+  ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [9, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
 end;
 
 procedure TMainForm.LoadBag;
@@ -436,14 +445,15 @@ begin
 
   TabControl.Repaint;
 
-  TThread.Synchronize(nil,procedure
+  TThread.Synchronize(nil,
+  procedure
   begin
     if Assigned(FFrameMap) then
-    FreeAndNil(FFrameMap);
+      FreeAndNil(FFrameMap);
 
-  FFrameMap := TFrameMap.Create(TabMap);
-  FFrameMap.Parent := TabMap;
-  FFrameMap.timerCheckCritical.Enabled := true;
+    FFrameMap := TFrameMap.Create(TabMap);
+    FFrameMap.Parent := TabMap;
+    FFrameMap.timerCheckCritical.Enabled := true;
   end);
 
   if Assigned(FFrameSettings) then
@@ -503,7 +513,7 @@ var
 begin
   vAnswerText := AContext.Connection.Socket.ReadLn();
 
-  if Assigned(FFrameBag.FActiveAction) then
+  if Assigned(FFrameBag) and Assigned(FFrameBag.FActiveAction) then
     try
       case FFrameBag.FActiveAction.SendType of
         stSell:
@@ -512,8 +522,6 @@ begin
 
             try
               vSell := TJSON.JsonToObject<TSell>(FFrameBag.FActiveAction.JSONObject);
-
-              FFrameBag.FActiveAction.PageCount := 1;
 
               if TJSON.JsonToObject<TPerson>(vAnswerText).Cash - vSell.Cost >= 0 then
               begin
@@ -536,8 +544,31 @@ begin
           end;
       end;
     finally
+      FFrameBag.FActiveAction.Free;
       FFrameBag.laySellQR.Visible := false;
       ReloadBag;
+    end;
+
+    if  Assigned(FFramePercs) and Assigned(FFramePercs.FActiveAction) then
+    try
+      case FFramePercs.FActiveAction.SendType of
+        stMedic:
+          begin
+            ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [10, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]), exExecute, FDQuery);
+            FFramePercs.StartTimerMedicPercReload(NOW());
+          end;
+        stTehnic:
+          begin
+            ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [11, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]), exExecute, FDQuery);
+            FFramePercs.StartTimerTehnicPercReload(NOW());
+          end;
+      end;
+
+      AContext.Connection.Socket.WriteLn(TJSON.ObjectToJsonString(FFramePercs.FActiveAction), IndyUTF8Encoding(true));
+      AContext.Connection.Disconnect;
+    finally
+      FFramePercs.FActiveAction.Free;
+      FFramePercs.layQR.Visible := false;
     end;
 end;
 
@@ -554,7 +585,7 @@ begin
         TimerZombi.Enabled := false;
         FKillType := ktWeapon;
         layZombTimer.Visible := false;
-        FIsDead := false;
+        Person.IsDead := false;
         Person.Health := 0;
       end;
     end);
@@ -661,6 +692,8 @@ begin
   Person.GroupId := Person.GroupId;
   Person.ArmorHealth := Person.ArmorHealth;
   Person.WeaponHealth := Person.WeaponHealth;
+  FFramePercs.layPercsUp.Visible := false;
+  FFramePercs.laySelection.Visible := false;
 end;
 
 procedure TMainForm.btnToQRScannerClick(Sender: TObject);

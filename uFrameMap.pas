@@ -351,13 +351,19 @@ begin
 
     case vQuery.FieldByName('marker_type_id').AsInteger of
       0:
-          NewMarkerToMap(ACoords, 'Моя точка', mtPoint, vIsOwner);
+        if vIsOwner then
+          NewMarkerToMap(ACoords, 'Моя точка', mtPoint)
+        else
+          NewMarkerToMap(ACoords, 'Чужая точка', mtPoint, false);
       1:
           NewMarkerToMap(ACoords, 'Радиация', mtPointRad, vIsOwner);
       2:
           NewMarkerToMap(ACoords, 'Аномалия', mtPointAnomaly, vIsOwner);
       3:
-          NewMarkerToMap(ACoords, 'Схрон', mtPointBag, vIsOwner);
+        if vIsOwner then
+          NewMarkerToMap(ACoords, 'Мой схрон', mtPoint)
+        else
+          NewMarkerToMap(ACoords, 'Чужой схрон', mtPoint, false);
     end;
     vQuery.Next;
   end;
@@ -598,7 +604,7 @@ begin
 
   if vIsInnerCritical then
   begin
-    if (FSecondBeforeStartDamage <= 0) and (NOT FIsDead) then
+    if (FSecondBeforeStartDamage <= 0) and (NOT Person.IsDead) then
     begin
       FKillType := ktCritical;
       StartDamageGlow;
@@ -1085,16 +1091,19 @@ procedure TFrameMap.MapImageGesture(Sender: TObject; const EventInfo: TGestureEv
   end;
 
 begin
-  FCoords := PixelsToCoordinates(FLongTap.X, FLongTap.Y);
-  btnAddMarker.Enabled := GetPoints < 10;
-  btnAddMarkerRad.Enabled := GetPoints < 10;
-  btnAddMarkerBag.Enabled := GetPoints < 10;
-  btnAddMarkerAnomaly.Enabled := GetPoints < 10;
-  labMarkerCount.Text := GetPoints.ToString + '/10';
-  // Устанавливаем маркер
-  SetMarker(MarkersPanel, FCoords.Latitude, FCoords.Longitude);
-  MarkersPanel.Visible := true;
-  MarkersPanel.BringToFront;
+  if not Person.IsDead then
+  begin
+    FCoords := PixelsToCoordinates(FLongTap.X, FLongTap.Y);
+    btnAddMarker.Enabled := GetPoints < 10;
+    btnAddMarkerRad.Enabled := GetPoints < 10;
+    btnAddMarkerBag.Enabled := GetPoints < 10;
+    btnAddMarkerAnomaly.Enabled := GetPoints < 10;
+    labMarkerCount.Text := GetPoints.ToString + '/10';
+    // Устанавливаем маркер
+    SetMarker(MarkersPanel, FCoords.Latitude, FCoords.Longitude);
+    MarkersPanel.Visible := true;
+    MarkersPanel.BringToFront;
+  end;
 end;
 
 procedure TFrameMap.SetMarker(AMarker: TImage; Lat, Lon: Double);
@@ -1292,8 +1301,7 @@ begin
     begin
       if (AResult = mrYes) then
       begin
-       // FKillType := ktWeapon;
-        FKillType := ktPSI;
+        FKillType := ktWeapon;
         Person.Health := 0;
       end;
     end);
@@ -1765,7 +1773,7 @@ end;
 
 procedure TFrameMap.timerScanAnomaliesNextToTimer(Sender: TObject);
 begin
-  if Not FIsDead then
+  if Not Person.IsDead then
     ScanAnomaliesNextTo;
 end;
 
@@ -1780,7 +1788,7 @@ begin
       if Person.Health < 100 then
         ScanBaseSafeDead;
 
-   if Not FIsDead then
+   if Not Person.IsDead then
     begin
       ScanAnomalies;
       ScanIssuies;

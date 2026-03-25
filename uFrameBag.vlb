@@ -4,14 +4,8 @@ Coordinates=424,786,67,36
 [layChangeSlot]
 Coordinates=316,786,98,36
 
-[InnerGlowEffect9]
-Coordinates=995,1,113,36
-
 [InnerGlowEffect6]
 Coordinates=995,56,113,36
-
-[InnerGlowEffect16]
-Coordinates=995,111,120,36
 
 [Image6]
 Coordinates=809,146,57,58
@@ -160,9 +154,6 @@ Coordinates=910,648,103,36
 [Image14]
 Coordinates=10,78,64,58
 
-[Layout9]
-Coordinates=840,648,60,36
-
 [flMedicalBackground]
 Coordinates=696,648,134,36
 
@@ -306,9 +297,6 @@ Coordinates=931,823,64,36
 
 [Image15]
 Coordinates=943,214,64,58
-
-[recSkin5]
-Coordinates=861,556,65,36
 
 [Layout2]
 Coordinates=791,556,60,36
@@ -585,7 +573,7 @@ Coordinates=312,350,67,36
 Coordinates=167,350,64,36
 
 []
-Coordinates=1528,441,113,36
+Coordinates=840,648,60,36
 
 [recBackInfo]
 Coordinates=77,350,80,36
@@ -595,4 +583,7 @@ Coordinates=241,350,61,36
 
 [laySellQR]
 Coordinates=10,556,72,36
+
+[recBackQR]
+Coordinates=861,556,65,36
 

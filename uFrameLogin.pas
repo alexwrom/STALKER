@@ -86,48 +86,59 @@ begin
   Result := false;
   ProgressBar.Value := 0;
   try
-    vUser := TUser.Create;
-    vUser.Username := eNickName.Text;
-    vUser.Password := ePassword.Text;
-    vUser.UserID := -1;
+    try
+      vUser := TUser.Create;
+      vUser.Username := eNickName.Text;
+      vUser.Password := ePassword.Text;
+      vUser.UserID := -1;
 
-    AAnswer := TJSON.JsonToObject<TAnswer>(PostDataServer('api/get_data',TJSON.ObjectToJsonString(vUser)));
+      AAnswer := TJSON.JsonToObject<TAnswer>(PostDataServer('api/get_data',TJSON.ObjectToJsonString(vUser)));
 
-    if Assigned(AAnswer) then
-      if (AAnswer.Status = 'success') then
-      begin
-        AData := TJSON.JsonToObject<TData>(AAnswer.Json);
-
-        TThread.Synchronize(nil,
-          procedure
-          begin
-            ProgressBar.Max := AData.SQL.Count;
-          end);
-
-        for I := 0 to AData.SQL.Count - 1 do
+      if Assigned(AAnswer) then
+        if (AAnswer.Status = 'success') then
         begin
-          vSQL := vSQL + AData.SQL[I];
+          AData := TJSON.JsonToObject<TData>(AAnswer.Json);
 
           TThread.Synchronize(nil,
             procedure
             begin
-              ProgressBar.Value := ProgressBar.Value + 1;
+              ProgressBar.Max := AData.SQL.Count;
             end);
-        end;
 
-        try
-          ExeExec(vSQL, exExecute, vQuery);
-          Result := true;
-        except
+          for I := 0 to AData.SQL.Count - 1 do
+          begin
+            vSQL := vSQL + AData.SQL[I];
+
+            TThread.Synchronize(nil,
+              procedure
+              begin
+                ProgressBar.Value := ProgressBar.Value + 1;
+              end);
+          end;
+
+          try
+            ExeExec(vSQL, exExecute, vQuery);
+            Result := true;
+          except
+            Result := false;
+
+            TThread.Synchronize(nil,
+              procedure
+              begin
+                Showmessage('Ошибка обновления базы');
+              end);
+          end;
+        end
+        else
+        begin
           Result := false;
 
           TThread.Synchronize(nil,
             procedure
             begin
-              Showmessage('Ошибка обновления базы');
+              Showmessage(AAnswer.Message);
             end);
-        end;
-      end
+        end
       else
       begin
         Result := false;
@@ -135,18 +146,17 @@ begin
         TThread.Synchronize(nil,
           procedure
           begin
-            Showmessage(AAnswer.Message);
+            Showmessage('Нет связи с сетью');
           end);
-      end
-    else
-    begin
+      end;
+    except
       Result := false;
 
-      TThread.Synchronize(nil,
-        procedure
-        begin
-          Showmessage('Нет связи с сетью');
-        end);
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            Showmessage('Ошибка получения данных');
+          end);
     end;
   finally
     FreeAndNil(AAnswer);

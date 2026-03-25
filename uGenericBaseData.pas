@@ -69,11 +69,8 @@ begin
             vColValue := vColValue + IfThen(i = 0, '', ',') + QuotedStr(FDQuery.FieldByName(vColumns[i].Name).AsString);
         end;
 
-        if (ATable <> 'notifications') then
-        begin
-          vColName := vColName + ',' + 'user_id'; // Вот здесь user_id
-          vColValue := vColValue + ',' + Person.UserId.ToString;
-        end;
+        vColName := vColName + ',' + 'user_id'; // Вот здесь user_id
+        vColValue := vColValue + ',' + Person.UserId.ToString;
 
         AStrData.Add('insert into ' + ATable + ' (' + vColName + ') values (' + vColValue + ');');
         FDQuery.Next;
@@ -97,7 +94,6 @@ begin
   GenerateTableInsert('belt', Result);
   GenerateTableInsert('users', Result);
   GenerateTableInsert('life_log', Result);
-
 
   if FIsSendMarkers then
    begin

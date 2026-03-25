@@ -13,6 +13,7 @@ object MainForm: TMainForm
   FormFactor.Devices = [Desktop, iPhone, iPad]
   OnActivate = FormActivate
   OnCreate = FormCreate
+  OnCloseQuery = FormCloseQuery
   OnDeactivate = FormDeactivate
   OnShow = FormShow
   DesignerMasterStyle = 3
@@ -6195,7 +6196,7 @@ object MainForm: TMainForm
     Size.Width = 827.000000000000000000
     Size.Height = 511.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 52
+    TabOrder = 54
     object layMenu: TLayout
       Align = Right
       Position.X = 779.000000000000000000
@@ -11666,6 +11667,8 @@ object MainForm: TMainForm
         StyleLookup = ''
         TabOrder = 0
         Text = 'TabSettings'
+        ExplicitSize.cx = 8.000000000000000000
+        ExplicitSize.cy = 8.000000000000000000
       end
     end
     object layPersonHealth: TLayout

@@ -110,7 +110,8 @@ uses
   uGenericBaseData in 'uGenericBaseData.pas',
   classes.userdata in 'classes\classes.userdata.pas',
   classes.marker in 'classes\classes.marker.pas',
-  uFrameSettings in 'uFrameSettings.pas' {FrameSettings: TFrame};
+  uFrameSettings in 'uFrameSettings.pas' {FrameSettings: TFrame},
+  classes.medicdata in 'classes\classes.medicdata.pas';
 
 {$R *.res}
 

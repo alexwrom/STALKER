@@ -127,7 +127,7 @@ end;
 
 procedure TFrameDetector.TimerSensorTimer(Sender: TObject);
 begin
-  if Not FIsDead then
+  if Not Person.IsDead then
   begin
 {$IF Defined(ANDROID)}
     Vibration(100);
@@ -394,7 +394,7 @@ procedure TFrameDetector.timerScannerArtefactsTimer(Sender: TObject);
 begin
   // Запрос разрешений для Android
 {$IFDEF ANDROID}
-  if Not FIsDead then
+  if Not Person.IsDead then
   begin
     MyLocationCenter;
 

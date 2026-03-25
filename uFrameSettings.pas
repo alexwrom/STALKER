@@ -33,7 +33,8 @@ begin
   inherited Create(AObject);
   try
     ExeExec('select value from settings where setting_id = ''volume'';', exActive, vQuery);
-    FVolume := vQuery.FieldByName('value').AsInteger;
+    FVolume := Round(vQuery.FieldByName('value').AsFloat);
+    tbVolume.Value := FVolume;
   finally
     FreeQueryAndConn(vQuery);
   end;
@@ -44,7 +45,7 @@ var
   vQuery : TFDQuery;
 begin
   try
-    ExeExec('update settings set value = ' + QuotedStr(tbVolume.Value.ToString)+ ' where setting_id = ''volume'';', exExecute, vQuery);
+    ExeExec('update settings set value = ' + QuotedStr(Round(tbVolume.Value).ToString)+ ' where setting_id = ''volume'';', exExecute, vQuery);
   finally
   end;
 

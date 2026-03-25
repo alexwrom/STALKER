@@ -13,7 +13,7 @@ uses
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Param,
   FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf,
   FireDAC.Stan.Async, FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet, StrUtils,
-  FireDAC.Comp.Client, Math, System.DateUtils, System.TimeSpan;
+  FireDAC.Comp.Client, Math, System.DateUtils, System.TimeSpan, classes.action, classes.send, Rest.Json, uScanerWiFi, classes.medicdata;
 
 type
   TFramePercs = class(TFrame)
@@ -211,7 +211,7 @@ type
     laySelection: TLayout;
     Rectangle11: TRectangle;
     btnCloseSelection: TSpeedButton;
-    Layout10: TLayout;
+    laySelectionBody: TLayout;
     Rectangle12: TRectangle;
     InnerGlowEffect11: TInnerGlowEffect;
     Image18: TImage;
@@ -220,12 +220,20 @@ type
     Image27: TImage;
     Rectangle13: TRectangle;
     InnerGlowEffect12: TInnerGlowEffect;
-    Layout12: TLayout;
+    layBtnMedicMyself: TLayout;
     Image28: TImage;
     btnMedicMyself: TCornerButton;
-    Layout13: TLayout;
+    layBtnRestore: TLayout;
     Image29: TImage;
     btnHelp: TCornerButton;
+    layQR: TLayout;
+    recBackQR: TRectangle;
+    imgQR: TImage;
+    btnCloseQR: TSpeedButton;
+    Layout3: TLayout;
+    layBtnMedic: TLayout;
+    Image30: TImage;
+    btnMedic: TCornerButton;
     procedure btnInfoClick(Sender: TObject);
     procedure btnCloseInfoClick(Sender: TObject);
     procedure btnArmorInfoClick(Sender: TObject);
@@ -243,12 +251,20 @@ type
     procedure btnHelpClick(Sender: TObject);
     procedure btnCloseSelectionClick(Sender: TObject);
     procedure btnRestoreArmorWeaponClick(Sender: TObject);
+    procedure btnCloseQRClick(Sender: TObject);
+    procedure btnMedicClick(Sender: TObject);
+    procedure btnTehnic1Click(Sender: TObject);
   private
     { Private declarations }
     FArtsList: TList<TPerc>;
     procedure ReloadArmor;
 
+    function GetTimeDec(ASeconds: integer): string;
+
   public
+    FActiveAction: TAction;
+    procedure StartTimerTehnicPercReload(ALastActionDateTime: TDateTime);
+    procedure StartTimerMedicPercReload(ALastActionDateTime: TDateTime);
     procedure ReloadArts;
     procedure ReloadPercs;
     procedure SetChimisheArmor(Value: integer);
@@ -291,8 +307,9 @@ begin
   infoLabFire.Text := IfThen(FArmorPerc.FireArmor = 0, '', FArmorPerc.FireArmor.ToString + ' %');
 
   layClearArmorWeapon.Visible := true;
+  layClearArmorWeapon.Enabled := Person.ArmorId <> 0;
   layRestoreArmorWeapon.Visible := true;
-  btnRestoreArmorWeapon.Enabled := Person.ArmorHealth < 100;
+  btnRestoreArmorWeapon.Enabled := (Person.ArmorHealth < 100) and (Person.ArmorId <> 0);
   layClearArt.Visible := false;
   layPanel.Height := ImgBottom.Height + ImgTop.Height + layClearArmorWeapon.Height + layRestoreArmorWeapon.Height + imgPercs.Height;
   layInfo.Tag := 0;
@@ -345,6 +362,11 @@ begin
   layPercsUp.Visible := false;
 end;
 
+procedure TFramePercs.btnCloseQRClick(Sender: TObject);
+begin
+ layQR.Visible := false;
+end;
+
 procedure TFramePercs.btnCloseSelectionClick(Sender: TObject);
 begin
   BtnClickMedia;
@@ -354,11 +376,37 @@ end;
 procedure TFramePercs.btnHelpClick(Sender: TObject);
 var
   vQuery: TFDQuery;
+  vSend: TSend;
+  vStrSend: string;
+  AMedic : TMedicData;
 begin
   BtnClickMedia;
-  // Добавить создание QR
-  //ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [10, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
+  layInfo.Visible := False;
+  layQR.Visible := true;
 
+  if not Assigned(FActiveAction) then
+    FActiveAction := TAction.Create;
+
+  FActiveAction.SendType := stMedic;
+
+  AMedic := TMedicData.Create;
+  try
+    AMedic.Health := 30;
+    AMedic.IsRestore := true;
+
+    FActiveAction.JSONObject := TJson.ObjectToJsonString(AMedic);
+  finally
+    AMedic.Free;
+  end;
+
+  vSend := TSend.Create;
+{$IFDEF ANDROID}
+  vSend.Ip := GetMyIP;
+{$ENDIF}
+  vStrSend := TJson.ObjectToJsonString(vSend);
+  vStrSend := StringReplace(vStrSend,'"code":"",','',[]);
+  vStrSend := StringReplace(vStrSend,',"marker":null','',[]);
+  GenerateQRCode(vStrSend, imgQR);
   laySelection.Visible := false;
 end;
 
@@ -403,21 +451,9 @@ begin
   if layMedic1.Opacity = 1 then
   begin
     BtnClickMedia;
-
-    MessageDlg('Восстановить 30% здоровья?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
-      procedure(const AResult: TModalResult)
-      var
-        vQuery: TFDQuery;
-      begin
-        if (AResult = mrYes) then
-          begin
-            ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [10, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]),
-                exExecute, vQuery);
-
-            Person.Health := Person.Health + 30;
-            TimerPercReload.Enabled := true;
-          end;
-      end);
+    layBtnRestore.Visible := false;
+    laySelectionBody.Height := Image18.Height + Image25.Height + layBtnMedicMyself.Height + layBtnMedic.Height;
+    laySelection.Visible := true;
   end;
 end;
 
@@ -426,21 +462,9 @@ begin
   if layMedic2.Opacity = 1 then
   begin
     BtnClickMedia;
-
-    MessageDlg('Восстановить 60% здоровья?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
-      procedure(const AResult: TModalResult)
-      var
-        vQuery: TFDQuery;
-      begin
-        if (AResult = mrYes) then
-          begin
-            ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [10, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]),
-              exExecute, vQuery);
-
-            Person.Health := Person.Health + 60;
-            TimerPercReload.Enabled := true;
-          end;
-      end);
+    layBtnRestore.Visible := false;
+    laySelectionBody.Height := Image18.Height + Image25.Height + layBtnMedicMyself.Height + layBtnMedic.Height;
+    laySelection.Visible := true;
   end;
 end;
 
@@ -449,8 +473,51 @@ begin
 if layMedic3.Opacity = 1 then
   begin
     BtnClickMedia;
+    layBtnRestore.Visible := true;
+    laySelectionBody.Height := Image18.Height + Image25.Height + layBtnMedicMyself.Height + layBtnRestore.Height + layBtnMedic.Height;
     laySelection.Visible := true;
   end;
+end;
+
+procedure TFramePercs.btnMedicClick(Sender: TObject);
+var
+  vSend: TSend;
+  vStrSend: string;
+  AMedic : TMedicData;
+begin
+  BtnClickMedia;
+  layInfo.Visible := False;
+  layQR.Visible := true;
+
+  if not Assigned(FActiveAction) then
+    FActiveAction := TAction.Create;
+
+  FActiveAction.SendType := stMedic;
+
+  AMedic := TMedicData.Create;
+  try
+     AMedic.IsRestore := false;
+
+    case Person.LevelMedic of
+      1: AMedic.Health := 30;
+      2: AMedic.Health := 60;
+      3: AMedic.Health := 100;
+    end;
+
+    FActiveAction.JSONObject := TJson.ObjectToJsonString(AMedic);
+  finally
+    AMedic.Free;
+  end;
+
+  vSend := TSend.Create;
+{$IFDEF ANDROID}
+  vSend.Ip := GetMyIP;
+{$ENDIF}
+  vStrSend := TJson.ObjectToJsonString(vSend);
+  vStrSend := StringReplace(vStrSend,'"code":"",','',[]);
+  vStrSend := StringReplace(vStrSend,',"marker":null','',[]);
+  GenerateQRCode(vStrSend, imgQR);
+  laySelection.Visible := false;
 end;
 
 procedure TFramePercs.btnMedicMyselfClick(Sender: TObject);
@@ -461,9 +528,13 @@ begin
   ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [10, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]),
       exExecute, vQuery);
 
-  Person.Health := 100;
+  case Person.LevelMedic of
+    1: Person.Health := 30;
+    2: Person.Health := 60;
+    3: Person.Health := 100;
+  end;
 
-  TimerPercReload.Enabled := true;
+  StartTimerMedicPercReload(NOW());
   laySelection.Visible := false;
 end;
 
@@ -473,90 +544,109 @@ begin
   GoToDetector;
 end;
 
-procedure TFramePercs.btnOpenPercsClick(Sender: TObject);
+function TFramePercs.GetTimeDec(ASeconds: integer): string;
 var
-  vQuery: TFDQuery;
+  TotalSeconds: Int64;
+  TimeSpan: TTimeSpan;
   Hours: integer;
   Minutes: integer;
   Seconds: integer;
-  TotalSeconds: Int64;
-  TimeSpan: TTimeSpan;
+begin
+   TotalSeconds := ASeconds;
+
+   // Создаем TTimeSpan
+   TimeSpan := TTimeSpan.FromSeconds(TotalSeconds);
+
+   // Получаем компоненты времени
+   Hours := TimeSpan.Hours;
+   Minutes := TimeSpan.Minutes;
+   Seconds := TimeSpan.Seconds;
+
+   Result := Format('%.2d:%.2d:%.2d', [Hours, Minutes, Seconds]);
+end;
+
+procedure TFramePercs.btnOpenPercsClick(Sender: TObject);
+var
+  vQuery: TFDQuery;
   vLastActionDateTime: TDateTime;
-
-  function GetTimeDec(ASeconds: integer): string;
-  begin
-    TotalSeconds := ASeconds;
-
-    // Создаем TTimeSpan
-    TimeSpan := TTimeSpan.FromSeconds(TotalSeconds);
-
-    // Получаем компоненты времени
-    Hours := TimeSpan.Hours;
-    Minutes := TimeSpan.Minutes;
-    Seconds := TimeSpan.Seconds;
-
-    Result := Format('%.2d:%.2d:%.2d', [Hours, Minutes, Seconds]);
-  end;
 begin
   BtnClickMedia;
   layPercsUp.Visible := true;
 
   // Medic
-  ExeExec('select action_date_time from life_log where action_type_id = 10;', exActive, vQuery);
-
   layMedic1.Opacity := 0.2;
   layMedic2.Opacity := 0.2;
   layMedic3.Opacity := 0.2;
 
-  (Self.FindComponent('layMedic' + Person.LevelMedic.ToString) as TLayout).Opacity := 1;
-  layMedicReload.Parent := Self.FindComponent('layMedic' + Person.LevelMedic.ToString) as TLayout;
+  if Person.LevelMedic > 0 then
+  begin
+    (Self.FindComponent('layMedic' + Person.LevelMedic.ToString) as TLayout).Opacity := 1;
+    layMedicReload.Parent := Self.FindComponent('layMedic' + Person.LevelMedic.ToString) as TLayout;
 
-  if vQuery.RecordCount > 0 then
-    begin
-      vLastActionDateTime := vQuery.FieldByName('action_date_time').AsDateTime;
+    ExeExec('select action_date_time from life_log where action_type_id = 10 order by action_date_time desc;', exActive, vQuery);
 
-      if  SecondsBetween(NOW(), vLastActionDateTime) > 30 * 60 then
-        begin
-          labReloadTimerMedic.Text := '00:00:00';
-          layMedicReload.Visible := false;
-          TimerPercReload.Enabled := false;
-        end
-        else
-         begin
-          layMedicReload.Visible := true;
-          labReloadTimerMedic.Text := GetTimeDec(1 * 30 * 60 - SecondsBetween(NOW(), vLastActionDateTime));
-          TimerPercReload.Enabled := true;
-         end;
+    if vQuery.RecordCount > 0 then
+      begin
+        vQuery.First;
+        vLastActionDateTime := vQuery.FieldByName('action_date_time').AsDateTime;
 
-    end;
+        if  SecondsBetween(NOW(), vLastActionDateTime) > 30 * 60 then
+          begin
+            labReloadTimerMedic.Text := '00:00:00';
+            layMedicReload.Visible := false;
+            TimerPercReload.Enabled := false;
+          end
+          else
+           begin
+             StartTimerMedicPercReload(vLastActionDateTime);
+           end;
+
+      end;
+  end;
 
   // Tehnic
-  ExeExec('select action_date_time from life_log where action_type_id = 11;', exActive, vQuery);
-
   layTehnic1.Opacity := 0.2;
   layTehnic2.Opacity := 0.2;
   layTehnic3.Opacity := 0.2;
 
-  (Self.FindComponent('layTehnic' + Person.LevelTehnic.ToString) as TLayout).Opacity := 1;
-  layTehnicReload.Parent := Self.FindComponent('layTehnic' + Person.LevelTehnic.ToString) as TLayout;
+  if Person.LevelTehnic > 0 then
+  begin
+    (Self.FindComponent('layTehnic' + Person.LevelTehnic.ToString) as TLayout).Opacity := 1;
+    layTehnicReload.Parent := Self.FindComponent('layTehnic' + Person.LevelTehnic.ToString) as TLayout;
 
-  if vQuery.RecordCount > 0 then
-    begin
-      vLastActionDateTime := vQuery.FieldByName('action_date_time').AsDateTime;
+    ExeExec('select action_date_time from life_log where action_type_id = 11 order by action_date_time desc;', exActive, vQuery);
 
-      if  SecondsBetween(NOW(), vLastActionDateTime) > 60 * 60 then
-        begin
-          labReloadTimerTehnic.Text := '00:00:00';
-          layTehnicReload.Visible := false;
-          TimerPercReload.Enabled := TimerPercReload.Enabled;
-        end
-        else
-         begin
-          layTehnicReload.Visible := true;
-          labReloadTimerTehnic.Text := GetTimeDec(1 * 60 * 60 - SecondsBetween(NOW(), vLastActionDateTime));
-          TimerPercReload.Enabled := true;
-         end;
-    end;
+    if vQuery.RecordCount > 0 then
+      begin
+        vQuery.First;
+        vLastActionDateTime := vQuery.FieldByName('action_date_time').AsDateTime;
+
+        if  SecondsBetween(NOW(), vLastActionDateTime) > 60 * 60 then
+          begin
+            labReloadTimerTehnic.Text := '00:00:00';
+            layTehnicReload.Visible := false;
+            TimerPercReload.Enabled := TimerPercReload.Enabled;
+          end
+          else
+           begin
+             StartTimerTehnicPercReload(vLastActionDateTime);
+           end;
+      end;
+  end;
+end;
+
+procedure TFramePercs.StartTimerMedicPercReload(ALastActionDateTime: TDateTime);
+begin
+  layMedicReload.Visible := true;
+  labReloadTimerMedic.Text := GetTimeDec(1 * 30 * 60 - SecondsBetween(NOW(), ALastActionDateTime));
+  TimerPercReload.Enabled := true;
+end;
+
+procedure TFramePercs.StartTimerTehnicPercReload(ALastActionDateTime: TDateTime);
+begin
+  layTehnicReload.Visible := true;
+  labReloadTimerTehnic.Text := GetTimeDec(1 * 60 * 60 - SecondsBetween(NOW(), ALastActionDateTime));
+  TimerPercReload.Enabled := true;
 end;
 
 procedure TFramePercs.btnRestoreArmorWeaponClick(Sender: TObject);
@@ -564,6 +654,7 @@ var
   vQuery: TFDQuery;
 begin
   BtnClickMedia;
+
   if layInfo.Tag = 0 then
   begin
    if Person.LevelTehnic = 3 then
@@ -574,7 +665,7 @@ begin
        ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [11, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]),
               exExecute, vQuery);
 
-       TimerPercReload.Enabled := true;
+        StartTimerTehnicPercReload(NOW());
      end
    else
      // Здесь вызов сканера для ремонта
@@ -588,7 +679,7 @@ begin
        ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [11, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]),
               exExecute, vQuery);
 
-       TimerPercReload.Enabled := true;
+       StartTimerTehnicPercReload(NOW());
      end
     else
      // Здесь вызов сканера для ремонта
@@ -598,6 +689,30 @@ begin
   layInfo.Visible := false;
 end;
 
+procedure TFramePercs.btnTehnic1Click(Sender: TObject);
+var
+  vSend: TSend;
+  vStrSend: string;
+begin
+  BtnClickMedia;
+  layQR.Visible := true;
+
+  if not Assigned(FActiveAction) then
+    FActiveAction := TAction.Create;
+
+  FActiveAction.SendType := stTehnic;
+  FActiveAction.JSONObject := Person.LevelTehnic.ToString;
+
+  vSend := TSend.Create;
+{$IFDEF ANDROID}
+  vSend.Ip := GetMyIP;
+{$ENDIF}
+  vStrSend := TJson.ObjectToJsonString(vSend);
+  vStrSend := StringReplace(vStrSend,'"code":"",','',[]);
+  vStrSend := StringReplace(vStrSend,',"marker":null','',[]);
+  GenerateQRCode(vStrSend, imgQR);
+end;
+
 procedure TFramePercs.btnWeaponInfoClick(Sender: TObject);
 begin
   BtnClickMedia;
@@ -605,8 +720,9 @@ begin
   layPercs.Visible := false;
   layClearArt.Visible := false;
   layClearArmorWeapon.Visible := true;
+  layClearArmorWeapon.Enabled := Person.WeaponId <> 0;
   layRestoreArmorWeapon.Visible := true;
-  btnRestoreArmorWeapon.Enabled := Person.WeaponHealth < 100;
+  btnRestoreArmorWeapon.Enabled := (Person.WeaponHealth < 100) and (Person.WeaponId <> 0);
   layPanel.Height := layClearArmorWeapon.Height + layRestoreArmorWeapon.Height + ImgBottom.Height + ImgTop.Height;
   layInfo.Visible := true;
 end;
@@ -641,8 +757,9 @@ procedure TFramePercs.ReloadPercs;
 var
   vQuery: TFDQuery;
 begin
-  ReloadArmor;
-  ExeExec('select health, armor_health, weapon_health, weapon_icon, detector_id, level, radius, chimishe, electro, fire, phisic, psi, radiation, cash, armor_id, weapon_id, is_classic_bag, weapon_level, level_medic, level_tehnic  from user_info;', exActive, vQuery);
+  ReloadArmor;     // nickname,
+  ExeExec('select   health, armor_health, weapon_health, weapon_icon, detector_id, level, radius, chimishe, electro, fire, phisic, psi, radiation, cash, armor_id, weapon_id, is_classic_bag, weapon_level, level_medic, level_tehnic from user_info;', exActive, vQuery);
+  //Person.UserName := vQuery.FieldByName('nickname').AsString;
   Person.Health := vQuery.FieldByName('health').AsFloat;
   Person.Cash := vQuery.FieldByName('cash').AsInteger;
   Person.ArmorId := vQuery.FieldByName('armor_id').AsInteger;

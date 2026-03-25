@@ -12335,7 +12335,7 @@ object FrameIssuies: TFrameIssuies
             Size.Height = 34.000000000000000000
             Size.PlatformDefault = False
             Visible = False
-            TabOrder = 4
+            TabOrder = 3
             object Image4: TImage
               MultiResBitmap.Height = 63
               MultiResBitmap.Width = 153

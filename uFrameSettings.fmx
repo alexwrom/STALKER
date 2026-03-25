@@ -2529,7 +2529,8 @@ object FrameSettings: TFrameSettings
           Size.Width = 554.000000000000000000
           Size.Height = 19.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 3
+          TabOrder = 4
+          Value = 100.000000000000000000
           OnChange = tbVolumeChange
         end
       end

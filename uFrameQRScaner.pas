@@ -10,7 +10,7 @@ uses
   ZXing.ReadResult,
   ZXing.ScanManager, FMX.Platform, Permissions, FMX.Controls.Presentation,
   uGlobal, Classes.sell, Rest.Json, Classes.send, FireDAC.Comp.Client, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient,
-  IdGlobal, Classes.action, StrUtils, FMX.Effects, FMX.Memo, FMX.Memo.Types, FMX.ScrollBox, FMX.Edit, FMX.Layouts, Generics.Collections;
+  IdGlobal, Classes.action, StrUtils, FMX.Effects, FMX.Memo, FMX.Memo.Types, FMX.ScrollBox, FMX.Edit, FMX.Layouts, Generics.Collections, classes.medicdata;
 
 type
   TFrameQRScanner = class(TFrame)
@@ -162,12 +162,12 @@ begin
             vSend: TSend;
             vAction: TAction;
             vSell: TSell;
-            vStringData: TList<UnicodeString>;
-            Page, vRowID: Integer;
-            vStr, vTableName: string;
+            vRowID: Integer;
+            vTableName: string;
             vQuery: TFDQuery;
             vPercName : string;
             vLevelPerc : integer;
+            AMedic : TMedicData;
           begin
             if (ReadResult <> nil) then
             begin
@@ -181,7 +181,7 @@ begin
               try
                 vSend := TJson.JsonToObject<TSend>(ReadResult.Text);
 
-                if vSend.Code <> '' then
+                if (vSend.Code <> '') and (not Person.IsDead) then
                 begin
                   case Length(vSend.Code) of
                     2: // Детектор      {"code":"01"}
@@ -238,7 +238,7 @@ begin
                   end;
                 end
                 else
-                if Assigned(vSend.Marker) then
+                if Assigned(vSend.Marker) and (not Person.IsDead) then
                   begin
                      case vSend.Marker.MarkerType of
                       0:
@@ -250,7 +250,7 @@ begin
                       3:
                           NewMarkerToMap(vSend.Marker.Coords, 'Чужой схрон', mtPointBag, false);
                     end;
-                    showmessage(TJSON.ObjectToJsonString(vSend));
+
                     ExeExec(Format('insert into markers (lat, lon, marker_type_id, is_owner) values (%s, %s, %d, false);',[StringReplace(vSend.Marker.Coords.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(vSend.Marker.Coords.Longitude.ToString, ',', '.', [rfReplaceAll]), vSend.Marker.MarkerType]), exExecute, vQuery);
                   end
                 else
@@ -263,32 +263,11 @@ begin
                       IdTCPClient.Connect;
                       try
                         IdTCPClient.IOHandler.WriteLn(TJson.ObjectToJsonString(Person), IndyUTF8Encoding(True));
-                        vStringData := TList<UnicodeString>.Create;
-                        try
+                        vAction := TJson.JsonToObject<TAction>(IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(True)));
 
-                          vAction := TJson.JsonToObject<TAction>(IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(True)));
-                          Page := 1;
-
-                          if vAction.PageCount > 1 then
-                          begin
-                            while Page <> vAction.PageCount do
-                            begin
-                              vStr := IdTCPClient.IOHandler.ReadLn(#13#10, IndyUTF8Encoding(True));
-
-                              if vStr[1] = '~' then
-                              begin
-                                vStringData[vStringData.Count - 1] := vStringData[vStringData.Count - 1] + Copy(vStr, 2, Length(vStr) - 1);
-                                Dec(Page);
-                              end
-                              else
-                                vStringData.Add(vStr);
-
-                              inc(Page);
-                            end;
-                          end;
-
-                          case vAction.SendType of
-                            stSell:
+                        case vAction.SendType of
+                          stSell:
+                            if (not Person.IsDead) then
                               begin
                                 vSell := TSell.Create;
 
@@ -304,18 +283,38 @@ begin
                                 ReloadBag;
                               end;
 
-                            stCancelSell:
-                              ShowMessage('Недостаточно средств');
+                          stCancelSell:
+                            ShowMessage('Недостаточно средств');
 
-                            stLoadArmor:
-                              begin
+                          stMedic:
+                            begin
+                              AMedic := TJson.JsonToObject<TMedicData>(vAction.JSONObject);
+                              btnYesClick(nil);
 
-                              end;
-                          end;
-                        finally
-                          FreeAndNil(vStringData);
+                              if (Person.IsDead) then
+                                if AMedic.IsRestore then
+                                  begin
+                                    Person.Health := Person.Health + AMedic.Health;
+                                    OpenMap;
+                                  end
+                                else
+                                  Person.Health := Person.Health + AMedic.Health;
+                            end;
+
+                           stTehnic:
+                            begin
+                              btnYesClick(nil);
+
+
+                              if (Person.IsDead) then
+                                  begin
+                                    if Person.WeaponLevel <= vAction.JSONObject.ToInteger then
+                                      Person.WeaponHealth := 100;
+
+                                    OpenPercs;
+                                  end;
+                            end;
                         end;
-
                       finally
                         IdTCPClient.Disconnect;
                       end;

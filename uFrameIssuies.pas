@@ -280,6 +280,7 @@ begin
   recSelectMenu.Parent := ImgBtnInfo;
   animNotification.Enabled := false;
   recNotification.Opacity := 0;
+  layDownload.Visible := false;
   LoadInfo;
 end;
 
