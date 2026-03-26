@@ -24,7 +24,7 @@ uses
   FMX.Platform.Android,
 {$ENDIF}
   uScanerWiFi, FMX.Ani, FMX.Effects, IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer, IdTCPConnection, IdTCPClient, FMX.Edit, FMX.Media,
-  uFrameLogin, Classes.answer, OAuth2, Classes.Data, uGenericBaseData, Classes.userdata, uFrameSettings;
+  uFrameLogin, Classes.answer, OAuth2, Classes.Data, uGenericBaseData, Classes.userdata, uFrameSettings, classes.tehnicdata;
 
 type
 
@@ -107,6 +107,17 @@ type
     Image22: TImage;
     InnerGlowEffect8: TInnerGlowEffect;
     TabSettings: TTabItem;
+    layTehnicReload: TLayout;
+    Rectangle9: TRectangle;
+    labReloadTimerTehnic: TLabel;
+    InnerGlowEffect10: TInnerGlowEffect;
+    MediaPlayerWorking: TMediaPlayer;
+    Layout2: TLayout;
+    Layout3: TLayout;
+    layStopWorking: TLayout;
+    Image3: TImage;
+    btnStopWorking: TCornerButton;
+    TimerTehnicReload: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure btnToMapClick(Sender: TObject);
     procedure btnToPercsClick(Sender: TObject);
@@ -123,6 +134,8 @@ type
     procedure FormDeactivate(Sender: TObject);
     procedure btnSettingsClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure btnStopWorkingClick(Sender: TObject);
+    procedure TimerTehnicReloadTimer(Sender: TObject);
   private
 
     procedure LoadArtefacts;
@@ -196,6 +209,7 @@ begin
   MediaPlayerMenu.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'menu.mp3');
   MediaPlayerZombi.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'zombi.mp3');
   MediaPlayerNotification.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'notification.mp3');
+  MediaPlayerWorking.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'work.mp3');
 {$ENDIF}
 end;
 
@@ -510,8 +524,32 @@ var
   vAnswerText: string;
   vSell: TSell;
   FDQuery: TFDQuery;
+  vTehnic: TTehnicData;
+  vConnectPerson: TPerson;
+  vCostRestore: integer;
+  vIsCorrectLevel : boolean;
+  vSum: integer;
+
+  procedure SendCorrectRestore;
+  begin
+    ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [11, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]), exExecute, FDQuery);
+    FFramePercs.StartTimerTehnicPercReload(NOW());
+    Person.Cash := Person.Cash + vCostRestore;
+
+    AContext.Connection.Socket.WriteLn(TJSON.ObjectToJsonString(FFramePercs.FActiveAction), IndyUTF8Encoding(true));
+    AContext.Connection.Disconnect;
+  end;
+
+  procedure SendInvalidLevelTehnic;
+  begin
+    FFramePercs.FActiveAction.SendType := stIncorrectLevelTehnic;
+    FFramePercs.FActiveAction.JSONObject := '0';
+    AContext.Connection.Socket.WriteLn(TJSON.ObjectToJsonString(FFramePercs.FActiveAction), IndyUTF8Encoding(true));
+    AContext.Connection.Disconnect;
+  end;
 begin
   vAnswerText := AContext.Connection.Socket.ReadLn();
+  vConnectPerson := TJSON.JsonToObject<TPerson>(vAnswerText);
 
   if Assigned(FFrameBag) and Assigned(FFrameBag.FActiveAction) then
     try
@@ -523,7 +561,7 @@ begin
             try
               vSell := TJSON.JsonToObject<TSell>(FFrameBag.FActiveAction.JSONObject);
 
-              if TJSON.JsonToObject<TPerson>(vAnswerText).Cash - vSell.Cost >= 0 then
+              if vConnectPerson.Cash - vSell.Cost >= 0 then
               begin
                 ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''' + vSell.TableName + ''' and row_id = ' + vSell.RowID.ToString + ' and health = ' + vSell.Health.ToString + ' limit 1);', exExecute, FDQuery);
                 Person.Cash := Person.Cash + vSell.Cost;
@@ -544,30 +582,76 @@ begin
           end;
       end;
     finally
-      FFrameBag.FActiveAction.Free;
-      FFrameBag.laySellQR.Visible := false;
       ReloadBag;
     end;
 
     if  Assigned(FFramePercs) and Assigned(FFramePercs.FActiveAction) then
     try
       case FFramePercs.FActiveAction.SendType of
-        stMedic:
+        stMedic:     // Medic
           begin
             ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [10, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]), exExecute, FDQuery);
             FFramePercs.StartTimerMedicPercReload(NOW());
+
+            AContext.Connection.Socket.WriteLn(TJSON.ObjectToJsonString(FFramePercs.FActiveAction), IndyUTF8Encoding(true));
+            AContext.Connection.Disconnect;
           end;
-        stTehnic:
+
+        stTehnic:     // Tehnic
           begin
-            ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [11, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]), exExecute, FDQuery);
-            FFramePercs.StartTimerTehnicPercReload(NOW());
+            vTehnic := TJSON.JsonToObject<TTehnicData>(FFramePercs.FActiveAction.JSONObject);
+
+            if not vConnectPerson.IsDead then
+            begin
+              if vConnectPerson.IsRestoreWeapon then
+              begin
+                ExeExec(Format('select round(%s * cost) as cost from weapons where weapon_id = %d', [StringReplace((1 - vConnectPerson.WeaponHealth / 100).ToString, ',', '.', [rfReplaceAll]), vConnectPerson.WeaponId]), exActive, FDQuery);
+                  try
+                    vCostRestore := FDQuery.FieldByName('cost').AsInteger;
+                  finally
+                    FreeQueryAndConn(FDQuery);
+                  end;
+
+                vIsCorrectLevel := Person.LevelTehnic >= vConnectPerson.WeaponLevel;
+              end
+              else
+                begin
+                  ExeExec(Format('select round(%s * cost) as cost from armors where armor_id = %d', [StringReplace((1 - vConnectPerson.ArmorHealth / 100).ToString, ',', '.', [rfReplaceAll]), vConnectPerson.ArmorId]), exActive, FDQuery);
+                  try
+                    vCostRestore := FDQuery.FieldByName('cost').AsInteger;
+                  finally
+                    FreeQueryAndConn(FDQuery);
+                  end;
+
+                  vIsCorrectLevel := Person.LevelTehnic = 3;
+                end;
+
+              if vTehnic.IsFree then
+                vCostRestore := 0;
+
+              vSum := vConnectPerson.Cash - vCostRestore;
+              if vSum >= 0 then
+                begin
+                  if vIsCorrectLevel then
+                    SendCorrectRestore
+                  else
+                    SendInvalidLevelTehnic;
+                end
+              else
+                begin
+                  FFramePercs.FActiveAction.SendType := stCancelSell;
+                  FFramePercs.FActiveAction.JSONObject := '0';
+                  AContext.Connection.Socket.WriteLn(TJSON.ObjectToJsonString(FFramePercs.FActiveAction), IndyUTF8Encoding(true));
+                  AContext.Connection.Disconnect;
+                end;
+            end
+            else
+              SendCorrectRestore;
           end;
       end;
 
-      AContext.Connection.Socket.WriteLn(TJSON.ObjectToJsonString(FFramePercs.FActiveAction), IndyUTF8Encoding(true));
-      AContext.Connection.Disconnect;
     finally
-      FFramePercs.FActiveAction.Free;
+      FreeAndNil(FFramePercs.FActiveAction);
       FFramePercs.layQR.Visible := false;
     end;
 end;
@@ -600,6 +684,21 @@ begin
   layPersonHealth.Visible := false;
 end;
 
+procedure TMainForm.btnStopWorkingClick(Sender: TObject);
+begin
+  MessageDlg('Ты согласен прервать ремонт?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
+    procedure(const AResult: TModalResult)
+    begin
+      if (AResult = mrYes) then
+      begin
+        MediaPlayerWorking.CurrentTime := 0;
+        MediaPlayerWorking.Stop;
+        TimerTehnicReload.Enabled := false;
+        layTehnicReload.Visible := false;
+      end;
+    end);
+end;
+
 procedure TMainForm.btnToBagClick(Sender: TObject);
 begin
   BtnClickMedia;
@@ -619,7 +718,7 @@ procedure TMainForm.CreateBagFrame;
 begin
   TTask.Run(procedure
   begin
-    if Assigned(FFrameBag) then
+    while Assigned(FFrameBag) do
       begin
         FFrameBag.Parent := nil;
         FFrameBag.Visible := false;
@@ -751,6 +850,61 @@ begin
     end);
 
 {$ENDIF}
+end;
+
+procedure TMainForm.TimerTehnicReloadTimer(Sender: TObject);
+var
+  TimeParts: TArray<string>;
+  Hours, Minutes, Seconds: Integer;
+  TotalSeconds: Integer;
+begin
+  if labReloadTimerTehnic.Text = '00:00:00' then
+  begin
+    MediaPlayerWorking.CurrentTime := 0;
+    MediaPlayerWorking.Stop;
+    TimerTehnicReload.Enabled := false;
+    layTehnicReload.Visible := false;
+    SetMediaVolume(FVolume);
+
+    FFramePercs.ShowQRTehnic;
+  end
+  else
+  begin
+    FFrameMap.timerCritical.Enabled := false;
+    FFrameMap.MediaPlayerNotificationCritical.Stop;
+    FFrameMap.MediaPlayerNotificationCritical.CurrentTime := 0;
+    FFrameMap.MediaPlayerStartCritical.Stop;
+    FFrameMap.MediaPlayerStartCritical.CurrentTime := 0;
+
+    SetMediaVolume(100);
+    MediaPlayerWorking.Play;
+
+    if MediaPlayerWorking.CurrentTime = MediaPlayerWorking.Duration then
+      MediaPlayerWorking.CurrentTime := 0;
+    // Разбиваем текущее время из Label на часы, минуты, секунды
+    TimeParts := labReloadTimerTehnic.Text.Split([':']);
+
+    if Length(TimeParts) = 3 then
+    begin
+      Hours := StrToIntDef(TimeParts[0], 0);
+      Minutes := StrToIntDef(TimeParts[1], 0);
+      Seconds := StrToIntDef(TimeParts[2], 0);
+
+      // Переводим всё в секунды и уменьшаем на 1
+      TotalSeconds := Hours * 3600 + Minutes * 60 + Seconds - 1;
+
+      // Проверяем, не истекло ли время
+      if TotalSeconds >= 0 then
+      begin
+        // Преобразуем обратно в часы, минуты, секунды
+        Hours := TotalSeconds div 3600;
+        Minutes := (TotalSeconds mod 3600) div 60;
+        Seconds := TotalSeconds mod 60;
+
+        labReloadTimerTehnic.Text := Format('%.2d:%.2d:%.2d', [Hours, Minutes, Seconds]);
+      end;
+    end;
+  end;
 end;
 
 procedure TMainForm.TimerUpdateDataTimer(Sender: TObject);

@@ -30,7 +30,7 @@ type
   TMarkerType = (mtPoint, mtPointRad, mtPointAnomaly, mtPointBag, mtIssue, mtBase, mtSafe, mtRadiation, mtAnomaly, mtArtefact);
   TAnomalyType = (atElectro, atFire, atPhisic, atRadiation, atChimishe, atPSI);
   TBagType = (btMedical, btArmor, btWeapon, btArt, btDetector);
-  TSendType = (stSell, stCancelSell, stMedic, stTehnic);
+  TSendType = (stSell, stCancelSell, stIncorrectLevelTehnic, stMedic, stTehnic);
   TKillType = (ktWeapon, ktAnomaly, ktPSI, ktCritical, ktRadiation, ktStopZombi, ktLive);
 
   TColumn = record
@@ -84,7 +84,7 @@ type
     HealthRestore: double;
     CountSlots: integer;
     Percs: TPerc;
-    Cost: Extended;
+    Cost: integer;
   end;
 
   TPlaceData = record
@@ -150,7 +150,7 @@ type
     FChimisheArmor: double;
     FDetector: TDetector;
     FGroupId: integer;
-    FCash: Extended;
+    FCash: integer;
     FIsClassicBag: boolean;
     FCountContener: integer;
     FArmorId: integer;
@@ -161,9 +161,10 @@ type
     FLevelTehnic: integer;
     FWeaponLevel: integer;
     FIsDead: boolean;
+    FIsRestoreWeapon: boolean;
     procedure SetHealth(const Value: double);
     
-    procedure SetCash(const Value: Extended);
+    procedure SetCash(const Value: integer);
     procedure SetIsClassicBag(const Value: boolean);
     procedure SetGroupId(const Value: integer);
     procedure SetUserId(const Value: integer);
@@ -187,13 +188,14 @@ type
     property PhisicArmor: double read FPhisicArmor write FPhisicArmor;
     property ChimisheArmor: double read FChimisheArmor write FChimisheArmor;
     property RadiationArmor: double read FRadiationArmor write FRadiationArmor;
-    property Cash: Extended read FCash write SetCash;
+    property Cash: integer read FCash write SetCash;
     property CountContener: integer read FCountContener write FCountContener;
     property IsClassicBag: boolean read FIsClassicBag write SetIsClassicBag;
     property Detector: TDetector read FDetector write FDetector;
     property LevelMedic: integer read FLevelMedic write FLevelMedic;
     property LevelTehnic: integer read FLevelTehnic write FLevelTehnic;
     property IsDead: boolean read FIsDead write SetIsDead;
+    property IsRestoreWeapon: boolean read FIsRestoreWeapon  write FIsRestoreWeapon;
     
   end;
 
@@ -226,6 +228,8 @@ procedure ReloadNotificationData;
 procedure ReloadMarkers;
 procedure OpenMap;
 procedure OpenPercs;
+procedure OpenScanQR;
+procedure StartWork;
 
 var
   Person: TPerson;
@@ -266,6 +270,8 @@ begin
 end;
 
 procedure TPerson.SetHealthArmor(AValue: double);
+var
+  vQuery: TFDQuery;
 begin
   FArmorHealth := AValue;
 
@@ -280,9 +286,13 @@ begin
     else
       MainForm.FFramePercs.ArmorHealthProgress.Fill.Color := cFullColor;
   end;
+
+  ExeExec(Format('update users set armor_health = %s;', [StringReplace(FArmorHealth.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
 end;
 
 procedure TPerson.SetHealthWeapon(AValue: double);
+var
+  vQuery: TFDQuery;
 begin
   FWeaponHealth := AValue;
 
@@ -297,6 +307,8 @@ begin
     else
       MainForm.FFramePercs.WeaponHealthProgress.Fill.Color := cFullColor;
   end;
+
+  ExeExec(Format('update users set weapon_health = %s;', [StringReplace(FWeaponHealth.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
 end;
 
 procedure TPerson.SetIsClassicBag(const Value: boolean);
@@ -335,14 +347,14 @@ begin
   MainForm.FFrameMap.UpdateIssue;
 end;
 
-procedure TPerson.SetCash(const Value: Extended);
+procedure TPerson.SetCash(const Value: integer);
 var
   FDQuery: TFDQuery;
 begin
   FCash := Value;
 
   if Assigned(MainForm.FFrameBag) then
-    MainForm.FFrameBag.labCash.Text := Format('%.0n', [FCash]);
+    MainForm.FFrameBag.labCash.Text := Format('%.0n', [FCash.ToExtended]);
 
   ExeExec(Format('update users set cash = %d;', [Round(FCash)]), exExecute, FDQuery);
 end;
@@ -378,10 +390,9 @@ begin
       SetSkin(MainForm.FFramePercs.recSkin);
       SetSkin(MainForm.FFramePercs.recSkin1);
       SetSkin(MainForm.FFramePercs.recSkin2);
+      SetSkin(MainForm.FFramePercs.recSkin3);
+      SetSkin(MainForm.FFramePercs.recSkin4);
     end;
-
-    if Assigned(MainForm.FFrameDetector) then
-      SetSkin(MainForm.FFrameDetector.recSkin);
 
     if Assigned(MainForm.FFrameQRScanner) then
     begin
@@ -490,8 +501,7 @@ begin
         if WeaponHealth < 0 then
           WeaponHealth := 0;
 
-        ExeExec(Format('update users set health = %s, armor_health = %s, weapon_health = %s;', [StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]), StringReplace(ArmorHealth.ToString, ',', '.', [rfReplaceAll]),
-          StringReplace(WeaponHealth.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
+        ExeExec(Format('update users set health = %s;', [StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
 
       end
       else
@@ -502,7 +512,7 @@ begin
       if Assigned(MainForm.FFramePercs) then
       begin
         SetHealthProgress(MainForm.FFramePercs.HealthProgress, FHealth);
-        MainForm.FFramePercs.ReloadPercs;
+        ReloadPercs;
       end;
     end
     else
@@ -882,7 +892,8 @@ end;
 
 procedure ReloadPercs;
 begin
-  MainForm.FFramePercs.ReloadPercs;
+  if Assigned(MainForm.FFramePercs) then
+    MainForm.FFramePercs.ReloadPercs;
 end;
 
 function IsFullBelt: boolean;
@@ -963,6 +974,18 @@ end;
 procedure OpenPercs;
 begin
   MainForm.btnToPercsClick(nil);
+end;
+
+procedure OpenScanQR;
+begin
+  MainForm.btnToQRScannerClick(nil);
+end;
+
+procedure StartWork;
+begin
+  MainForm.labReloadTimerTehnic.Text := '00:05:00';
+  MainForm.layTehnicReload.Visible := true;
+  MainForm.TimerTehnicReload.Enabled := true;
 end;
 
 end.

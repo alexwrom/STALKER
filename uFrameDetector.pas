@@ -33,7 +33,7 @@ type
     imgDetectorVilka: TImage;
     recBackForIndicatorVilka: TRectangle;
     labDisplayVilka: TLabel;
-    recSkin: TRectangle;
+    recBack: TRectangle;
     InnerGlowEffect1: TInnerGlowEffect;
     ShadowEffect1: TShadowEffect;
     layVeles: TLayout;

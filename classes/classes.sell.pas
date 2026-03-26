@@ -9,12 +9,12 @@ type
     FTableName: string;
     FRowID: integer;
     FHealth: double;
-    FCost: Extended;
+    FCost: integer;
   published
     property TableName: string read FTableName write FTableName;
     property RowID: integer read FRowID write FRowID;
     property Health: double read FHealth write FHealth;
-    property Cost: Extended read FCost write FCost;
+    property Cost: integer read FCost write FCost;
   end;
 
 implementation

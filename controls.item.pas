@@ -86,7 +86,7 @@ begin
     ShowHint := false;
     Padding.Top := 5;
     Padding.Bottom := 5;
-    Padding.Left := 55;
+    Padding.Left := 35;
     Padding.Right := 5;
     Margins.Top := 25;
     Margins.Bottom := 5;
@@ -108,7 +108,7 @@ begin
   begin
     Parent := Self;
     Align := TAlignLayout.Top;
-    Height := 75;
+    Height := 50;
     Margins.Left := 15;
     Margins.Top := -10;
     HitTest := false;
@@ -187,7 +187,7 @@ begin
     TextSettings.FontColor := TAlphacolors.Aliceblue;
     TextSettings.Font.Style := [TFontStyle.fsBold];
     TextSettings.Font.Family := 'YouTube Sans Dark';
-    Font.Size := 14;
+    Font.Size := 11;
     AutoSize := true;
     WordWrap := true;
     Height := 0;
@@ -246,7 +246,9 @@ begin
   rcBackground.Fill.Color := $01000000;
   Timer.Enabled := false;
   Timer.DisposeOf;
-  FOnItemClick(Self.TagObject, Self);
+
+  if Assigned(Self.TagObject) then
+    FOnItemClick(Self.TagObject, Self);
 end;
 
 procedure TControlItem.OnMove(Sender: TObject; Shift: TShiftState; X, Y: Single);

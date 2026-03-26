@@ -10,7 +10,7 @@ uses
   ZXing.ReadResult,
   ZXing.ScanManager, FMX.Platform, Permissions, FMX.Controls.Presentation,
   uGlobal, Classes.sell, Rest.Json, Classes.send, FireDAC.Comp.Client, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient,
-  IdGlobal, Classes.action, StrUtils, FMX.Effects, FMX.Memo, FMX.Memo.Types, FMX.ScrollBox, FMX.Edit, FMX.Layouts, Generics.Collections, classes.medicdata;
+  IdGlobal, Classes.action, StrUtils, FMX.Effects, FMX.Memo, FMX.Memo.Types, FMX.ScrollBox, FMX.Edit, FMX.Layouts, Generics.Collections, classes.medicdata, classes.tehnicdata;
 
 type
   TFrameQRScanner = class(TFrame)
@@ -167,7 +167,8 @@ begin
             vQuery: TFDQuery;
             vPercName : string;
             vLevelPerc : integer;
-            AMedic : TMedicData;
+            vMedic : TMedicData;
+            vTehnic : TTehnicData;
           begin
             if (ReadResult <> nil) then
             begin
@@ -286,33 +287,74 @@ begin
                           stCancelSell:
                             ShowMessage('Недостаточно средств');
 
+                          stIncorrectLevelTehnic:
+                            begin
+                              btnYesClick(nil);
+                              ShowMessage('Ремонт невозможен. Уровень техника не соответствует');
+                              OpenPercs;
+                            end;
+
                           stMedic:
                             begin
-                              AMedic := TJson.JsonToObject<TMedicData>(vAction.JSONObject);
+                              vMedic := TJson.JsonToObject<TMedicData>(vAction.JSONObject);
                               btnYesClick(nil);
 
                               if (Person.IsDead) then
-                                if AMedic.IsRestore then
+                              begin
+                                if vMedic.IsRestore then
                                   begin
-                                    Person.Health := Person.Health + AMedic.Health;
+                                    Person.Health := Person.Health + vMedic.Health;
                                     OpenMap;
                                   end
+                              end
                                 else
-                                  Person.Health := Person.Health + AMedic.Health;
+                                  Person.Health := Person.Health + vMedic.Health;
                             end;
 
                            stTehnic:
                             begin
                               btnYesClick(nil);
 
+                              if (not Person.IsDead) then
+                              begin
+                                vTehnic := TJson.JsonToObject<TTehnicData>(vAction.JSONObject);
 
-                              if (Person.IsDead) then
+                                if Person.IsRestoreWeapon then
                                   begin
-                                    if Person.WeaponLevel <= vAction.JSONObject.ToInteger then
-                                      Person.WeaponHealth := 100;
+                                    if NOT vTehnic.IsFree then
+                                      begin
+                                        ExeExec(Format('select round(%s * cost) as cost from weapons where weapon_id = %d', [StringReplace((1 - Person.WeaponHealth / 100).ToString, ',', '.', [rfReplaceAll]), Person.WeaponId]), exActive, FDQuery);
 
-                                    OpenPercs;
+                                        try
+                                          Person.Cash := Person.Cash - FDQuery.FieldByName('cost').AsInteger;
+                                        finally
+                                          FreeQueryAndConn(FDQuery);
+                                        end;
+                                      end;
+
+                                    Person.WeaponHealth := 100;
+                                  end
+                                else
+                                  begin
+                                    if NOT vTehnic.IsFree then
+                                      begin
+                                        ExeExec(Format('select round(%s * cost) as cost from armors where armor_id = %d', [StringReplace((1 - Person.ArmorHealth / 100).ToString, ',', '.', [rfReplaceAll]), Person.ArmorId]), exActive, FDQuery);
+
+                                        try
+                                          Person.Cash := Person.Cash - FDQuery.FieldByName('cost').AsInteger;
+                                        finally
+                                          FreeQueryAndConn(FDQuery);
+                                        end;
+                                      end;
+
+                                    Person.ArmorHealth := 100;
                                   end;
+
+                                ReloadPercs;
+                                OpenPercs;
+                              end
+                              else
+                                ShowMessage('Ты мерт, чтобы ремонтировать свои вещи');
                             end;
                         end;
                       finally
@@ -320,7 +362,10 @@ begin
                       end;
                     end
                   else
-                    ShowMessage('Нет подключения к сталкерской сети.');
+                    begin
+                      ShowMessage('Нет подключения к сталкерской сети.');
+                      StartScan;
+                    end;
                 end;
               finally
                 vSend.Free;

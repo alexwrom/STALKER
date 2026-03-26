@@ -66,6 +66,7 @@ type
     recSkin2: TRectangle;
     recNotification: TRectangle;
     animNotification: TFloatAnimation;
+    VertScrollBox1: TVertScrollBox;
     procedure btnToActiveClick(Sender: TObject);
     procedure btnToCompleteClick(Sender: TObject);
     procedure btnToCancelClick(Sender: TObject);
@@ -169,7 +170,7 @@ begin
     with listitem do
     begin
       CenterText := FNotificationsList[I].Name;
-      listitem.Height := 70;
+      listitem.Height := 50;
       OnItemClick := ItemNotificationClick;
       Tag := FNotificationsList[I].ID;
       TagObject := listitem;
@@ -334,7 +335,7 @@ begin
       with listitem do
       begin
         CenterText := FAllIssueList[I].Name;
-        listitem.Height := 70;
+        listitem.Height := 50;
         OnItemClick := ItemClick;
         Tag := FAllIssueList[I].ID;
         TagObject := listitem;
@@ -349,16 +350,20 @@ begin
 end;
 
 function TFrameIssuies.GetNotification(AID: integer): TNotificationData;
-  var
-   vNotification : TNotificationData;
-  begin
-    for vNotification in FNotificationsList do
-      if vNotification.ID = AID then
-        begin
-          Result := vNotification;
-          break;
-        end;
-  end;
+var
+ I : integer;
+ vNotification : TNotificationData;
+begin
+  for i:= 0 to FNotificationsList.Count - 1 do
+    if FNotificationsList[i].ID = AID then
+      begin
+        vNotification := FNotificationsList[i];
+        vNotification.IsOpen := true;
+        FNotificationsList[i] := vNotification;
+        Result := vNotification;
+        break;
+      end;
+end;
 
 procedure TFrameIssuies.ItemNotificationClick(FTagObject: TObject; FItem: TFMXObject);
 var
@@ -366,6 +371,7 @@ var
   vNotification : TNotificationData;
 begin
   FNotificationSelID := (FItem as TControlItem).Tag;
+
   vNotification := GetNotification(FNotificationSelID);
   BtnClickMedia;
   recSelectNotification.Parent := (FItem as TControlItem).rcBackground;

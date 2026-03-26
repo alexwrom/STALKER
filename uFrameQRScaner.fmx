@@ -8919,7 +8919,7 @@ object FrameQRScanner: TFrameQRScanner
               Size.Height = 34.000000000000000000
               Size.PlatformDefault = False
               TabOrder = 0
-              Text = #1045#1097#1077
+              Text = #1054#1082
               TextSettings.Font.Family = 'YouTube Sans Dark'
               TextSettings.Font.Size = 15.000000000000000000
               TextSettings.Font.StyleExt = {00070000000000000004000000}

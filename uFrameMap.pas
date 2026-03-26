@@ -457,7 +457,7 @@ begin
       begin
         ExeExec('update issuies set status_id = 1 where issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
         ExeExec('select cost from issuies where issue_id = ' + FIssueList[I].ID.ToString + ';', exActive, vQuery);
-        Person.Cash := Person.Cash + vQuery.FieldByName('cost').AsFloat;
+        Person.Cash := Person.Cash + vQuery.FieldByName('cost').AsInteger;
         FreeQueryAndConn(vQuery);
 
         ExeExec('update issuies set status_id = 0 where prev_issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
@@ -470,7 +470,7 @@ begin
       begin
         ExeExec('update issuies set status_id = 1 where issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
         ExeExec('select cost from issuies where issue_id = ' + FIssueList[I].ID.ToString + ';', exActive, vQuery);
-        Person.Cash := Person.Cash + vQuery.FieldByName('cost').AsFloat;
+        Person.Cash := Person.Cash + vQuery.FieldByName('cost').AsInteger;
         FreeQueryAndConn(vQuery);
         ExeExec('update issuies set status_id = 0 where prev_issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
         ReloadIssuies;
@@ -1710,6 +1710,7 @@ begin
       if FormatDateTime('hh:nn', Time()) = FormatDateTime('hh:nn', FCurrentCritical.TimeStop) then
       begin
         FIsCriticalStart := False;
+        timerCritical.Enabled := false;
         MediaPlayerStartCritical.Stop;
         MediaPlayerStopCritical.CurrentTime := 0;
         MediaPlayerStopCritical.Play;

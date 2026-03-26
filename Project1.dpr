@@ -111,7 +111,8 @@ uses
   classes.userdata in 'classes\classes.userdata.pas',
   classes.marker in 'classes\classes.marker.pas',
   uFrameSettings in 'uFrameSettings.pas' {FrameSettings: TFrame},
-  classes.medicdata in 'classes\classes.medicdata.pas';
+  classes.medicdata in 'classes\classes.medicdata.pas',
+  classes.tehnicdata in 'classes\classes.tehnicdata.pas';
 
 {$R *.res}
 

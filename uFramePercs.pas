@@ -13,7 +13,7 @@ uses
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Param,
   FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf,
   FireDAC.Stan.Async, FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet, StrUtils,
-  FireDAC.Comp.Client, Math, System.DateUtils, System.TimeSpan, classes.action, classes.send, Rest.Json, uScanerWiFi, classes.medicdata;
+  FireDAC.Comp.Client, Math, System.DateUtils, System.TimeSpan, classes.action, classes.send, Rest.Json, uScanerWiFi, classes.medicdata, classes.tehnicdata;
 
 type
   TFramePercs = class(TFrame)
@@ -212,7 +212,7 @@ type
     Rectangle11: TRectangle;
     btnCloseSelection: TSpeedButton;
     laySelectionBody: TLayout;
-    Rectangle12: TRectangle;
+    recSkin4: TRectangle;
     InnerGlowEffect11: TInnerGlowEffect;
     Image18: TImage;
     Image25: TImage;
@@ -234,6 +234,24 @@ type
     layBtnMedic: TLayout;
     Image30: TImage;
     btnMedic: TCornerButton;
+    layRestoreCost: TLayout;
+    Rectangle14: TRectangle;
+    btnCloseRestoreCost: TSpeedButton;
+    Layout12: TLayout;
+    recSkin3: TRectangle;
+    InnerGlowEffect13: TInnerGlowEffect;
+    Image31: TImage;
+    Image32: TImage;
+    Image33: TImage;
+    Image34: TImage;
+    Rectangle16: TRectangle;
+    InnerGlowEffect14: TInnerGlowEffect;
+    Layout13: TLayout;
+    Image35: TImage;
+    btnRestoreFree: TCornerButton;
+    Layout16: TLayout;
+    Image37: TImage;
+    иbtnRestoreForMoney: TCornerButton;
     procedure btnInfoClick(Sender: TObject);
     procedure btnCloseInfoClick(Sender: TObject);
     procedure btnArmorInfoClick(Sender: TObject);
@@ -254,15 +272,20 @@ type
     procedure btnCloseQRClick(Sender: TObject);
     procedure btnMedicClick(Sender: TObject);
     procedure btnTehnic1Click(Sender: TObject);
+    procedure btnCloseRestoreCostClick(Sender: TObject);
+    procedure btnRestoreFreeClick(Sender: TObject);
+    procedure btnTehnic2Click(Sender: TObject);
+    procedure btnTehnic3Click(Sender: TObject);
   private
     { Private declarations }
     FArtsList: TList<TPerc>;
     procedure ReloadArmor;
-
     function GetTimeDec(ASeconds: integer): string;
+
 
   public
     FActiveAction: TAction;
+    procedure ShowQRTehnic;
     procedure StartTimerTehnicPercReload(ALastActionDateTime: TDateTime);
     procedure StartTimerMedicPercReload(ALastActionDateTime: TDateTime);
     procedure ReloadArts;
@@ -367,6 +390,12 @@ begin
  layQR.Visible := false;
 end;
 
+procedure TFramePercs.btnCloseRestoreCostClick(Sender: TObject);
+begin
+  BtnClickMedia;
+  layRestoreCost.Visible := false;
+end;
+
 procedure TFramePercs.btnCloseSelectionClick(Sender: TObject);
 begin
   BtnClickMedia;
@@ -375,7 +404,6 @@ end;
 
 procedure TFramePercs.btnHelpClick(Sender: TObject);
 var
-  vQuery: TFDQuery;
   vSend: TSend;
   vStrSend: string;
   AMedic : TMedicData;
@@ -470,7 +498,7 @@ end;
 
 procedure TFramePercs.btnMedic3Click(Sender: TObject);
 begin
-if layMedic3.Opacity = 1 then
+  if layMedic3.Opacity = 1 then
   begin
     BtnClickMedia;
     layBtnRestore.Visible := true;
@@ -572,6 +600,7 @@ var
 begin
   BtnClickMedia;
   layPercsUp.Visible := true;
+  layRestoreCost.Visible := false;
 
   // Medic
   layMedic1.Opacity := 0.2;
@@ -655,9 +684,9 @@ var
 begin
   BtnClickMedia;
 
-  if layInfo.Tag = 0 then
+  if layInfo.Tag = 0 then     // Броня
   begin
-   if Person.LevelTehnic = 3 then
+   if (Person.LevelTehnic = 3) and (not layTehnicReload.Visible) then
      begin
        ExeExec('update users set armor_health = 100;', exExecute, vQuery);
        Person.ArmorHealth := 100;
@@ -666,13 +695,17 @@ begin
               exExecute, vQuery);
 
         StartTimerTehnicPercReload(NOW());
+        ShowMessage('Ремонт выполнен успешно');
      end
    else
-     // Здесь вызов сканера для ремонта
+     begin
+       Person.IsRestoreWeapon := false;
+       OpenScanQR;
+     end;
   end
-  else
+  else                    // Оружие
   begin
-    if Person.WeaponLevel <= Person.LevelTehnic then
+    if (Person.WeaponLevel <= Person.LevelTehnic)  and (not layTehnicReload.Visible) then
      begin
        Person.WeaponHealth := 100;
        ExeExec('update users set weapon_health = 100;', exExecute, vQuery);
@@ -680,28 +713,43 @@ begin
               exExecute, vQuery);
 
        StartTimerTehnicPercReload(NOW());
+       ShowMessage('Ремонт выполнен успешно');
      end
     else
-     // Здесь вызов сканера для ремонта
+     begin
+       Person.IsRestoreWeapon := true;
+       OpenScanQR;
+     end;
   end;
 
   ReloadPercs;
   layInfo.Visible := false;
 end;
 
-procedure TFramePercs.btnTehnic1Click(Sender: TObject);
+procedure TFramePercs.ShowQRTehnic;
 var
   vSend: TSend;
   vStrSend: string;
+  vTehnic: TTehnicData;
 begin
   BtnClickMedia;
+
+  //После таймера
   layQR.Visible := true;
 
   if not Assigned(FActiveAction) then
     FActiveAction := TAction.Create;
 
   FActiveAction.SendType := stTehnic;
-  FActiveAction.JSONObject := Person.LevelTehnic.ToString;
+
+  vTehnic := TTehnicData.Create;
+  try
+    vTehnic.Level := Person.LevelTehnic;
+    vTehnic.IsFree := layRestoreCost.Tag = 0;  // Если на кнопке TAG = 0 значит кнопка бесплатно
+    FActiveAction.JSONObject := TJSON.ObjectToJsonString(vTehnic);
+  finally
+    vTehnic.Free;
+  end;
 
   vSend := TSend.Create;
 {$IFDEF ANDROID}
@@ -711,6 +759,45 @@ begin
   vStrSend := StringReplace(vStrSend,'"code":"",','',[]);
   vStrSend := StringReplace(vStrSend,',"marker":null','',[]);
   GenerateQRCode(vStrSend, imgQR);
+  layRestoreCost.Visible := false;
+end;
+
+procedure TFramePercs.btnRestoreFreeClick(Sender: TObject);
+var
+  vSend: TSend;
+  vStrSend: string;
+  vTehnic: TTehnicData;
+begin
+  BtnClickMedia;
+  layRestoreCost.Tag := (Sender as TCornerButton).Tag;  // Если на кнопке TAG = 0 значит кнопка бесплатно
+  StartWork;
+end;
+
+procedure TFramePercs.btnTehnic1Click(Sender: TObject);
+begin
+  if layTehnic1.Opacity = 1 then
+    begin
+      BtnClickMedia;
+      layRestoreCost.Visible := true;
+    end;
+end;
+
+procedure TFramePercs.btnTehnic2Click(Sender: TObject);
+begin
+  if layTehnic2.Opacity = 1 then
+    begin
+      BtnClickMedia;
+      layRestoreCost.Visible := true;
+    end;
+end;
+
+procedure TFramePercs.btnTehnic3Click(Sender: TObject);
+begin
+  if layTehnic3.Opacity = 1 then
+    begin
+      BtnClickMedia;
+      layRestoreCost.Visible := true;
+    end;
 end;
 
 procedure TFramePercs.btnWeaponInfoClick(Sender: TObject);
@@ -757,9 +844,9 @@ procedure TFramePercs.ReloadPercs;
 var
   vQuery: TFDQuery;
 begin
-  ReloadArmor;     // nickname,
-  ExeExec('select   health, armor_health, weapon_health, weapon_icon, detector_id, level, radius, chimishe, electro, fire, phisic, psi, radiation, cash, armor_id, weapon_id, is_classic_bag, weapon_level, level_medic, level_tehnic from user_info;', exActive, vQuery);
-  //Person.UserName := vQuery.FieldByName('nickname').AsString;
+  ReloadArmor;
+  ExeExec('select nickname, health, armor_health, weapon_health, weapon_icon, detector_id, level, radius, chimishe, electro, fire, phisic, psi, radiation, cash, armor_id, weapon_id, is_classic_bag, weapon_level, level_medic, level_tehnic from user_info;', exActive, vQuery);
+  Person.UserName := vQuery.FieldByName('nickname').AsString;
   Person.Health := vQuery.FieldByName('health').AsFloat;
   Person.Cash := vQuery.FieldByName('cash').AsInteger;
   Person.ArmorId := vQuery.FieldByName('armor_id').AsInteger;

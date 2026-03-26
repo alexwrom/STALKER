@@ -194,6 +194,15 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
+        <DeployFile Include="Resources\music\work.mp3" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>Project1\assets\internal\</RemoteDir>
+            <RemoteName>work.mp3</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="Resources\music\electro.mp3" Condition="'$(Config)'=='Debug'">
             <RemoteDir>Project1\assets\internal\</RemoteDir>
             <RemoteName>electro.mp3</RemoteName>
@@ -680,6 +689,15 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
+        <DeployFile Include="Resources\music\work.mp3" Condition="'$(Config)'=='Release'">
+            <RemoteDir>Project1\assets\internal\</RemoteDir>
+            <RemoteName>work.mp3</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="Resources\music\electro.mp3" Condition="'$(Config)'=='Release'">
             <RemoteDir>Project1\assets\internal\</RemoteDir>
             <RemoteName>electro.mp3</RemoteName>
@@ -1144,6 +1162,15 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
+        <DeployFile Include="Resources\music\work.mp3" Condition="'$(Config)'=='Release'">
+            <RemoteDir>Project1\</RemoteDir>
+            <RemoteName>work.mp3</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="Resources\music\psi.mp3" Condition="'$(Config)'=='Debug'">
             <RemoteDir>Project1\assets\internal\</RemoteDir>
             <RemoteName>psi.mp3</RemoteName>
@@ -1515,7 +1542,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="Android\Release\AndroidManifest.xml" Condition="'$(Config)'=='Release'">
-            <RemoteDir>Project1\</RemoteDir>
+            <RemoteDir>Project1\assets\internal\</RemoteDir>
             <RemoteName>AndroidManifest.xml</RemoteName>
             <DeployClass>ProjectAndroidManifest</DeployClass>
             <Operation>1</Operation>
@@ -1663,6 +1690,15 @@
             <RemoteName>ic_launcher.png</RemoteName>
             <DeployClass>Android_LauncherIcon144</DeployClass>
             <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="Resources\music\work.mp3" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>Project1\assets\internal\</RemoteDir>
+            <RemoteName>work.mp3</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>

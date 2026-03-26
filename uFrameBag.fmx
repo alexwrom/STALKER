@@ -18451,7 +18451,7 @@ object FrameBag: TFrameBag
           Fill.Color = xFF111611
           Opacity = 0.949999988079071000
           Size.Width = 387.000000000000000000
-          Size.Height = 29.000000000000000000
+          Size.Height = 74.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
           object InnerGlowEffect12: TInnerGlowEffect
@@ -18465,7 +18465,7 @@ object FrameBag: TFrameBag
             Margins.Left = 20.000000000000000000
             Position.X = 250.000000000000000000
             Size.Width = 100.000000000000000000
-            Size.Height = 29.000000000000000000
+            Size.Height = 74.000000000000000000
             Size.PlatformDefault = False
             TextSettings.Font.Family = 'LCD'
             TextSettings.Font.Size = 16.000000000000000000
@@ -18481,7 +18481,7 @@ object FrameBag: TFrameBag
             Margins.Left = 5.000000000000000000
             Position.X = 355.000000000000000000
             Size.Width = 32.000000000000000000
-            Size.Height = 29.000000000000000000
+            Size.Height = 74.000000000000000000
             Size.PlatformDefault = False
             TextSettings.Font.Family = 'LCD'
             TextSettings.Font.Size = 20.000000000000000000
@@ -18495,7 +18495,7 @@ object FrameBag: TFrameBag
           Align = Bottom
           Fill.Color = xFF111611
           Opacity = 0.949999988079071000
-          Position.Y = 156.000000000000000000
+          Position.Y = 201.000000000000000000
           Size.Width = 387.000000000000000000
           Size.Height = 45.000000000000000000
           Size.PlatformDefault = False
@@ -18846,6 +18846,7 @@ object FrameBag: TFrameBag
           Size.Height = 45.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
+          Visible = False
           object InnerGlowEffect6: TInnerGlowEffect
             Softness = 1.500000000000000000
             GlowColor = xFF060606
@@ -19093,7 +19094,7 @@ object FrameBag: TFrameBag
         end
         object layPercs: TLayout
           Align = Bottom
-          Position.Y = 29.000000000000000000
+          Position.Y = 74.000000000000000000
           Size.Width = 387.000000000000000000
           Size.Height = 127.000000000000000000
           Size.PlatformDefault = False
