@@ -10,6 +10,7 @@ const
   cDefLength = 9000;
 
 function GoGenericBaseData(AUserID: integer; AIsAdmin: boolean = false): TList<UnicodeString>;
+function GoGenericDataFromUser(AUserID: integer): TList<UnicodeString>;
 function AddMapToHex: UnicodeString;
 
 implementation
@@ -38,6 +39,79 @@ begin
   finally
     Stream.Free;
   end;
+end;
+
+
+procedure GenerateNotifications(var AStrData: TList<UnicodeString>; AUserID: integer = -1);
+var
+  FDQuery: TFDQuery;
+  FDQueryCol: TFDQuery;
+  vColumns: TList<TColumn>;
+  vColumn: TColumn;
+  i: integer;
+  vColName: string;
+  vColValue: UnicodeString;
+  vStr: string;
+begin
+  vColumns := TList<TColumn>.Create;
+  try
+    ExeExec('PRAGMA Table_Info(notifications)', exActive, FDQueryCol);
+    try
+      FDQueryCol.First;
+
+      while not FDQueryCol.Eof do
+      begin
+        if (FDQueryCol.FieldByName('name').AsString <> 'notification_id') and (FDQueryCol.FieldByName('name').AsString <> 'user_id') then
+        begin
+          vColumn.Name := FDQueryCol.FieldByName('name').AsString;
+          vColumn.TypeCol := FDQueryCol.FieldByName('type').AsString;
+          vColumns.Add(vColumn);
+        end;
+
+        FDQueryCol.Next;
+      end;
+    finally
+      FreeQueryAndConn(FDQueryCol);
+    end;
+
+    ExeExec('select * from notifications n left join users u on u.group_id = n.group_id where (u.user_id = ' + AUserID.ToString + ' or n.group_id = 10) and n.user_id <> ' + AUserID.ToString + ';', exActive, FDQuery);
+    try
+      FDQuery.First;
+      while not FDQuery.Eof do
+      begin
+        vColName := '';
+        vColValue := '';
+
+        for i := 0 to vColumns.Count - 1 do
+        begin
+          vColName := vColName + IfThen(i = 0, '', ',') + vColumns[i].Name;
+
+          if vColumns[i].Name = 'is_owner' then
+             vColValue := vColValue + IfThen(i = 0, '', ',') + '0'
+          else
+             if (vColumns[i].TypeCol = 'BOOLEAN') or (vColumns[i].TypeCol = 'INTEGER') or (vColumns[i].TypeCol = 'DOUBLE') then
+                begin
+                  if FDQuery.FieldByName(vColumns[i].Name).AsString = '' then
+                    vColValue := vColValue + IfThen(i = 0, '', ',') + 'NULL'
+                  else
+                    vColValue := vColValue + IfThen(i = 0, '', ',') + StringReplace(FDQuery.FieldByName(vColumns[i].Name).AsString, ',', '.', [rfReplaceAll]);
+                end
+                else if (vColumns[i].TypeCol = 'VARCHAR') or (vColumns[i].TypeCol = 'DATETIME') or (vColumns[i].TypeCol = 'TIME') then
+                  vColValue := vColValue + IfThen(i = 0, '', ',') + QuotedStr(FDQuery.FieldByName(vColumns[i].Name).AsString);
+        end;
+
+        AStrData.Add('insert into notifications (' + vColName + ') values (' + vColValue + ');');
+
+        FDQuery.Next;
+      end;
+
+    finally
+      FreeQueryAndConn(FDQuery);
+    end;
+  finally
+    FreeAndNil(vColumns);
+  end;
+
 end;
 
 procedure GenerateTableInsert(ATable: string; var AStrData: TList<UnicodeString>; AUserID: integer = -1);
@@ -188,11 +262,11 @@ function GoGenericDataFromUser(AUserID: integer): TList<UnicodeString>;
 begin
   // Порядок важен
   Result := TList<UnicodeString>.Create;
-  GenerateTableInsert('arts_to_map', Result);
+  //GenerateTableInsert('arts_to_map', Result);
 
-  GenerateTableInsert('issuies_block', Result, AUserID);
-  GenerateTableInsert('issuies', Result, AUserID);
-  //GenerateTableInsert('notifications', Result, AUserID);
+  //GenerateTableInsert('issuies_block', Result, AUserID);
+  //GenerateTableInsert('issuies', Result, AUserID);
+  GenerateNotifications(Result, AUserID);
 end;
 
 end.

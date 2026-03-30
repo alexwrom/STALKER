@@ -9,7 +9,8 @@ uses
   DelphiZXIngQRCode in '..\..\ZXing.Delphi-3.10.0\DelphiZXingQRCode-master\Source\DelphiZXIngQRCode.pas',
   classes.send in '..\classes\classes.send.pas',
   controls.item in 'controls.item.pas',
-  controls.listitem in 'controls.listitem.pas';
+  controls.listitem in 'controls.listitem.pas',
+  classes.marker in '..\classes\classes.marker.pas';
 
 {$R *.res}
 

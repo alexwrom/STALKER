@@ -283,6 +283,7 @@
         <DCCReference Include="..\classes\classes.send.pas"/>
         <DCCReference Include="controls.item.pas"/>
         <DCCReference Include="controls.listitem.pas"/>
+        <DCCReference Include="..\classes\classes.marker.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

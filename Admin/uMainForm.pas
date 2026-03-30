@@ -10,7 +10,7 @@ uses
   FireDAC.Comp.Client, FMX.StdCtrls, Generics.Collections, StrUtils, Classes.send, Threading,
   FMX.Objects, FMX.ListView.Types, FMX.ListView.Appearances,
   FMX.ListView.Adapters.Base, FMX.ListView, FMX.TabControl, FMX.Layouts,
-  Controls.listitem, Controls.item, FMX.Edit, FMX.EditBox, FMX.SpinBox;
+  Controls.listitem, Controls.item, FMX.Edit, FMX.EditBox, FMX.SpinBox, System.IOUtils, Math;
 
 type
   TMainForm = class(TForm)
@@ -149,8 +149,16 @@ type
     eBRLon: TEdit;
     btnCreateQR: TCornerButton;
     CornerButton2: TCornerButton;
-    ImgQR: TImage;
-    Image6: TImage;
+    CornerButton3: TCornerButton;
+    CornerButton4: TCornerButton;
+    Layout8: TLayout;
+    btnCreateCardsArts: TCornerButton;
+    Layout12: TLayout;
+    btnCreateCardsArmors: TCornerButton;
+    Layout13: TLayout;
+    btnCreateCardsMedical: TCornerButton;
+    Layout14: TLayout;
+    btnCreateCardsWeapons: TCornerButton;
     procedure IdTCPServerExecute(AContext: TIdContext);
     procedure FormShow(Sender: TObject);
     procedure btnSaveWeaponClick(Sender: TObject);
@@ -172,6 +180,12 @@ type
     procedure btnLoadMapClick(Sender: TObject);
     procedure btnCreateQRClick(Sender: TObject);
     procedure CornerButton2Click(Sender: TObject);
+    procedure CornerButton3Click(Sender: TObject);
+    procedure CornerButton4Click(Sender: TObject);
+    procedure btnCreateCardsArtsClick(Sender: TObject);
+    procedure btnCreateCardsArmorsClick(Sender: TObject);
+    procedure btnCreateCardsMedicalClick(Sender: TObject);
+    procedure btnCreateCardsWeaponsClick(Sender: TObject);
   private
     { Private declarations }
     FStrdata: UnicodeString;
@@ -191,6 +205,7 @@ type
     procedure LoadMedicalToListview;
     procedure ItemMedicalClick(FTagObject: TObject; FItem: TFMXObject);
     procedure LoadMap;
+    procedure CreateCards(AImg: TBitmap; AName: string; ACode: string; AID: integer);
 
   public
     { Public declarations }
@@ -253,9 +268,89 @@ begin
   ImgIconWeapon.Bitmap.Assign(nil);
 end;
 
+procedure TMainForm.btnCreateCardsArmorsClick(Sender: TObject);
+var
+  FDQuery: TFDQuery;
+  vBitmap: TBitmap;
+begin
+  ExeExec('select * from armors;', exActive, FDQuery);
+  FDQuery.First;
+
+  while not(FDQuery.Eof) do
+  begin
+    vBitmap := TBitmap.Create;
+    try
+      vBitmap.Assign(FDQuery.FieldByName('icon'));
+      CreateCards(vBitmap, FDQuery.FieldByName('name').AsString, '01', FDQuery.FieldByName('armor_id').AsInteger);
+    finally
+      FDQuery.Next;
+    end;
+  end;
+end;
+
+procedure TMainForm.btnCreateCardsArtsClick(Sender: TObject);
+var
+  FDQuery: TFDQuery;
+  vBitmap: TBitmap;
+begin
+  ExeExec('select * from arts order by art_name;', exActive, FDQuery);
+  FDQuery.First;
+
+  while not(FDQuery.Eof) do
+  begin
+    vBitmap := TBitmap.Create;
+    try
+      vBitmap.Assign(FDQuery.FieldByName('icon'));
+      CreateCards(vBitmap, FDQuery.FieldByName('art_name').AsString, '02', FDQuery.FieldByName('art_id').AsInteger);
+    finally
+      FDQuery.Next;
+    end;
+  end;
+end;
+
+procedure TMainForm.btnCreateCardsMedicalClick(Sender: TObject);
+var
+  FDQuery: TFDQuery;
+  vBitmap: TBitmap;
+begin
+  ExeExec('select * from medical;', exActive, FDQuery);
+  FDQuery.First;
+
+  while not(FDQuery.Eof) do
+  begin
+    vBitmap := TBitmap.Create;
+    try
+      vBitmap.Assign(FDQuery.FieldByName('icon'));
+      CreateCards(vBitmap, FDQuery.FieldByName('name').AsString, '03', FDQuery.FieldByName('medical_id').AsInteger);
+    finally
+      FDQuery.Next;
+    end;
+  end;
+end;
+
+procedure TMainForm.btnCreateCardsWeaponsClick(Sender: TObject);
+var
+  FDQuery: TFDQuery;
+  vBitmap: TBitmap;
+begin
+  ExeExec('select * from weapons;', exActive, FDQuery);
+  FDQuery.First;
+
+  while not(FDQuery.Eof) do
+  begin
+    vBitmap := TBitmap.Create;
+    try
+      vBitmap.Assign(FDQuery.FieldByName('icon'));
+      CreateCards(vBitmap, FDQuery.FieldByName('name').AsString, '04', FDQuery.FieldByName('weapon_id').AsInteger);
+    finally
+      FDQuery.Next;
+    end;
+  end;
+end;
+
 procedure TMainForm.btnCreateQRClick(Sender: TObject);
 begin
-  GenerateQRCode('{"code":"02' + FSelID.ToString.PadLeft(3, '0') + '"}', ImgQR);
+  CreateCards(imgIconArt.Bitmap, eNameArt.Text, '01', FSelID);
 end;
 
 procedure TMainForm.OnDeleteClick(Sender: TObject);
@@ -400,7 +495,75 @@ end;
 
 procedure TMainForm.CornerButton2Click(Sender: TObject);
 begin
-  GenerateQRCode('{"code":"01' + FSelID.ToString.PadLeft(3, '0') + '"}', Image6);
+  CreateCards(imgIconArmor.Bitmap, eNameArmor.Text, '02', FSelID);
+end;
+
+procedure TMainForm.CornerButton3Click(Sender: TObject);
+begin
+  CreateCards(imgIconMedical.Bitmap, eNameMedical.Text, '03', FSelID);
+end;
+
+procedure TMainForm.CornerButton4Click(Sender: TObject);
+begin
+  CreateCards(ImgIconWeapon.Bitmap, eNameWeapon.Text, '04', FSelID);
+end;
+
+procedure TMainForm.CreateCards(AImg: TBitmap; AName: string; ACode: string; AID: integer);
+begin
+  TTask.Run(
+    procedure
+    var
+      vBmp: TBitmap;
+      vImgQR: TImage;
+      Scale: Single;
+      DstX: Extended;
+      DstY: Extended;
+      AFolderName: string;
+    begin
+      case ACode.ToInteger() of
+        1: AFolderName := 'Броня';
+        2: AFolderName := 'Артефакты';
+        3: AFolderName := 'Медицина';
+        4: AFolderName := 'Оружие';
+      end;
+
+      TDirectory.CreateDirectory(GetUserAppPath + '\' + AFolderName);
+
+      vBmp := TBitmap.Create;
+      try
+        vBmp.LoadFromFile(System.IOUtils.TPath.Combine(GetUserAppPath, 'Card-1.png'));
+        vBmp.Canvas.BeginScene;
+        Scale := Min(vBmp.Width / 2 / AImg.Width, vBmp.Height / AImg.Height);
+        DstX := (vBmp.Width / 2 - AImg.Width * Scale) / 2;
+        DstY := (vBmp.Height - AImg.Height * Scale) / 2;
+
+        vBmp.Canvas.DrawBitmap(AImg, RectF(0, 0, AImg.Width, AImg.Height), RectF(DstX, DstY, DstX + AImg.Width * Scale, DstY + AImg.Height * Scale), 1);
+        vBmp.Canvas.Font.Size := 100;
+        vBmp.Canvas.Font.Style := [TFontStyle.fsBold];
+        vBmp.Canvas.Fill.Color := TAlphaColors.Black;
+        vBmp.Canvas.FillText(RectF(vBmp.Width / 2, 0, vBmp.Width, vBmp.Height), AName, true, 0.8, [], TTextAlign.Center, TTextAlign.Center);
+        vBmp.Canvas.EndScene;
+        vBmp.SaveToFile(System.IOUtils.TPath.Combine(GetUserAppPath + '\' + AFolderName, AName + ' - 1.jpg'));
+
+        vImgQR := TImage.Create(nil);
+        vImgQR.Width := vBmp.Height;
+        vImgQR.Height := vBmp.Height;
+        try
+          GenerateQRCode('{"code":"' + ACode + AID.ToString.PadLeft(3, '0') + '"}', vImgQR);
+
+          vBmp.LoadFromFile(System.IOUtils.TPath.Combine(GetUserAppPath, 'Card-1.png'));
+          vBmp.Canvas.BeginScene;
+          vBmp.Canvas.DrawBitmap(vImgQR.Bitmap, RectF(0, 0, vBmp.Width, vBmp.Height), RectF(vBmp.Width / 2 - vBmp.Height / 2, 0, vBmp.Width / 2 + vBmp.Height / 2, vBmp.Height), 1);
+          vBmp.Canvas.EndScene;
+          vBmp.SaveToFile(System.IOUtils.TPath.Combine(GetUserAppPath+ '\' + AFolderName, AName + ' - 2.jpg'));
+        finally
+          vImgQR.Free;
+        end;
+      finally
+        vBmp.Free;
+      end;
+    end);
+
 end;
 
 procedure TMainForm.FormShow(Sender: TObject);
@@ -410,6 +573,7 @@ begin
   LoadArtsToListview;
   LoadMedicalToListview;
   LoadMap;
+  labStatusLoadData.Text := 'Загружено';
 end;
 
 procedure TMainForm.LoadMap;
@@ -422,11 +586,12 @@ begin
 
   if FDQuery.RecordCount > 0 then
   begin
+    imgMap.Hint := FDQuery.FieldByName('map_image_path').AsString;
+
     TTask.Run(
       procedure
       begin
         imgMap.Bitmap.LoadFromFile(FDQuery.FieldByName('map_image_path').AsString);
-        imgMap.Hint := FDQuery.FieldByName('map_image_path').AsString;
       end);
 
     eTLLat.Text := FDQuery.FieldByName('map_left_top_lat').AsString;

@@ -80,6 +80,7 @@ var
   vData: TData;
   vUser: TUser;
   vUserData: TUserData;
+  AStreamString : TStringStream;
 begin
 
   // Устанавливаем заголовки CORS (для веб-приложений)
@@ -100,14 +101,6 @@ begin
   if (ARequestInfo.Command = 'GET') then
   begin
     try
-      // Парсим JSON из тела запроса
-      if Assigned(ARequestInfo.PostStream) then
-      begin
-        ARequestInfo.PostStream.Position := 0;
-        StreamReader := TStreamReader.Create(ARequestInfo.PostStream, TEncoding.UTF8);
-        JsonValue := TJSONObject.ParseJSONValue(StreamReader.ReadToEnd);
-      end;
-
       try
         // Получение списка настроек для ADMIN PDA
         if (vDocument = '/api/get_data_admin') then
@@ -123,7 +116,6 @@ begin
 
       finally
         JsonResponse.Free;
-        // JsonValue.Free;
       end;
     except
       on E: Exception do
@@ -146,9 +138,10 @@ begin
     try
       // Парсим JSON из тела запроса
       ARequestInfo.PostStream.Position := 0;
-      StreamReader := TStreamReader.Create(ARequestInfo.PostStream, TEncoding.UTF8);
-      JsonValue := TJSONObject.ParseJSONValue(StreamReader.ReadToEnd);
-      AData := (JsonValue as TJSONObject).ToString;
+      AStreamString := TStringStream.Create('', TEncoding.UTF8) ;
+      AStreamString.CopyFrom(ARequestInfo.PostStream, ARequestInfo.PostStream.Size);
+
+      AData := AStreamString.DataString;
 
       try
         // Авторизация
@@ -178,7 +171,6 @@ begin
 
       finally
         JsonResponse.Free;
-        JsonValue.Free;
       end;
     except
       on E: Exception do
@@ -292,13 +284,17 @@ begin
   AData.SQL := TList<UnicodeString>.Create;
   AData.SQL := AdminData;
 
-  JsonResponse := TJSONObject.Create;
   try
-    JsonResponse.AddPair('status', 'success');
-    JsonResponse.AddPair('message', 'Данные отправлены');
-    JsonResponse.AddPair('JSON', TJSON.ObjectToJsonString(AData));
-    Result := JsonResponse;
+    JsonResponse := TJSONObject.Create;
+    try
+      JsonResponse.AddPair('status', 'success');
+      JsonResponse.AddPair('message', 'Данные отправлены');
+      JsonResponse.AddPair('JSON', TJSON.ObjectToJsonString(AData));
+      Result := JsonResponse;
+    finally
+    end;
   finally
+    AData.Free;
   end;
 
 end;
@@ -362,6 +358,7 @@ var
   JsonResponse: TJSONObject;
   vSQLText: UnicodeString;
   I: Integer;
+  AData: TData;
 begin
   Result := nil;
 
@@ -371,14 +368,21 @@ begin
 
     ExeExec(vSQLText, exExecute, vQuery);
 
-    JsonResponse := TJSONObject.Create;
-    try
-      JsonResponse.AddPair('status', 'success');
-      JsonResponse.AddPair('message', 'Данные загружены успешно');
-      JsonResponse.AddPair('JSON', '');
-      Result := JsonResponse;
-    finally
-    end;
+    AData := TData.Create;
+    AData.SQL := TList<UnicodeString>.Create;
+    AData.SQL := GoGenericDataFromUser(AUserId);
+     try
+        JsonResponse := TJSONObject.Create;
+        try
+          JsonResponse.AddPair('status', 'success');
+          JsonResponse.AddPair('message', 'Данные загружены успешно  и отправлены');
+          JsonResponse.AddPair('JSON', TJSON.ObjectToJsonString(AData));
+          Result := JsonResponse;
+        finally
+        end;
+     finally
+        AData.Free;
+     end;
 
   except
     JsonResponse := TJSONObject.Create;
