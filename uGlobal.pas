@@ -595,7 +595,11 @@ begin
                     begin
                       FKillType := ktPSI;
                       MainForm.layDeadGlow.Visible := false;
-                      TotalSeconds := 30 * 60 - SecondsBetween(NOW(), vLastActionDateTime);
+
+                      if vActionTypeID = 5 then
+                        TotalSeconds := 30 * 60 - SecondsBetween(NOW(), vLastActionDateTime)
+                      else
+                        TotalSeconds := 30 * 60;
 
                       // Создаем TTimeSpan
                       TimeSpan := TTimeSpan.FromSeconds(TotalSeconds);
@@ -741,6 +745,7 @@ begin
 
   AQuery.Connection := FDConn;
   FDConn.Params.Database := System.IOUtils.TPath.Combine(GetUserAppPath, 'base.db');
+  FDConn.Params.Add('DateTimeFormat=String');
   try
     FDConn.Connected := true;
   except

@@ -7,7 +7,7 @@ uses
   FMX.Types, FMX.Graphics, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.StdCtrls,
   FMX.Objects, FMX.Layouts, uGlobal, System.ImageList, FMX.ImgList, Generics.Collections,
   FMX.Controls.Presentation, FMX.Effects, StrUtils, FireDAC.Comp.Client, uScanerWiFi, Classes.send, Classes.sell,
-  Rest.JSON, IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer, IdGlobal, System.Net.URLClient, Classes.action, FMX.TabControl, FMX.Edit;
+  Rest.JSON, IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer, IdGlobal, System.Net.URLClient, Classes.action, FMX.TabControl, FMX.Edit, Math;
 
 type
   TFrameBag = class(TFrame)
@@ -20,26 +20,6 @@ type
     flBackground: TFlowLayout;
     flElements: TFlowLayout;
     layBag: TLayout;
-    layInfo: TLayout;
-    recBackground: TRectangle;
-    layPanel: TLayout;
-    imgBottom: TImage;
-    imgTop: TImage;
-    Image13: TImage;
-    Image8: TImage;
-    imgPercsInfo: TImage;
-    infoRadiation: TRectangle;
-    infoChimishe: TRectangle;
-    infoElectro: TRectangle;
-    infoPsi: TRectangle;
-    infoPhisic: TRectangle;
-    infoFire: TRectangle;
-    infoLabChimishe: TLabel;
-    infoLabElectro: TLabel;
-    infoLabradiation: TLabel;
-    infoLabPhisic: TLabel;
-    infoLabFire: TLabel;
-    infoLabPsi: TLabel;
     Image7: TImage;
     Label4: TLabel;
     SwitchStyle: TSwitch;
@@ -47,19 +27,6 @@ type
     InnerGlowEffect3: TInnerGlowEffect;
     labCash: TLabel;
     Label1: TLabel;
-    recCountSlots: TRectangle;
-    InnerGlowEffect4: TInnerGlowEffect;
-    Image4: TImage;
-    Label2: TLabel;
-    labCountSlots: TLabel;
-    recHealth: TRectangle;
-    ImgHealth: TImage;
-    HealthProgress: TRectangle;
-    recHealthRestore: TRectangle;
-    InnerGlowEffect6: TInnerGlowEffect;
-    Image5: TImage;
-    Label3: TLabel;
-    labHealthRestore: TLabel;
     layChangeSlot: TLayout;
     Rectangle3: TRectangle;
     Layout3: TLayout;
@@ -117,31 +84,6 @@ type
     recRadiationChangeArt: TRectangle;
     GlassList: TImageList;
     igfSelect: TInnerGlowEffect;
-    infoChimisheFullArmor: TRectangle;
-    infoElectroFullArmor: TRectangle;
-    infoFireFullArmor: TRectangle;
-    infoPhisicFullArmor: TRectangle;
-    infoPsiFullArmor: TRectangle;
-    infoRadiationFullArmor: TRectangle;
-    Layout1: TLayout;
-    Rectangle5: TRectangle;
-    InnerGlowEffect2: TInnerGlowEffect;
-    layAddArmor: TLayout;
-    Image1: TImage;
-    btnAddArmor: TCornerButton;
-    layUse: TLayout;
-    Image2: TImage;
-    btnUse: TCornerButton;
-    layAddArt: TLayout;
-    Image6: TImage;
-    btnAddArt: TCornerButton;
-    laySells: TLayout;
-    Image18: TImage;
-    bntSells: TCornerButton;
-    recCost: TRectangle;
-    InnerGlowEffect12: TInnerGlowEffect;
-    labElementCost: TLabel;
-    Label6: TLabel;
     TabControl: TTabControl;
     TabClassic: TTabItem;
     TabSection: TTabItem;
@@ -190,23 +132,101 @@ type
     InnerGlowEffect15: TInnerGlowEffect;
     Image29: TImage;
     recSkin3: TRectangle;
-    recSkin4: TRectangle;
-    Layout15: TLayout;
-    Image30: TImage;
     laySellQR: TLayout;
     recBackQR: TRectangle;
     imgQR: TImage;
     btnCloseChangeSlot: TSpeedButton;
-    btnCloseInfo: TSpeedButton;
     btnCloseQR: TSpeedButton;
     InnerGlowEffect11: TInnerGlowEffect;
-    InnerGlowEffect17: TInnerGlowEffect;
     Layout5: TLayout;
     Layout16: TLayout;
     recBackArt: TRectangle;
+    Layout9: TLayout;
+    layInfo: TLayout;
+    recBackground: TRectangle;
+    btnCloseInfo: TSpeedButton;
+    layPanel: TLayout;
+    recSkin4: TRectangle;
+    InnerGlowEffect17: TInnerGlowEffect;
+    imgBottom: TImage;
+    imgTop: TImage;
+    Image13: TImage;
+    Image8: TImage;
+    Layout15: TLayout;
+    recCost: TRectangle;
+    InnerGlowEffect12: TInnerGlowEffect;
+    labElementCost: TLabel;
+    Label6: TLabel;
+    recCountSlots: TRectangle;
+    InnerGlowEffect4: TInnerGlowEffect;
+    Image4: TImage;
+    Label2: TLabel;
+    labCountSlots: TLabel;
+    recHealthRestore: TRectangle;
+    InnerGlowEffect6: TInnerGlowEffect;
+    Image5: TImage;
+    Label3: TLabel;
+    labHealthRestore: TLabel;
     layPercs: TLayout;
     recBackInfo: TRectangle;
-    Layout9: TLayout;
+    infoRadiationFullArmor: TRectangle;
+    infoRadiation: TRectangle;
+    infoPsiFullArmor: TRectangle;
+    infoPsi: TRectangle;
+    infoPhisicFullArmor: TRectangle;
+    infoPhisic: TRectangle;
+    infoFireFullArmor: TRectangle;
+    infoFire: TRectangle;
+    infoElectroFullArmor: TRectangle;
+    infoElectro: TRectangle;
+    infoChimisheFullArmor: TRectangle;
+    infoChimishe: TRectangle;
+    imgPercsInfo: TImage;
+    infoLabChimishe: TLabel;
+    infoLabElectro: TLabel;
+    infoLabradiation: TLabel;
+    infoLabPhisic: TLabel;
+    infoLabFire: TLabel;
+    infoLabPsi: TLabel;
+    recHealth: TRectangle;
+    HealthProgress: TRectangle;
+    ImgHealth: TImage;
+    Image30: TImage;
+    Layout1: TLayout;
+    Rectangle5: TRectangle;
+    InnerGlowEffect2: TInnerGlowEffect;
+    layAddArmor: TLayout;
+    Image1: TImage;
+    btnAddArmor: TCornerButton;
+    layUse: TLayout;
+    Image2: TImage;
+    btnUse: TCornerButton;
+    layAddArt: TLayout;
+    Image6: TImage;
+    btnAddArt: TCornerButton;
+    laySells: TLayout;
+    Image18: TImage;
+    bntSells: TCornerButton;
+    laySellCost: TLayout;
+    Rectangle14: TRectangle;
+    btnCloseSellCost: TSpeedButton;
+    Layout17: TLayout;
+    Rectangle1: TRectangle;
+    InnerGlowEffect1: TInnerGlowEffect;
+    Image31: TImage;
+    Image32: TImage;
+    Image33: TImage;
+    Image34: TImage;
+    Rectangle4: TRectangle;
+    InnerGlowEffect5: TInnerGlowEffect;
+    Layout18: TLayout;
+    Image35: TImage;
+    btnSellFree: TCornerButton;
+    Layout19: TLayout;
+    Image37: TImage;
+    btnSellForMoney: TCornerButton;
+    Label5: TLabel;
+    labSumma: TLabel;
     procedure SwitchStyleSwitch(Sender: TObject);
     procedure btnCloseInfoClick(Sender: TObject);
     procedure btnAddArmorClick(Sender: TObject);
@@ -216,6 +236,8 @@ type
     procedure btnChooseArtClick(Sender: TObject);
     procedure bntSellsClick(Sender: TObject);
     procedure btnCloseQRClick(Sender: TObject);
+    procedure btnSellFreeClick(Sender: TObject);
+    procedure btnCloseSellCostClick(Sender: TObject);
   private
     FArtsList: TList<TPerc>;
 
@@ -254,6 +276,7 @@ begin
   infoLabPsi.TextSettings.Font.Family := 'lcd';
   infoLabradiation.TextSettings.Font.Family := 'lcd';
   labElementCost.TextSettings.Font.Family := 'lcd';
+  labSumma.TextSettings.Font.Family := 'lcd';
 
   FArtsList := TList<TPerc>.Create;
 end;
@@ -373,35 +396,11 @@ begin
 end;
 
 procedure TFrameBag.bntSellsClick(Sender: TObject);
-var
-  vSend: TSend;
-  vSell: TSell;
-  vStrSend: string;
 begin
   BtnClickMedia;
+  labSumma.Text := FBagList[layInfo.Tag].Cost.ToString;
+  laySellCost.Visible := true;
   layInfo.Visible := False;
-  laySellQR.Visible := true;
-
-  if not Assigned(FActiveAction) then
-    FActiveAction := TAction.Create;
-
-  FActiveAction.SendType := stSell;
-  vSell := TSell.Create;
-  vSell.TableName := FBagList[layInfo.Tag].TableName;
-  vSell.RowID := FBagList[layInfo.Tag].RowID;
-  vSell.Health := FBagList[layInfo.Tag].Health;
-  vSell.Cost := FBagList[layInfo.Tag].Cost;
-
-  FActiveAction.JSONObject := TJson.ObjectToJsonString(vSell);
-
-  vSend := TSend.Create;
-{$IFDEF ANDROID}
-  vSend.Ip := GetMyIP;
-{$ENDIF}
-  vStrSend := TJson.ObjectToJsonString(vSend);
-  vStrSend := StringReplace(vStrSend,'"code":"",','',[]);
-  vStrSend := StringReplace(vStrSend,',"marker":null','',[]);
-  GenerateQRCode(vStrSend, imgQR);
 end;
 
 procedure TFrameBag.btnAddArmorClick(Sender: TObject);
@@ -409,7 +408,6 @@ var
   vIndex: integer;
   vQuery: TFDQuery;
 begin
-  BtnClickMedia;
   vIndex := layInfo.Tag;
 
   case FBagList[vIndex].BagType of
@@ -446,11 +444,12 @@ var
   vQuery: TFDQuery;
   vIndex: integer;
 begin
-  BtnClickMedia;
+
   vIndex := layInfo.Tag;
 
   if IsFullBelt then
   begin
+    BtnClickMedia;
     imgArt.Bitmap.Assign(FBagList[vIndex].Icon);
     ExeExec('select * from arts where art_id = ' + FBagList[vIndex].RowID.ToString + ';', exActive, vQuery);
 
@@ -584,7 +583,6 @@ procedure TFrameBag.btnChooseArtClick(Sender: TObject);
 var
   vQuery: TFDQuery;
 begin
-  BtnClickMedia;
   btnChooseArt.Enabled := False;
   ExeExec('update belt set art_id = ' + FBagList[layInfo.Tag].RowID.ToString + ' where slot = ' + igfSelect.Tag.ToString + ';', exExecute, vQuery);
   ExeExec('insert into bag (table_name, row_id, health) values (''arts'',' + FArtsList[igfSelect.Tag - 1].ID.ToString + ', 100);', exExecute, vQuery);
@@ -611,7 +609,6 @@ var
   vIndex: integer;
   vQuery: TFDQuery;
 begin
-  BtnClickMedia;
   vIndex := layInfo.Tag;
   case FBagList[vIndex].BagType of
     btMedical:
@@ -630,6 +627,44 @@ procedure TFrameBag.btnCloseQRClick(Sender: TObject);
 begin
   BtnClickMedia;
   laySellQR.Visible := False;
+end;
+
+procedure TFrameBag.btnCloseSellCostClick(Sender: TObject);
+begin
+  BtnClickMedia;
+  laySellCost.Visible := false;
+end;
+
+procedure TFrameBag.btnSellFreeClick(Sender: TObject);
+var
+  vSend: TSend;
+  vSell: TSell;
+  vStrSend: string;
+begin
+  BtnClickMedia;
+  laySellQR.Visible := true;
+  laySellCost.Visible := false;
+
+  if not Assigned(FActiveAction) then
+    FActiveAction := TAction.Create;
+
+  FActiveAction.SendType := stSell;
+  vSell := TSell.Create;
+  vSell.TableName := FBagList[layInfo.Tag].TableName;
+  vSell.RowID := FBagList[layInfo.Tag].RowID;
+  vSell.Health := FBagList[layInfo.Tag].Health;
+  vSell.Cost := IfThen((Sender as TCornerButton).Tag = 0, 0, FBagList[layInfo.Tag].Cost * Round(FBagList[layInfo.Tag].Health / 100));
+
+  FActiveAction.JSONObject := TJson.ObjectToJsonString(vSell);
+
+  vSend := TSend.Create;
+{$IFDEF ANDROID}
+  vSend.Ip := GetMyIP;
+{$ENDIF}
+  vStrSend := TJson.ObjectToJsonString(vSend);
+  vStrSend := StringReplace(vStrSend,'"code":"",','',[]);
+  vStrSend := StringReplace(vStrSend,',"marker":null','',[]);
+  GenerateQRCode(vStrSend, imgQR);
 end;
 
 procedure TFrameBag.CreateElements(AIsClassicBag: boolean);
@@ -817,7 +852,7 @@ begin
       begin
         recHealth.Visible := False;
         labHealthRestore.Text := FBagList[vIndex].HealthRestore.ToString;
-        labElementCost.Text := Format('%.0n', [FBagList[vIndex].Cost]);
+        labElementCost.Text := Format('%.0n', [FBagList[vIndex].Cost.ToExtended]);
         recCountSlots.Visible := False;
         layInfo.Tag := (Sender as TSpeedButton).Tag;
         recHealthRestore.Visible := true;
@@ -832,7 +867,7 @@ begin
     btArt:
       begin
 
-        labElementCost.Text := Format('%.0n', [FBagList[vIndex].Cost]);
+        labElementCost.Text := Format('%.0n', [FBagList[vIndex].Cost.ToExtended]);
         infoRadiation.Width := infoRadiation.Tag * FBagList[vIndex].Percs.RadiationArmor / 100;
         infoChimishe.Width := infoChimishe.Tag * FBagList[vIndex].Percs.ChimisheArmor / 100;
         infoElectro.Width := infoElectro.Tag * FBagList[vIndex].Percs.ElectroArmor / 100;
@@ -873,7 +908,7 @@ begin
 
     btArmor:
       begin
-        labElementCost.Text := Format('%.0n', [FBagList[vIndex].Cost]);
+        labElementCost.Text := Format('%.0n', [FBagList[vIndex].Cost.ToExtended * Round(FBagList[vIndex].Health / 100)]);
         infoRadiation.Width := infoRadiation.Tag * FBagList[vIndex].Percs.RadiationArmor / 100;
         infoChimishe.Width := infoChimishe.Tag * FBagList[vIndex].Percs.ChimisheArmor / 100;
         infoElectro.Width := infoElectro.Tag * FBagList[vIndex].Percs.ElectroArmor / 100;
@@ -938,7 +973,7 @@ begin
 
     btWeapon:
       begin
-        labElementCost.Text := Format('%.0n', [FBagList[vIndex].Cost]);
+        labElementCost.Text := Format('%.0n', [FBagList[vIndex].Cost.ToExtended * Round(FBagList[vIndex].Health / 100)]);
         recHealth.Visible := true;
         SetHealthProgress(HealthProgress, FBagList[vIndex].Health);
         recCountSlots.Visible := False;

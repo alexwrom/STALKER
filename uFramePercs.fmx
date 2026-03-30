@@ -1,7 +1,7 @@
 ﻿object FramePercs: TFramePercs
   Align = Client
-  Size.Width = 835.000000000000000000
-  Size.Height = 476.000000000000000000
+  Size.Width = 680.000000000000000000
+  Size.Height = 324.000000000000000000
   Size.PlatformDefault = False
   object recSkin: TRectangle
     Align = Contents
@@ -2485,21 +2485,21 @@
       FA48A3E2FF1C9BED6DEB7F017CD9E484923AAE0F0000000049454E44AE426082}
     Fill.Bitmap.WrapMode = Tile
     Fill.Kind = Bitmap
-    Size.Width = 835.000000000000000000
-    Size.Height = 476.000000000000000000
+    Size.Width = 680.000000000000000000
+    Size.Height = 324.000000000000000000
     Size.PlatformDefault = False
     Stroke.Kind = None
     Stroke.Thickness = 10.000000000000000000
     object layLeftBlock: TLayout
       Align = Left
       Size.Width = 387.000000000000000000
-      Size.Height = 476.000000000000000000
+      Size.Height = 324.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 0
       object layDetector: TLayout
         Align = Client
         Size.Width = 387.000000000000000000
-        Size.Height = 232.000000000000000000
+        Size.Height = 80.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
         object recDetector: TRectangle
@@ -2508,7 +2508,7 @@
           Opacity = 0.949999988079071000
           Margins.Bottom = -15.000000000000000000
           Size.Width = 311.000000000000000000
-          Size.Height = 247.000000000000000000
+          Size.Height = 95.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
           object InnerGlowEffect4: TInnerGlowEffect
@@ -2524,13 +2524,13 @@
               end>
             Align = Client
             Size.Width = 311.000000000000000000
-            Size.Height = 247.000000000000000000
+            Size.Height = 95.000000000000000000
             Size.PlatformDefault = False
           end
           object btnOpenDetector: TSpeedButton
             Align = Client
             Size.Width = 311.000000000000000000
-            Size.Height = 247.000000000000000000
+            Size.Height = 95.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'transparentcirclebuttonstyle'
             Text = 'btnOpenDetector'
@@ -2542,7 +2542,7 @@
           Margins.Bottom = -15.000000000000000000
           Position.X = 316.000000000000000000
           Size.Width = 71.000000000000000000
-          Size.Height = 247.000000000000000000
+          Size.Height = 95.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 4
           object Rectangle6: TRectangle
@@ -2550,7 +2550,7 @@
             Fill.Color = xFF111611
             Opacity = 0.949999988079071000
             Size.Width = 71.000000000000000000
-            Size.Height = 242.000000000000000000
+            Size.Height = 90.000000000000000000
             Size.PlatformDefault = False
             Stroke.Kind = None
             object InnerGlowEffect6: TInnerGlowEffect
@@ -42002,7 +42002,7 @@
               end>
             Align = MostBottom
             Opacity = 0.500000000000000000
-            Position.Y = 242.000000000000000000
+            Position.Y = 90.000000000000000000
             Size.Width = 71.000000000000000000
             Size.Height = 5.000000000000000000
             Size.PlatformDefault = False
@@ -42962,7 +42962,7 @@
           Margins.Bottom = -15.000000000000000000
           Position.X = 311.000000000000000000
           Size.Width = 5.000000000000000000
-          Size.Height = 247.000000000000000000
+          Size.Height = 95.000000000000000000
           Size.PlatformDefault = False
           WrapMode = Stretch
         end
@@ -43609,7 +43609,7 @@
           end>
         Align = Bottom
         Opacity = 0.500000000000000000
-        Position.Y = 449.000000000000000000
+        Position.Y = 170.000000000000000000
         Size.Width = 387.000000000000000000
         Size.Height = 5.000000000000000000
         Size.PlatformDefault = False
@@ -43617,7 +43617,7 @@
       end
       object layParameter: TLayout
         Align = Bottom
-        Position.Y = 322.000000000000000000
+        Position.Y = 175.000000000000000000
         Size.Width = 387.000000000000000000
         Size.Height = 127.000000000000000000
         Size.PlatformDefault = False
@@ -46313,7 +46313,7 @@
       object recHealth: TRectangle
         Align = MostBottom
         Fill.Color = xFF111611
-        Position.Y = 454.000000000000000000
+        Position.Y = 302.000000000000000000
         Size.Width = 387.000000000000000000
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
@@ -46366,7 +46366,7 @@
       end
       object layArts: TLayout
         Align = Bottom
-        Position.Y = 232.000000000000000000
+        Position.Y = 80.000000000000000000
         Size.Width = 387.000000000000000000
         Size.Height = 90.000000000000000000
         Size.PlatformDefault = False
@@ -48063,28 +48063,28 @@
     end
     object LeftRicghtBlock: TLayout
       Align = Client
-      Size.Width = 448.000000000000000000
-      Size.Height = 476.000000000000000000
+      Size.Width = 293.000000000000000000
+      Size.Height = 324.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 1
       object Layout9: TLayout
         Align = Client
-        Size.Width = 443.000000000000000000
-        Size.Height = 331.000000000000000000
+        Size.Width = 288.000000000000000000
+        Size.Height = 179.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 2
         object Layout11: TLayout
           Align = Client
-          Size.Width = 443.000000000000000000
-          Size.Height = 331.000000000000000000
+          Size.Width = 288.000000000000000000
+          Size.Height = 179.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 1
           object recArmor: TRectangle
             Align = Client
             Fill.Color = xFF111611
             Opacity = 0.949999988079071000
-            Size.Width = 443.000000000000000000
-            Size.Height = 331.000000000000000000
+            Size.Width = 288.000000000000000000
+            Size.Height = 179.000000000000000000
             Size.PlatformDefault = False
             Stroke.Kind = None
             object InnerGlowEffect1: TInnerGlowEffect
@@ -48094,8 +48094,8 @@
             end
             object Layout1: TLayout
               Align = Bottom
-              Position.Y = 309.000000000000000000
-              Size.Width = 443.000000000000000000
+              Position.Y = 157.000000000000000000
+              Size.Width = 288.000000000000000000
               Size.Height = 22.000000000000000000
               Size.PlatformDefault = False
               TabOrder = 0
@@ -48166,14 +48166,14 @@
               Margins.Top = 5.000000000000000000
               Margins.Right = 5.000000000000000000
               Margins.Bottom = 5.000000000000000000
-              Size.Width = 433.000000000000000000
-              Size.Height = 299.000000000000000000
+              Size.Width = 278.000000000000000000
+              Size.Height = 147.000000000000000000
               Size.PlatformDefault = False
             end
             object btnArmorInfo: TSpeedButton
               Align = Client
-              Size.Width = 443.000000000000000000
-              Size.Height = 309.000000000000000000
+              Size.Width = 288.000000000000000000
+              Size.Height = 157.000000000000000000
               Size.PlatformDefault = False
               StyleLookup = 'transparentcirclebuttonstyle'
               Text = 'btnOpenDetector'
@@ -48185,8 +48185,8 @@
       object Layout8: TLayout
         Align = Bottom
         Position.X = 5.000000000000000000
-        Position.Y = 336.000000000000000000
-        Size.Width = 443.000000000000000000
+        Position.Y = 184.000000000000000000
+        Size.Width = 288.000000000000000000
         Size.Height = 140.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
@@ -48194,7 +48194,7 @@
           Align = Client
           Fill.Color = xFF111611
           Opacity = 0.949999988079071000
-          Size.Width = 443.000000000000000000
+          Size.Width = 288.000000000000000000
           Size.Height = 140.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
@@ -48211,7 +48211,7 @@
             Margins.Top = 5.000000000000000000
             Margins.Right = 5.000000000000000000
             Margins.Bottom = 5.000000000000000000
-            Size.Width = 433.000000000000000000
+            Size.Width = 278.000000000000000000
             Size.Height = 108.000000000000000000
             Size.PlatformDefault = False
           end
@@ -48222,7 +48222,7 @@
           end
           object btnWeaponInfo: TSpeedButton
             Align = Client
-            Size.Width = 443.000000000000000000
+            Size.Width = 288.000000000000000000
             Size.Height = 118.000000000000000000
             Size.PlatformDefault = False
             StyleLookup = 'transparentcirclebuttonstyle'
@@ -48232,7 +48232,7 @@
           object Layout5: TLayout
             Align = Bottom
             Position.Y = 118.000000000000000000
-            Size.Width = 443.000000000000000000
+            Size.Width = 288.000000000000000000
             Size.Height = 22.000000000000000000
             Size.PlatformDefault = False
             TabOrder = 0
@@ -49243,7 +49243,7 @@
         Align = MostLeft
         Opacity = 0.500000000000000000
         Size.Width = 5.000000000000000000
-        Size.Height = 476.000000000000000000
+        Size.Height = 324.000000000000000000
         Size.PlatformDefault = False
         WrapMode = Stretch
       end
@@ -49890,8 +49890,8 @@
         Align = Bottom
         Opacity = 0.500000000000000000
         Position.X = 5.000000000000000000
-        Position.Y = 331.000000000000000000
-        Size.Width = 443.000000000000000000
+        Position.Y = 179.000000000000000000
+        Size.Width = 288.000000000000000000
         Size.Height = 5.000000000000000000
         Size.PlatformDefault = False
         WrapMode = Stretch

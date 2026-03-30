@@ -34,7 +34,9 @@ type
     Label1: TLabel;
     recSkin1: TRectangle;
     InnerGlowEffect3: TInnerGlowEffect;
+    btnChangeCamera: TSpeedButton;
     procedure btnYesClick(Sender: TObject);
+    procedure btnChangeCameraClick(Sender: TObject);
   private
     fScanInProgress: Boolean;
     fFrameTake: Integer;
@@ -67,6 +69,18 @@ constructor TFrameQRScanner.Create(AObject: TFmxObject);
 begin
   inherited Create(AObject);
 
+end;
+
+procedure TFrameQRScanner.btnChangeCameraClick(Sender: TObject);
+begin
+   Camera.Active := false;
+
+   if Camera.Kind = TCameraKind.BackCamera then
+     Camera.Kind := TCameraKind.FrontCamera
+   else
+     Camera.Kind := TCameraKind.BackCamera;
+
+   Camera.Active := True;
 end;
 
 procedure TFrameQRScanner.btnYesClick(Sender: TObject);
@@ -230,6 +244,9 @@ begin
                         vRowID := Copy(vSend.Code, 3, 3).ToInteger;
 
                         ExeExec(Format('insert into bag (table_name, row_id, health) values(''%s'', %d, 100);', [vTableName, vRowID]), exExecute, FDQuery);
+
+                        {if vTableName = 'arts' then                     // Сделать удаление арта с карты при его нахождении
+                          ExeExec(Format('update art_to_map set active = false where art_id = %d;', [vRowID]), exExecute, FDQuery);  }
                       end;
                     7: // Деньги      {"code":"0050000"}
                       begin

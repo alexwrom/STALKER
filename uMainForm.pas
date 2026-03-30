@@ -217,7 +217,8 @@ procedure TMainForm.FormDeactivate(Sender: TObject);
 var
   vQuery: TFDQuery;
 begin
-  ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [9, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
+  if FKillType = ktLive then
+    ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [9, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
 end;
 
 procedure TMainForm.LoadBag;
@@ -727,10 +728,7 @@ begin
           FreeAndNil(FFrameBag);
       end;
 
-      TThread.Synchronize(nil,
-      procedure
-      begin
-        FFrameBag := TFrameBag.Create(TabBag);
+      FFrameBag := TFrameBag.Create(TabBag);
         FFrameBag.Parent := TabBag;
         FFrameBag.layBag.Height := FFrameBag.Height - FFrameBag.layTopBorder.Height - FFrameBag.recCash.Height + 63;
         FFrameBag.layBag.Width := FFrameBag.Width;
@@ -743,6 +741,10 @@ begin
 
         Person.Cash := Person.Cash;
         Person.GroupId := Person.GroupId;
+
+      TThread.Synchronize(nil,
+      procedure
+      begin
         TabControl.ActiveTab := TabBag;
       end);
 

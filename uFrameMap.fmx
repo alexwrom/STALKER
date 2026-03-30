@@ -1,25 +1,25 @@
 object FrameMap: TFrameMap
   Align = Client
-  Size.Width = 815.000000000000000000
-  Size.Height = 588.000000000000000000
+  Size.Width = 801.000000000000000000
+  Size.Height = 560.000000000000000000
   Size.PlatformDefault = False
   TabOrder = 0
   object Rectangle5: TRectangle
     Align = Contents
     Fill.Color = xFF4B4B4B
-    Size.Width = 815.000000000000000000
-    Size.Height = 588.000000000000000000
+    Size.Width = 801.000000000000000000
+    Size.Height = 560.000000000000000000
     Size.PlatformDefault = False
   end
   object ScrollBox: TScrollBox
     Align = Contents
-    Size.Width = 815.000000000000000000
-    Size.Height = 588.000000000000000000
+    Size.Width = 801.000000000000000000
+    Size.Height = 560.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 0
     OnViewportPositionChange = ScrollBoxViewportPositionChange
-    Viewport.Width = 815.000000000000000000
-    Viewport.Height = 588.000000000000000000
+    Viewport.Width = 801.000000000000000000
+    Viewport.Height = 560.000000000000000000
     object MapLayout: TLayout
       Touch.GestureManager = GestureManager
       Align = Center
@@ -2553,16 +2553,16 @@ object FrameMap: TFrameMap
   end
   object ZoomLayout: TLayout
     Align = MostRight
-    Position.X = 725.000000000000000000
+    Position.X = 711.000000000000000000
     Position.Y = 33.000000000000000000
     Size.Width = 90.000000000000000000
-    Size.Height = 555.000000000000000000
+    Size.Height = 527.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 3
     object LayMapControls: TLayout
       Align = Bottom
       Margins.Bottom = 20.000000000000000000
-      Position.Y = 368.000000000000000000
+      Position.Y = 340.000000000000000000
       Size.Width = 90.000000000000000000
       Size.Height = 167.000000000000000000
       Size.PlatformDefault = False
@@ -2641,8 +2641,8 @@ object FrameMap: TFrameMap
   end
   object LayClient: TLayout
     Align = Contents
-    Size.Width = 815.000000000000000000
-    Size.Height = 588.000000000000000000
+    Size.Width = 801.000000000000000000
+    Size.Height = 560.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 6
     OnClick = LayClientClick
@@ -2672,8 +2672,8 @@ object FrameMap: TFrameMap
     end
     object Layout7: TLayout
       Align = Bottom
-      Position.Y = 538.000000000000000000
-      Size.Width = 815.000000000000000000
+      Position.Y = 510.000000000000000000
+      Size.Width = 801.000000000000000000
       Size.Height = 50.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 0
@@ -5344,7 +5344,7 @@ object FrameMap: TFrameMap
   end
   object layPersonHealth: TLayout
     Anchors = [akLeft, akBottom]
-    Position.Y = 379.000000000000000000
+    Position.Y = 351.000000000000000000
     Size.Width = 22.000000000000000000
     Size.Height = 209.000000000000000000
     Size.PlatformDefault = False
@@ -5352,13 +5352,13 @@ object FrameMap: TFrameMap
   end
   object layTopMenu: TLayout
     Align = MostTop
-    Size.Width = 815.000000000000000000
+    Size.Width = 801.000000000000000000
     Size.Height = 33.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 21
     object layClock: TLayout
       Align = Right
-      Position.X = 678.000000000000000000
+      Position.X = 664.000000000000000000
       Size.Width = 81.000000000000000000
       Size.Height = 33.000000000000000000
       Size.PlatformDefault = False
@@ -5387,7 +5387,7 @@ object FrameMap: TFrameMap
     end
     object layBattery: TLayout
       Align = Right
-      Position.X = 759.000000000000000000
+      Position.X = 745.000000000000000000
       Size.Width = 56.000000000000000000
       Size.Height = 33.000000000000000000
       Size.PlatformDefault = False
@@ -5469,7 +5469,7 @@ object FrameMap: TFrameMap
         StyleLookup = 'escapetoolbutton'
         OnClick = btnExitClick
         object InnerGlowEffect6: TInnerGlowEffect
-          Softness = 0.400000005960464500
+          Softness = 1.000000000000000000
           GlowColor = xFF891601
           Opacity = 1.000000000000000000
         end
@@ -5490,7 +5490,7 @@ object FrameMap: TFrameMap
         StyleLookup = 'actiontoolbutton'
         OnClick = btnSendMarkersClick
         object InnerGlowEffect7: TInnerGlowEffect
-          Softness = 0.400000005960464500
+          Softness = 1.000000000000000000
           GlowColor = claChocolate
           Opacity = 1.000000000000000000
         end

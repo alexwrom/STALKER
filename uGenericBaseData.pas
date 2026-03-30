@@ -94,6 +94,7 @@ begin
   GenerateTableInsert('belt', Result);
   GenerateTableInsert('users', Result);
   GenerateTableInsert('life_log', Result);
+  //GenerateTableInsert('art_to_map', Result);
 
   if FIsSendMarkers then
    begin
@@ -119,7 +120,6 @@ begin
   Result :=  Result + 'delete from groups;';
   Result :=  Result + 'delete from issuies;';
   Result :=  Result + 'delete from issuies_block;';
-  //Result :=  Result + 'delete from life_log;';
   Result :=  Result + 'delete from medical;';
   Result :=  Result + 'delete from notifications;';
   Result :=  Result + 'delete from places;';

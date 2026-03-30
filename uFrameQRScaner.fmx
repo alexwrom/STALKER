@@ -1,7 +1,7 @@
 object FrameQRScanner: TFrameQRScanner
   Align = Client
-  Size.Width = 890.000000000000000000
-  Size.Height = 460.000000000000000000
+  Size.Width = 887.000000000000000000
+  Size.Height = 482.000000000000000000
   Size.PlatformDefault = False
   object recSkin: TRectangle
     Align = Contents
@@ -2485,8 +2485,8 @@ object FrameQRScanner: TFrameQRScanner
       FA48A3E2FF1C9BED6DEB7F017CD9E484923AAE0F0000000049454E44AE426082}
     Fill.Bitmap.WrapMode = Tile
     Fill.Kind = Bitmap
-    Size.Width = 890.000000000000000000
-    Size.Height = 460.000000000000000000
+    Size.Width = 887.000000000000000000
+    Size.Height = 482.000000000000000000
     Size.PlatformDefault = False
     Stroke.Kind = None
     object InnerGlowEffect1: TInnerGlowEffect
@@ -2500,9 +2500,18 @@ object FrameQRScanner: TFrameQRScanner
       item
       end>
     Align = Client
-    Size.Width = 890.000000000000000000
-    Size.Height = 460.000000000000000000
+    Size.Width = 887.000000000000000000
+    Size.Height = 482.000000000000000000
     Size.PlatformDefault = False
+    object btnChangeCamera: TSpeedButton
+      Position.X = 16.000000000000000000
+      Position.Y = 32.000000000000000000
+      Size.Width = 65.000000000000000000
+      Size.Height = 57.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'cameratoolbutton'
+      OnClick = btnChangeCameraClick
+    end
   end
   object Camera: TCameraComponent
     Kind = FrontCamera

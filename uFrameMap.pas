@@ -181,6 +181,7 @@ type
 {$IFDEF ANDROID}
     procedure SetLocation;
     function BatteryPercent: integer;
+    function GetMyMarkersCount: integer;
 {$ENDIF}
 
   public
@@ -1078,27 +1079,31 @@ begin
   Result := TLocationCoord2D.Create(Lat, Lon);
 end;
 
+function TFrameMap.GetMyMarkersCount: integer;
+var
+  I: integer;
+begin
+  Result := 0;
+
+  for I := 0 to FMarkerList.Count - 1 do
+    if (FMarkerList[I].MarkerType in [mtPoint, mtPointRad, mtPointAnomaly, mtPointBag]) and (FMarkerList[I].IsOwner = true) then
+      Result := Result + 1;
+end;
+
+
 procedure TFrameMap.MapImageGesture(Sender: TObject; const EventInfo: TGestureEventInfo; var Handled: Boolean);
-  function GetPoints: integer;
-  var
-    I: integer;
-  begin
-    Result := 0;
-
-    for I := 0 to FMarkerList.Count - 1 do
-      if (FMarkerList[I].MarkerType in [mtPoint, mtPointRad, mtPointAnomaly, mtPointBag]) and (FMarkerList[I].IsOwner = true) then
-        Result := Result + 1;
-  end;
-
+ var
+  vCountMarkers: integer;
 begin
   if not Person.IsDead then
   begin
+    vCountMarkers := GetMyMarkersCount;
     FCoords := PixelsToCoordinates(FLongTap.X, FLongTap.Y);
-    btnAddMarker.Enabled := GetPoints < 10;
-    btnAddMarkerRad.Enabled := GetPoints < 10;
-    btnAddMarkerBag.Enabled := GetPoints < 10;
-    btnAddMarkerAnomaly.Enabled := GetPoints < 10;
-    labMarkerCount.Text := GetPoints.ToString + '/10';
+    btnAddMarker.Enabled := vCountMarkers < 10;
+    btnAddMarkerRad.Enabled := vCountMarkers < 10;
+    btnAddMarkerBag.Enabled := vCountMarkers < 10;
+    btnAddMarkerAnomaly.Enabled := vCountMarkers < 10;
+    labMarkerCount.Text := vCountMarkers.ToString + '/10';
     // Устанавливаем маркер
     SetMarker(MarkersPanel, FCoords.Latitude, FCoords.Longitude);
     MarkersPanel.Visible := true;
@@ -1294,7 +1299,6 @@ end;
 
 procedure TFrameMap.btnKillClick(Sender: TObject);
 begin
-  Person.Health := 80;
   BtnClickMedia;
   MessageDlg('Ты умер в бою?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
     procedure(const AResult: TModalResult)
@@ -1364,17 +1368,20 @@ end;
 
 procedure TFrameMap.btnSendMarkersClick(Sender: TObject);
 begin
-  MessageDlg('Ты отправляешь свои маркеры всей своей группировке. Эти данные может скачать любой сталкер из твоей группировки. Данные будут переданы при подключении к сталкерской сети. Ты согласен?', TMsgDlgType.mtInformation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
-          procedure(const AResult: TModalResult)
-          var
-            vQuery: TFDQuery;
-          begin
-            if (AResult = mrYes) then
+  if GetMyMarkersCount = 0 then
+    Showmessage('У тебя нет своих маркеров. Хочешь что-то отправить - создай маркер.')
+  else
+    MessageDlg('Ты отправляешь свои маркеры всей своей группировке. Эти данные может скачать любой сталкер из твоей группировки. Данные будут переданы при подключении к сталкерской сети. Ты согласен?', TMsgDlgType.mtInformation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
+            procedure(const AResult: TModalResult)
+            var
+              vQuery: TFDQuery;
             begin
-              FIsSendMarkers := true;
-              ExeExec(Format('insert into notifications(name, detail, is_open, group_id, is_owner, data) values (''Доступны новые маркеры'', ''Создал: %s \n\nСообщение: \nЯ делюсь своими маркерами с вами:\nвсего маркеров - '' || (select count(1) from markers where is_owner = true), false, %d, true, (select data from notifications_out));',[Person.UserName ,Person.GroupId]), exExecute, vQuery);
-            end;
-          end);
+              if (AResult = mrYes) then
+              begin
+                FIsSendMarkers := true;
+                ExeExec(Format('insert into notifications(name, detail, is_open, group_id, is_owner, data) values (''Доступны новые маркеры'', ''Создал: %s \n\nСообщение: \nЯ делюсь своими маркерами с вами:\nвсего маркеров - '' || (select count(1) from markers where is_owner = true), false, %d, true, (select data from notifications_out));',[Person.UserName ,Person.GroupId]), exExecute, vQuery);
+              end;
+            end);
 end;
 
 procedure TFrameMap.OnMarkerClick(Sender: TObject);

@@ -281,6 +281,7 @@ type
     FArtsList: TList<TPerc>;
     procedure ReloadArmor;
     function GetTimeDec(ASeconds: integer): string;
+    function IsClosedApp: boolean;
 
 
   public
@@ -817,6 +818,18 @@ end;
 constructor TFramePercs.Create(AObject: TFmxObject);
 begin
   inherited Create(AObject);
+
+  if Self.Width <= 680 then
+  begin
+    layLeftBlock.Scale.X := 0.9;
+    layLeftBlock.Scale.Y := 0.9;
+  end
+  else if Self.Width <= 500 then
+  begin
+    layLeftBlock.Scale.X := 0.8;
+    layLeftBlock.Scale.Y := 0.8;
+  end;
+
   FArtsList := TList<TPerc>.Create;
 
   labRadiationArmor.TextSettings.Font.Family := 'lcd';
@@ -840,34 +853,79 @@ begin
   ReloadPercs;
 end;
 
+function TFramePercs.IsClosedApp: boolean;  //Если вышел с приложения более чем на 1 минуту, то ты зомби на 30 минут
+var
+  AFormatSettings: TFormatSettings;
+  vQuery: TFDQuery;
+  vLastActionDateTime: TDateTime;
+  Hours: integer;
+  Minutes: integer;
+  Seconds: integer;
+  TotalSeconds: Int64;
+  TimeSpan: TTimeSpan;
+  vActionTypeID : integer;
+begin
+  Result := false;
+  AFormatSettings.DateSeparator := '.';
+  AFormatSettings.TimeSeparator := ':';
+  AFormatSettings.ShortDateFormat := 'DD.MM.YYYY';
+  AFormatSettings.LongTimeFormat := 'hh:nn:ss';
+
+  ExeExec('select * from last_action_life;', exActive, vQuery);
+   try
+     if vQuery.RecordCount > 0 then
+     begin
+       vLastActionDateTime := StrToDateTime(vQuery.FieldByName('action_date_time').AsString, AFormatSettings);
+       vActionTypeID := vQuery.FieldByName('action_type_id').AsInteger;
+     end;
+   finally
+     FreeQueryAndConn(vQuery);
+   end;
+
+   if ((vActionTypeID = 9) and (SecondsBetween(NOW(), vLastActionDateTime) > 60)) then
+   begin
+     FKillType := ktPSI;
+     Person.Health := 0;
+     Result := true;
+   end;
+end;
+
 procedure TFramePercs.ReloadPercs;
 var
   vQuery: TFDQuery;
 begin
   ReloadArmor;
-  ExeExec('select nickname, health, armor_health, weapon_health, weapon_icon, detector_id, level, radius, chimishe, electro, fire, phisic, psi, radiation, cash, armor_id, weapon_id, is_classic_bag, weapon_level, level_medic, level_tehnic from user_info;', exActive, vQuery);
-  Person.UserName := vQuery.FieldByName('nickname').AsString;
-  Person.Health := vQuery.FieldByName('health').AsFloat;
-  Person.Cash := vQuery.FieldByName('cash').AsInteger;
-  Person.ArmorId := vQuery.FieldByName('armor_id').AsInteger;
-  Person.IsClassicBag := vQuery.FieldByName('is_classic_bag').AsBoolean;
-  Person.ArmorHealth := vQuery.FieldByName('armor_health').AsFloat;
-  Person.WeaponId := vQuery.FieldByName('weapon_id').AsInteger;
-  Person.WeaponLevel := vQuery.FieldByName('weapon_level').AsInteger;
-  Person.WeaponHealth := vQuery.FieldByName('weapon_health').AsFloat;
-  SetChimisheArmor(vQuery.FieldByName('chimishe').AsInteger);
-  SetElectroArmor(vQuery.FieldByName('electro').AsInteger);
-  SetFireArmor(vQuery.FieldByName('fire').AsInteger);
-  SetPhisicArmor(vQuery.FieldByName('phisic').AsInteger);
-  SetPsiArmor(vQuery.FieldByName('psi').AsInteger);
-  SetRadiationArmor(vQuery.FieldByName('radiation').AsInteger);
-  imgWeaponIcon.Bitmap.Assign(vQuery.FieldByName('weapon_icon'));
-  SetDetector(vQuery.FieldByName('detector_id').AsInteger, vQuery.FieldByName('radius').AsInteger, vQuery.FieldByName('level').AsInteger);
-  Person.LevelMedic := vQuery.FieldByName('level_medic').AsInteger;
-  Person.LevelTehnic := vQuery.FieldByName('level_tehnic').AsInteger;
 
-  FreeQueryAndConn(vQuery);
-  ReloadArts;
+  ExeExec('select nickname, health, armor_health, weapon_health, weapon_icon, detector_id, level, radius, chimishe, electro, fire, phisic, psi, radiation, cash, armor_id, weapon_id, is_classic_bag, weapon_level, level_medic, level_tehnic from user_info;', exActive, vQuery);
+ try
+    Person.UserName := vQuery.FieldByName('nickname').AsString;
+
+    if NOT IsClosedApp then
+      Person.Health := vQuery.FieldByName('health').AsFloat;
+
+    Person.Cash := vQuery.FieldByName('cash').AsInteger;
+    Person.ArmorId := vQuery.FieldByName('armor_id').AsInteger;
+    Person.IsClassicBag := vQuery.FieldByName('is_classic_bag').AsBoolean;
+    Person.ArmorHealth := vQuery.FieldByName('armor_health').AsFloat;
+    Person.WeaponId := vQuery.FieldByName('weapon_id').AsInteger;
+    Person.WeaponLevel := vQuery.FieldByName('weapon_level').AsInteger;
+    Person.WeaponHealth := vQuery.FieldByName('weapon_health').AsFloat;
+    SetChimisheArmor(vQuery.FieldByName('chimishe').AsInteger);
+    SetElectroArmor(vQuery.FieldByName('electro').AsInteger);
+    SetFireArmor(vQuery.FieldByName('fire').AsInteger);
+    SetPhisicArmor(vQuery.FieldByName('phisic').AsInteger);
+    SetPsiArmor(vQuery.FieldByName('psi').AsInteger);
+    SetRadiationArmor(vQuery.FieldByName('radiation').AsInteger);
+    imgWeaponIcon.Bitmap.Assign(vQuery.FieldByName('weapon_icon'));
+    SetDetector(vQuery.FieldByName('detector_id').AsInteger, vQuery.FieldByName('radius').AsInteger, vQuery.FieldByName('level').AsInteger);
+    Person.LevelMedic := vQuery.FieldByName('level_medic').AsInteger;
+    Person.LevelTehnic := vQuery.FieldByName('level_tehnic').AsInteger;
+ finally
+   FreeQueryAndConn(vQuery);
+   ReloadArts;
+ end;
+
+
 end;
 
 procedure TFramePercs.ReloadArmor;
