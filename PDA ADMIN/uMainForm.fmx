@@ -24789,6 +24789,64 @@ object MainForm: TMainForm
           Size.PlatformDefault = False
           StyledSettings = [Family]
         end
+        object ckHideInDatetime: TCheckBox
+          Align = Top
+          StyledSettings = []
+          Margins.Left = 20.000000000000000000
+          Margins.Top = 20.000000000000000000
+          Margins.Right = 20.000000000000000000
+          Position.X = 20.000000000000000000
+          Position.Y = 229.000000000000000000
+          Size.Width = 288.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 7
+          Text = #1048#1084#1077#1077#1090' '#1076#1072#1090#1091' '#1080' '#1074#1088#1077#1084#1103' '#1080#1089#1095#1077#1079#1085#1086#1074#1077#1085#1080#1103
+          TextSettings.Font.Family = 'YouTube Sans Dark'
+          TextSettings.Font.Size = 15.000000000000000000
+          TextSettings.Font.StyleExt = {00070000000000000004000000}
+          TextSettings.FontColor = claDarkgray
+        end
+        object Layout1: TLayout
+          Align = Top
+          Margins.Left = 20.000000000000000000
+          Margins.Top = 10.000000000000000000
+          Margins.Right = 20.000000000000000000
+          Position.X = 20.000000000000000000
+          Position.Y = 258.000000000000000000
+          Size.Width = 288.000000000000000000
+          Size.Height = 43.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 8
+          object teTimeHide: TTimeEdit
+            Format = 'HH:mm'
+            Time = 0.756840451388888900
+            TimeFormatKind = Long
+            Align = Left
+            Position.X = 145.000000000000000000
+            Size.Width = 100.000000000000000000
+            Size.Height = 43.000000000000000000
+            Size.PlatformDefault = False
+            StyledSettings = []
+            TextSettings.Font.Family = 'YouTube Sans Dark'
+            TextSettings.Font.Size = 15.000000000000000000
+            TextSettings.FontColor = claDarkgray
+            TabOrder = 8
+          end
+          object deDateHide: TDateEdit
+            Date = 46113.000000000000000000
+            TodayDefault = True
+            Align = Left
+            Size.Width = 145.000000000000000000
+            Size.Height = 43.000000000000000000
+            Size.PlatformDefault = False
+            StyledSettings = []
+            TabOrder = 9
+            TextSettings.Font.Family = 'YouTube Sans Dark'
+            TextSettings.Font.Size = 15.000000000000000000
+            TextSettings.FontColor = claDarkgray
+          end
+        end
       end
     end
   end

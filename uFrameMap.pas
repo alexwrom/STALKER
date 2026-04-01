@@ -16,7 +16,7 @@ uses
   Androidapi.JNIBridge, Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNI.Location,
   Androidapi.JNI.Net,
 {$ENDIF}
-  uLocationListener, uGenericBaseData, classes.send, classes.marker, REST.Json, FMX.Surfaces;
+  uLocationListener, uGenericBaseData, classes.send, classes.marker, REST.Json, FMX.Surfaces, System.DateUtils;
 
 type
   TFrameMap = class(TFrame)
@@ -120,6 +120,7 @@ type
     InnerGlowEffect10: TInnerGlowEffect;
     TimerArmorPSIReload: TTimer;
     Image4: TImage;
+    TimerUpdateAnomalies: TTimer;
     procedure MapImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure btnZoomInClick(Sender: TObject);
     procedure btnZoomOutClick(Sender: TObject);
@@ -142,6 +143,7 @@ type
     procedure LayClientClick(Sender: TObject);
     procedure btnCloseQRClick(Sender: TObject);
     procedure TimerArmorPSIReloadTimer(Sender: TObject);
+    procedure TimerUpdateAnomaliesTimer(Sender: TObject);
   private
     FMapLoaded: Boolean;
 
@@ -207,7 +209,7 @@ type
     // Свойства только для чтения
     property MapLoaded: Boolean read FMapLoaded;
     property CurrentScale: Double read FCurrentScale;
-    procedure UpdateIssue;
+    procedure UpdateIssuies;
     procedure NewMarkerToMap(ACoords: TLocationCoord2D; AText: String; AMarkerType: TMarkerType; AIsOwner: boolean = true);
   end;
 
@@ -245,14 +247,17 @@ begin
 
   FMarkerList := TList<TMarkerData>.Create;
   FMarkerIssue := TList<TMarkerData>.Create;
+  FAnomalyList := TList<TAnomalyData>.Create;
 
   LoadMap;
 
   LoadMarkers;
   LoadAnomalies;
-  UpdateIssue;
+  UpdateIssuies;
   UpdateBaseSafeDead;
   UpdateAnomalies;
+
+  TimerUpdateAnomalies.Enabled := true;
 
   MediaPlayerRad.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'zvuk-radiacii.mp3');
   MediaPlayerScanAnomaly.FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'detector.mp3');
@@ -300,9 +305,11 @@ procedure TFrameMap.LoadAnomalies;
 var
   vQuery: TFDQuery;
   vAnomalyItem: TAnomalyData;
+  I: integer;
 begin
-  FAnomalyList := TList<TAnomalyData>.Create;
-  ExeExec('select * from anomalies;', exActive, vQuery);
+  FAnomalyList.Clear;
+
+  ExeExec('select * from active_anomalies;', exActive, vQuery);
   vQuery.First;
 
   while Not vQuery.Eof do
@@ -380,7 +387,7 @@ begin
   FreeQueryAndConn(vQuery);
 end;
 
-procedure TFrameMap.UpdateIssue;
+procedure TFrameMap.UpdateIssuies;
 var
   AMarker: TMarkerData;
   I: integer;
@@ -399,18 +406,19 @@ begin
     FMarkerIssue.Delete(I);
   end;
 
-  for I := 0 to FIssueList.Count - 1 do
-    if FIssueList[I].Visible then
-    begin
-      FCoords := FIssueList[I].Coords;
-      AMarker.Coords := FCoords;
-      AMarker.MarkerType := mtIssue;
+  if Assigned(FIssueList) and not FIssueList.IsEmpty then
+    for I := 0 to FIssueList.Count - 1 do
+      if FIssueList[I].Visible then
+      begin
+        FCoords := FIssueList[I].Coords;
+        AMarker.Coords := FCoords;
+        AMarker.MarkerType := mtIssue;
 
-      AMarker.LabelText := FIssueList[I].Name;
-      AMarker.LabelDetail := FIssueList[I].Detail;
+        AMarker.LabelText := FIssueList[I].Name;
+        AMarker.LabelDetail := FIssueList[I].Detail;
 
-      CreateMarker(AMarker);
-    end;
+        CreateMarker(AMarker);
+      end;
 end;
 
 procedure TFrameMap.UpdateBaseSafeDead;
@@ -436,6 +444,14 @@ var
   AMarker: TMarkerData;
   I: integer;
 begin
+  for I := FMarkerList.Count - 1 downto 0 do
+    if FMarkerList[I].MarkerType in [mtRadiation, mtAnomaly] then
+      begin
+        FMarkerList[I].Marker.Parent := nil;
+        FMarkerList[I].Marker.Visible := False;
+        FMarkerList.Delete(I);
+      end;
+
   for I := 0 to FAnomalyList.Count - 1 do
   begin
     FCoords := FAnomalyList[I].Coords;
@@ -457,40 +473,42 @@ var
   vDistance: Double;
   vQuery: TFDQuery;
 begin
+ if not FIsCriticalStart then
   for I := 0 to FIssueList.Count - 1 do
   begin
-    vDistance := CalculateFastDistance(FLocation.Latitude, FLocation.Longitude, FIssueList[I].Coords.Latitude, FIssueList[I].Coords.Longitude);
+     try
+     vDistance := CalculateFastDistance(FLocation.Latitude, FLocation.Longitude, FIssueList[I].Coords.Latitude, FIssueList[I].Coords.Longitude);
 
-    if (vDistance <= FIssueList[I].RadiusIN) and (FIssueList[I].RadiusIN > 0) then
-      if FIssueList[I].CompleteAfterIN then // выполняется при входе в зону действия
-      begin
-        ExeExec('update issuies set status_id = 1 where issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
-        ExeExec('select cost from issuies where issue_id = ' + FIssueList[I].ID.ToString + ';', exActive, vQuery);
-        Person.Cash := Person.Cash + vQuery.FieldByName('cost').AsInteger;
-        FreeQueryAndConn(vQuery);
+      if (vDistance <= FIssueList[I].RadiusIN) and (FIssueList[I].RadiusIN > 0) then
+        if FIssueList[I].CompleteAfterIN then // выполняется при входе в зону действия
+        begin
+          ExeExec('update issuies set status_id = 1 where issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
+          ExeExec('select cost from issuies where issue_id = ' + FIssueList[I].ID.ToString + ';', exActive, vQuery);
+          Person.Cash := Person.Cash + vQuery.FieldByName('cost').AsInteger;
+          FreeQueryAndConn(vQuery);
 
-        ExeExec('update issuies set status_id = 0 where prev_issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
-        ReloadIssuies;
-        UpdateIssue;
-      end;
+          ExeExec('update issuies set status_id = 0 where prev_issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
+          ReloadIssuies;
+        end;
 
-    if (vDistance > FIssueList[I].RadiusOUT) and (FIssueList[I].RadiusOUT > 0) then
-      if FIssueList[I].CompleteAfterOUT then // выполняется при выходе из зоны действия
-      begin
-        ExeExec('update issuies set status_id = 1 where issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
-        ExeExec('select cost from issuies where issue_id = ' + FIssueList[I].ID.ToString + ';', exActive, vQuery);
-        Person.Cash := Person.Cash + vQuery.FieldByName('cost').AsInteger;
-        FreeQueryAndConn(vQuery);
-        ExeExec('update issuies set status_id = 0 where prev_issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
-        ReloadIssuies;
-        UpdateIssue;
-      end
-      else
-      begin // Провалено при выходе из зоны
-        ExeExec('update issuies set status_id = 2 where issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
-        ReloadIssuies;
-        UpdateIssue;
-      end
+      if (vDistance > FIssueList[I].RadiusOUT) and (FIssueList[I].RadiusOUT > 0) then
+        if FIssueList[I].CompleteAfterOUT then // выполняется при выходе из зоны действия
+        begin
+          ExeExec('update issuies set status_id = 1 where issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
+          ExeExec('select cost from issuies where issue_id = ' + FIssueList[I].ID.ToString + ';', exActive, vQuery);
+          Person.Cash := Person.Cash + vQuery.FieldByName('cost').AsInteger;
+          FreeQueryAndConn(vQuery);
+          ExeExec('update issuies set status_id = 0 where prev_issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
+          ReloadIssuies;
+        end
+        else
+        begin // Провалено при выходе из зоны
+          ExeExec('update issuies set status_id = 2 where issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
+          ReloadIssuies;
+        end
+    finally
+
+    end;
   end;
 end;
 
@@ -755,6 +773,7 @@ var
   LocationManagerService: JObject;
   Location: JLocation;
   ProviderName: JString;
+  Criteria: JCriteria;
 begin
   try
      if not Assigned(FLocationManager) then
@@ -766,12 +785,20 @@ begin
          locationListener := TLocationListener.Create();
      end;
 
-     try
-       if TOSVersion.Check(12) then
-         ProviderName := TJLocationManager.JavaClass.FUSED_PROVIDER
-       else
-         ProviderName := TJLocationManager.JavaClass.GPS_PROVIDER;
+     if  TOSVersion.Check(12) then
+     begin
+      Criteria := TJCriteria.JavaClass.init;
+      Criteria.setAccuracy(TJCriteria.JavaClass.ACCURACY_FINE);     // Высокая точность
+      Criteria.setPowerRequirement(TJCriteria.JavaClass.POWER_HIGH); // Можно использовать GPS
+      Criteria.setBearingRequired(False);
+      Criteria.setSpeedRequired(False);
+      Criteria.setAltitudeRequired(False);
+      ProviderName := FLocationManager.getBestProvider(Criteria, True);
+     end
+     else
+        ProviderName := TJLocationManager.JavaClass.GPS_PROVIDER;
 
+     try
        FLocationManager.requestLocationUpdates(ProviderName, 0, 0, locationListener, TJLooper.JavaClass.getMainLooper);
 
        Location := FLocationManager.getLastKnownLocation(ProviderName);
@@ -1554,6 +1581,7 @@ begin
       end;
     mtRadiation:
       begin
+        AMarker.Marker.Visible := false;
         vWidth := FOriginalMapWidth / FMapRealWidth * FAnomalyList[AMarker.Index].Radius * 2 * FCurrentScale;
         AMarker.Marker.Tag := Round(vWidth / FCurrentScale);
         AMarker.LabelText := 'Радиация';
@@ -1562,6 +1590,7 @@ begin
       end;
     mtAnomaly:
       begin
+        AMarker.Marker.Visible := false;
         vWidth := FOriginalMapWidth / FMapRealWidth * FAnomalyList[AMarker.Index].Radius * 2 * FCurrentScale;
         AMarker.Marker.Tag := Round(vWidth / FCurrentScale);
         CreateBackground(vWidth);
@@ -1606,52 +1635,50 @@ begin
 end;
 
 procedure TFrameMap.ResetLocationMarkers;
-
 begin
-
-TTask.Run(
-procedure
-var
-  I: integer;
-
-  function GetBackground: TCircle;
+  TTask.Run(
+  procedure
   var
-    K: integer;
+    I: integer;
+
+    function GetBackground: TCircle;
+    var
+      K: integer;
+    begin
+      for K := 0 to FMarkerList[I].Marker.ChildrenCount - 1 do
+        if FMarkerList[I].Marker.Children[K] is TCircle then
+          Result := (FMarkerList[I].Marker.Children[K] as TCircle)
+    end;
+
   begin
-    for K := 0 to FMarkerList[I].Marker.ChildrenCount - 1 do
-      if FMarkerList[I].Marker.Children[K] is TCircle then
-        Result := (FMarkerList[I].Marker.Children[K] as TCircle)
-  end;
-
-begin
-   for I := 0 to FMarkerList.Count - 1 do
-   begin
-
-     if (FMarkerList[I].MarkerType in [mtAnomaly, mtRadiation, mtBase, mtSafe]) then
+     for I := 0 to FMarkerList.Count - 1 do
      begin
-       GetBackground.Width := FMarkerList[I].Marker.Tag * FCurrentScale;
-       GetBackground.Height := GetBackground.Width;
+
+       if (FMarkerList[I].MarkerType in [mtAnomaly, mtRadiation, mtBase, mtSafe]) then
+       begin
+         GetBackground.Width := FMarkerList[I].Marker.Tag * FCurrentScale;
+         GetBackground.Height := GetBackground.Width;
+       end;
+
+       SetMarker(FMarkerList[I].Marker, FMarkerList[I].Coords.Latitude, FMarkerList[I].Coords.Longitude);
      end;
 
-     SetMarker(FMarkerList[I].Marker, FMarkerList[I].Coords.Latitude, FMarkerList[I].Coords.Longitude);
-   end;
 
+    for I := 0 to FMarkerIssue.Count - 1 do
+      SetMarker(FMarkerIssue[I].Marker, FMarkerIssue[I].Coords.Latitude, FMarkerIssue[I].Coords.Longitude);
 
-  for I := 0 to FMarkerIssue.Count - 1 do
-    SetMarker(FMarkerIssue[I].Marker, FMarkerIssue[I].Coords.Latitude, FMarkerIssue[I].Coords.Longitude);
+    faMarkerX.Duration := 0; // Для скрытия плавного движения при зуме
+    faMarkerY.Duration := 0;
 
-  faMarkerX.Duration := 0; // Для скрытия плавного движения при зуме
-  faMarkerY.Duration := 0;
+    SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
 
-  SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
+    faMarkerX.Duration := 0.2;
+    faMarkerY.Duration := 0.2;
 
-  faMarkerX.Duration := 0.2;
-  faMarkerY.Duration := 0.2;
+    if MarkersPanel.Visible then
+      SetMarker(MarkersPanel, FCoords.Latitude, FCoords.Longitude);
+  end);
 
-  if MarkersPanel.Visible then
-    SetMarker(MarkersPanel, FCoords.Latitude, FCoords.Longitude);
-end);
-  
 end;
 
 procedure TFrameMap.ZoomIn;
@@ -1738,24 +1765,30 @@ begin
     begin
 
       for I := 0 to FCritical.Count - 1 do
-        if FormatDateTime('hh:nn', Time()) = FormatDateTime('hh:nn', FCritical[I].TimeStart) then
+        if (FormatDateTime('DD.MM.YYYY hh:nn', NOW()) >= FormatDateTime('DD.MM.YYYY hh:nn', FCritical[I].DateTimeStart)) and (FormatDateTime('DD.MM.YYYY hh:nn', NOW()) < FormatDateTime('DD.MM.YYYY hh:nn', FCritical[I].DateTimeStop)) then
         begin
-          FCurrentCritical := FCritical[I];
-          FSecondBeforeStartDamage := FCurrentCritical.MinuteBeforeStartDamage * 60;
-          timerCritical.Enabled := true;
           FIsCriticalStart := true;
+          FCurrentCritical := FCritical[I];
+
+          if SecondsBetween(NOW(), FCritical[I].DateTimeStart) > FCurrentCritical.MinuteBeforeStartDamage * 60 then
+            FSecondBeforeStartDamage := 0
+          else
+            FSecondBeforeStartDamage := FCurrentCritical.MinuteBeforeStartDamage * 60 - SecondsBetween(NOW(), FCritical[I].DateTimeStart);
+
+          timerCritical.Enabled := true;
+
           labCritical.Text := 'Приближается выброс';
           break;
         end;
 
       if FIsCriticalStart then
       begin
-        for I := 0 to FIssueList.Count - 1 do
-        begin
-          vIssue := FIssueList[I];
-          vIssue.Visible := False;
-          FIssueList[I] := vIssue;
-        end;
+         for I := 0 to FIssueList.Count - 1 do
+          begin
+            vIssue := FIssueList[I];
+            vIssue.Visible := False;
+            FIssueList[I] := vIssue;
+          end;
 
         for I := 0 to FPlacesList.Count - 1 do
         begin
@@ -1772,13 +1805,13 @@ begin
           FIssueList.Add(vIssue);
         end;
 
-        UpdateIssue;
+        UpdateIssuies;
       end;
 
     end
     else
     begin
-      if FormatDateTime('hh:nn', Time()) = FormatDateTime('hh:nn', FCurrentCritical.TimeStop) then
+      if FormatDateTime('DD.MM.YYYY hh:nn', NOW()) >= FormatDateTime('DD.MM.YYYY hh:nn', FCurrentCritical.DateTimeStop) then
       begin
         FIsCriticalStart := False;
         timerCritical.Enabled := false;
@@ -1786,17 +1819,18 @@ begin
         MediaPlayerStopCritical.CurrentTime := 0;
         MediaPlayerStopCritical.Play;
 
-        for I := FIssueList.Count - 1 downto 0 do
-          if FIssueList[I].BlockDetail = 'critical' then
-            FIssueList.Delete(I);
+          for I := FIssueList.Count - 1 downto 0 do
+            if FIssueList[I].BlockDetail = 'critical' then
+              FIssueList.Delete(I);
 
-        for I := FIssueList.Count - 1 downto 0 do
-        begin
-          vIssue := FIssueList[I];
-          vIssue.Visible := true;
-          FIssueList[I] := vIssue;
-        end;
-        UpdateIssue;
+          for I := FIssueList.Count - 1 downto 0 do
+          begin
+            vIssue := FIssueList[I];
+            vIssue.Visible := true;
+            FIssueList[I] := vIssue;
+          end;
+
+        UpdateIssuies
       end;
     end;
   end;
@@ -1853,7 +1887,7 @@ procedure TFrameMap.TimerSensorTimer(Sender: TObject);
 begin
 
    {$IFDEF ANDROID}
-      LocationServiceChanged;
+     LocationServiceChanged;
    {$ENDIF}
 
     if Assigned(Person) then
@@ -1873,6 +1907,12 @@ begin
   BatteryProgress.Width := BatteryPercent() / 100 * BatteryProgress.Tag;
 {$ENDIF}
   labTime.Text := FormatDateTime('hh:nn:ss', Time());
+end;
+
+procedure TFrameMap.TimerUpdateAnomaliesTimer(Sender: TObject);
+begin
+  LoadAnomalies;
+  UpdateAnomalies;
 end;
 
 procedure TFrameMap.btnCloseQRClick(Sender: TObject);

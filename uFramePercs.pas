@@ -483,7 +483,8 @@ begin
   begin
     BtnClickMedia;
     layBtnRestore.Visible := false;
-    laySelectionBody.Height := Image18.Height + Image25.Height + layBtnMedicMyself.Height + layBtnMedic.Height;
+    laySelectionBody.Height := Image18.Height + Image25.Height + layBtnMedicMyself.Height;
+    layBtnMedic.Visible := false;
     laySelection.Visible := true;
   end;
 end;
@@ -494,7 +495,8 @@ begin
   begin
     BtnClickMedia;
     layBtnRestore.Visible := false;
-    laySelectionBody.Height := Image18.Height + Image25.Height + layBtnMedicMyself.Height + layBtnMedic.Height;
+    laySelectionBody.Height := Image18.Height + Image25.Height + layBtnMedicMyself.Height;
+    layBtnMedic.Visible := false;
     laySelection.Visible := true;
   end;
 end;
@@ -613,7 +615,7 @@ begin
     (Self.FindComponent('layMedic' + Person.LevelMedic.ToString) as TLayout).Opacity := 1;
     layMedicReload.Parent := Self.FindComponent('layMedic' + Person.LevelMedic.ToString) as TLayout;
 
-    ExeExec('select action_date_time from life_log where action_type_id = 10 order by action_date_time desc;', exActive, vQuery);
+    ExeExec('select * from life_log where action_type_id = 10 order by action_date_time desc;', exActive, vQuery);
 
     if vQuery.RecordCount > 0 then
       begin
@@ -644,7 +646,7 @@ begin
     (Self.FindComponent('layTehnic' + Person.LevelTehnic.ToString) as TLayout).Opacity := 1;
     layTehnicReload.Parent := Self.FindComponent('layTehnic' + Person.LevelTehnic.ToString) as TLayout;
 
-    ExeExec('select action_date_time from life_log where action_type_id = 11 order by action_date_time desc;', exActive, vQuery);
+    ExeExec('select * from life_log where action_type_id = 11 order by action_date_time desc;', exActive, vQuery);
 
     if vQuery.RecordCount > 0 then
       begin

@@ -25,7 +25,7 @@ uses
   FMX.Platform.Android,
 {$ENDIF}
   FMX.Ani, FMX.Effects, IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer, IdTCPConnection, IdTCPClient, FMX.Edit, FMX.Media,
-  Controls.listitem, Controls.item, FMX.EditBox, FMX.SpinBox, uGenericBaseData, OAuth2, Classes.Data, Classes.answer;
+  Controls.listitem, Controls.item, FMX.EditBox, FMX.SpinBox, uGenericBaseData, OAuth2, Classes.Data, Classes.answer, FMX.DateTimeCtrls;
 
 type
 
@@ -155,6 +155,10 @@ type
     btnClear: TSpeedButton;
     Image29: TImage;
     InnerGlowEffect15: TInnerGlowEffect;
+    ckHideInDatetime: TCheckBox;
+    Layout1: TLayout;
+    teTimeHide: TTimeEdit;
+    deDateHide: TDateEdit;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnConfirmNameClick(Sender: TObject);
@@ -264,7 +268,7 @@ begin
           procedure
           begin
             try
-              GetServerData;
+              GetData;
             finally
               recLoading.Visible := false;
               StartApp;
@@ -440,12 +444,27 @@ end;
 procedure TMainForm.btnAnomalySaveClick(Sender: TObject);
 var
   vQuery: TFDQuery;
+
+  function GetDateTimeHide: string;
+  var
+    AFormatSettings: TFormatSettings;
+  begin
+    AFormatSettings.DateSeparator := '-';
+    AFormatSettings.TimeSeparator := ':';
+    AFormatSettings.ShortDateFormat := 'YYYY-MM-DD';
+    AFormatSettings.LongTimeFormat := 'hh:nn:ss';
+
+    Result := 'NULL';
+
+    if ckHideInDatetime.IsChecked then
+      Result := DateToStr(deDateHide.Date, AFormatSettings) + ' ' + TimeToStr(teTimeHide.Time, AFormatSettings);
+  end;
 begin
   if layAddAnomaly.Tag <> 0 then // Update
-    ExeExec(Format('update anomalies set radius = %d, power = %d,anomaly_type_id = %d  where anomaly_id = %d;', [Round(sbRadius.Value), Round(sbPower.Value), cbAnomalyType.Selected.Tag, layAddAnomaly.Tag]), exExecute, vQuery)
+    ExeExec(Format('update anomalies set radius = %d, power = %d,anomaly_type_id = %d, hide_in_datetime = %s, datetime_hide = %s  where anomaly_id = %d;', [Round(sbRadius.Value), Round(sbPower.Value), cbAnomalyType.Selected.Tag, ckHideInDatetime.IsChecked.ToString(), QuotedStr(GetDateTimeHide),  layAddAnomaly.Tag]), exExecute, vQuery)
   else
-    ExeExec(Format('insert into anomalies (radius, power, anomaly_type_id, lat, lon) values (%d, %d, %d, %s, %s);', [Round(sbRadius.Value), Round(sbPower.Value), cbAnomalyType.Selected.Tag, StringReplace(FCoords.Latitude.ToString, ',', '.',
-      [rfReplaceAll]), StringReplace(FCoords.Longitude.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
+    ExeExec(Format('insert into anomalies (radius, power, anomaly_type_id, lat, lon, hide_in_datetime, datetime_hide) values (%d, %d, %d, %s, %s, %s, %s);', [Round(sbRadius.Value), Round(sbPower.Value), cbAnomalyType.Selected.Tag, StringReplace(FCoords.Latitude.ToString, ',', '.',
+      [rfReplaceAll]), StringReplace(FCoords.Longitude.ToString, ',', '.', [rfReplaceAll]), ckHideInDatetime.IsChecked.ToString(), QuotedStr(GetDateTimeHide)]), exExecute, vQuery);
 
   layAddAnomaly.Tag := 0;
   FFrameMap.LoadAnomalies;
@@ -553,7 +572,7 @@ procedure TMainForm.StartApp;
 begin
   LoadArtefacts;
 
-  if Assigned(FFrameMap) then
+  while Assigned(FFrameMap) do
   begin
     FFrameMap.Parent := nil;
     FreeAndNil(FFrameMap);
@@ -561,15 +580,15 @@ begin
 
   FFrameMap := TFrameMap.Create(TabMap);
   FFrameMap.Parent := TabMap;
-  FFrameMap.btnMyLocationClick(nil);
 
-  PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.CHANGE_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.NEARBY_WIFI_DEVICES', 'android.permission.CHANGE_WIFI_MULTICAST_STATE'],
+  PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.CHANGE_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION'],
     procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
     begin
       if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
       begin
 {$IFDEF ANDROID}
         FFrameMap.LocationServiceChanged;
+        FFrameMap.btnMyLocationClick(nil);
 {$ENDIF}
       end
       else

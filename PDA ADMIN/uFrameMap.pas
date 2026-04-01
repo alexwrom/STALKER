@@ -188,7 +188,13 @@ procedure TFrameMap.LoadAnomalies;
 var
   vQuery: TFDQuery;
   vAnomalyItem: TAnomalyData;
+  AFormatSettings: TFormatSettings;
 begin
+  AFormatSettings.DateSeparator := '-';
+  AFormatSettings.TimeSeparator := ':';
+  AFormatSettings.ShortDateFormat := 'YYYY-MM-DD';
+  AFormatSettings.LongTimeFormat := 'hh:nn:ss';
+
   if Assigned(FAnomalyList) then
     FAnomalyList.Clear
   else
@@ -205,6 +211,10 @@ begin
       vAnomalyItem.Radius := vQuery.FieldByName('radius').AsInteger;
       vAnomalyItem.Power := vQuery.FieldByName('power').AsInteger;
       vAnomalyItem.ID := vQuery.FieldByName('anomaly_id').AsInteger;
+      vAnomalyItem.IsHide := vQuery.FieldByName('hide_in_datetime').AsBoolean;
+
+      if vQuery.FieldByName('datetime_hide').AsString <> ''  then
+        vAnomalyItem.DateTimeHide := StrToDateTime(vQuery.FieldByName('datetime_hide').AsString, AFormatSettings);
 
       case vQuery.FieldByName('anomaly_type_id').AsInteger of
         1:
@@ -792,7 +802,7 @@ begin
         AMarker.Marker.Tag := Round(vWidth / FCurrentScale);
 
         CreateBackground(vWidth);
-        CreateIcon(ImageList.Source[1].MultiResBitmap[0].Bitmap);
+        CreateIcon(ImageList.Source[0].MultiResBitmap[0].Bitmap);
       end;
     mtRadiation:
       begin

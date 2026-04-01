@@ -8,7 +8,7 @@ uses System.SysUtils, System.Sensors, uGlobal, System.Classes, Math,
   Androidapi.JNIBridge, Androidapi.Helpers, Androidapi.JNI.Os,
   Androidapi.JNI.Net,
 {$ENDIF}
-  System.Sensors.Components, Generics.Collections, FMX.Dialogs, Permissions, System.Types;
+  System.Sensors.Components, Generics.Collections, FMX.Dialogs, Permissions, System.Types, System.Threading;
 
 function ScanDistanceToArtefacts(ALevel: Integer): double;
 procedure ScanNetworks;
@@ -248,82 +248,86 @@ function ConnectToNetworkAndroid10Plus: boolean;
 begin
   Result := False;
 
-  PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.CHANGE_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.NEARBY_WIFI_DEVICES', 'android.permission.CHANGE_WIFI_MULTICAST_STATE'],
+  PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.CHANGE_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION'],
     procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
-    var
-      ConnectivityManager: JConnectivityManager;
-      WifiNetworkSpecifier: JWifiNetworkSpecifier;
-      NetworkRequestBuilder: JNetworkRequest_Builder;
-      NetworkRequest: JNetworkRequest;
-      Service: JObject;
-      Context: JContext;
-      FCurrentNetworkRequest: JNetworkRequest;
-      WifiNetworkSpecifierBuilder: JWifiNetworkSpecifier_Builder;
-      FNetworkCallback: JConnectivityManager_NetworkCallback;
-      Suggestion: JWifiNetworkSuggestion;
-      SuggestionsList: JArrayList;
-      Intent: JIntent;
     begin
       if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
       begin
-        try // Создаем предложение сети (WifiNetworkSuggestion)
-          Suggestion := TJWifiNetworkSuggestion_Builder.JavaClass.init.setSsid(StringToJString(MERCHANT_WIFI)).setWpa2Passphrase(StringToJString(MERCHANT_PASS)).setIsAppInteractionRequired(True).setIsHiddenSsid(True).build;
+       TTask.Run(
+       procedure
+       var
+          ConnectivityManager: JConnectivityManager;
+          WifiNetworkSpecifier: JWifiNetworkSpecifier;
+          NetworkRequestBuilder: JNetworkRequest_Builder;
+          NetworkRequest: JNetworkRequest;
+          Service: JObject;
+          Context: JContext;
+          FCurrentNetworkRequest: JNetworkRequest;
+          WifiNetworkSpecifierBuilder: JWifiNetworkSpecifier_Builder;
+          FNetworkCallback: JConnectivityManager_NetworkCallback;
+          Suggestion: JWifiNetworkSuggestion;
+          SuggestionsList: JArrayList;
+          Intent: JIntent;
+       begin
+          try // Создаем предложение сети (WifiNetworkSuggestion)
+                Suggestion := TJWifiNetworkSuggestion_Builder.JavaClass.init.setSsid(StringToJString(MERCHANT_WIFI)).setWpa2Passphrase(StringToJString(MERCHANT_PASS)).setIsAppInteractionRequired(True).setIsHiddenSsid(True).build;
 
-          // Создаем список предложений
-          SuggestionsList := TJArrayList.JavaClass.init;
-          SuggestionsList.Add(Suggestion);
+            // Создаем список предложений
+            SuggestionsList := TJArrayList.JavaClass.init;
+            SuggestionsList.Add(Suggestion);
 
-          // Добавляем предложения в систему
-          WiFiManager.addNetworkSuggestions(JList(SuggestionsList));
+            // Добавляем предложения в систему
+            WiFiManager.addNetworkSuggestions(JList(SuggestionsList));
 
-          // Получаем ConnectivityManager
-          Context := TAndroidHelper.Context;
-          Service := Context.getSystemService(TJContext.JavaClass.CONNECTIVITY_SERVICE);
+            // Получаем ConnectivityManager
+            Context := TAndroidHelper.Context;
+            Service := Context.getSystemService(TJContext.JavaClass.CONNECTIVITY_SERVICE);
 
-          if Assigned(Service) then
-          begin
-            ConnectivityManager := TJConnectivityManager.Wrap((Service as ILocalObject).GetObjectID);
-            // Создаем спецификацию Wi-Fi сети
-            WifiNetworkSpecifierBuilder := TJWifiNetworkSpecifier_Builder.JavaClass.init;
+            if Assigned(Service) then
+            begin
+              ConnectivityManager := TJConnectivityManager.Wrap((Service as ILocalObject).GetObjectID);
+              // Создаем спецификацию Wi-Fi сети
+              WifiNetworkSpecifierBuilder := TJWifiNetworkSpecifier_Builder.JavaClass.init;
 
-            // Устанавливаем SSID
-            WifiNetworkSpecifierBuilder.setSsid(StringToJString(MERCHANT_WIFI));
+              // Устанавливаем SSID
+              WifiNetworkSpecifierBuilder.setSsid(StringToJString(MERCHANT_WIFI));
 
-            // Устанавливаем пароль для WPA2
-            WifiNetworkSpecifierBuilder.setWpa2Passphrase(StringToJString(MERCHANT_PASS));
+              // Устанавливаем пароль для WPA2
+              WifiNetworkSpecifierBuilder.setWpa2Passphrase(StringToJString(MERCHANT_PASS));
 
-            WifiNetworkSpecifier := WifiNetworkSpecifierBuilder.build;
+              WifiNetworkSpecifier := WifiNetworkSpecifierBuilder.build;
 
-            // Ключевое исправление: НЕ удаляем NET_CAPABILITY_INTERNET
-            NetworkRequestBuilder := TJNetworkRequest_Builder.JavaClass.init;
+              // Ключевое исправление: НЕ удаляем NET_CAPABILITY_INTERNET
+              NetworkRequestBuilder := TJNetworkRequest_Builder.JavaClass.init;
 
-            // Указываем, что нам нужен Wi-Fi транспорт
-            NetworkRequestBuilder.addTransportType(TJNetworkCapabilities.JavaClass.TRANSPORT_WIFI);
+              // Указываем, что нам нужен Wi-Fi транспорт
+              NetworkRequestBuilder.addTransportType(TJNetworkCapabilities.JavaClass.TRANSPORT_WIFI);
 
-            // Добавляем возможность выбора сети пользователем
-            NetworkRequestBuilder.addCapability(TJNetworkCapabilities.JavaClass.NET_CAPABILITY_INTERNET);
+              // Добавляем возможность выбора сети пользователем
+              NetworkRequestBuilder.addCapability(TJNetworkCapabilities.JavaClass.NET_CAPABILITY_INTERNET);
 
-            // Указываем, что запрос должен оставаться активным
-            NetworkRequestBuilder.setNetworkSpecifier(TJNetworkSpecifier.Wrap((WifiNetworkSpecifier as ILocalObject).GetObjectID));
+              // Указываем, что запрос должен оставаться активным
+              NetworkRequestBuilder.setNetworkSpecifier(TJNetworkSpecifier.Wrap((WifiNetworkSpecifier as ILocalObject).GetObjectID));
 
-            NetworkRequest := NetworkRequestBuilder.build;
+              NetworkRequest := NetworkRequestBuilder.build;
 
-            FNetworkCallback := TJConnectivityManager_NetworkCallback.JavaClass.init;
+              FNetworkCallback := TJConnectivityManager_NetworkCallback.JavaClass.init;
 
-            // Сохраняем текущий запрос
-            FCurrentNetworkRequest := NetworkRequest;
+              // Сохраняем текущий запрос
+              FCurrentNetworkRequest := NetworkRequest;
 
-            // Запрашиваем подключение с высоким приоритетом
-            ConnectivityManager.requestNetwork(NetworkRequest, FNetworkCallback, 1000);
+              // Запрашиваем подключение с высоким приоритетом
+              ConnectivityManager.requestNetwork(NetworkRequest, FNetworkCallback, 1000);
 
-            Intent := TJIntent.JavaClass.init(TJWifiManager.JavaClass.SCAN_RESULTS_AVAILABLE_ACTION);
+              Intent := TJIntent.JavaClass.init(TJWifiManager.JavaClass.SCAN_RESULTS_AVAILABLE_ACTION);
 
-            // Отправляем broadcast
-            TAndroidHelper.Context.sendBroadcast(Intent);
-          end
+              // Отправляем broadcast
+              TAndroidHelper.Context.sendBroadcast(Intent);
+            end
 
-        except
-        end;
+          except
+          end;
+       end);
       end
       else
       begin

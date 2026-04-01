@@ -49,6 +49,8 @@ type
     AnomalyType: TAnomalyType;
     Tag: integer;
     ID: integer;
+    IsHide: boolean;
+    DateTimeHide: TDateTime;
   end;
 
   TPlaceData = record
@@ -122,6 +124,7 @@ begin
   AQuery := TFDQuery.Create(nil);
   AQuery.Connection := FDConn;
   FDConn.Params.Database := System.IOUtils.TPath.Combine(GetUserAppPath, 'base.db');
+  FDConn.Params.Add('DateTimeFormat=String');
   try
     FDConn.Connected := true;
   except
@@ -217,6 +220,9 @@ begin
 
         MainForm.sbRadius.Value := FAnomalyList[AMarker.Tag].Radius;
         MainForm.sbPower.Value := FAnomalyList[AMarker.Tag].Power;
+        MainForm.ckHideInDatetime.IsChecked := FAnomalyList[AMarker.Tag].IsHide;
+        MainForm.deDateHide.Date := FAnomalyList[AMarker.Tag].DateTimeHide;
+        MainForm.teTimeHide.Time := FAnomalyList[AMarker.Tag].DateTimeHide;
       end;
     mtBase, mtSafe:
       begin

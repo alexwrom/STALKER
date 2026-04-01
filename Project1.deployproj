@@ -4,8 +4,8 @@
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
     <PropertyGroup>
-        <DeviceId Condition="'$(Platform)'=='Android'">AC4TJK5718C00517</DeviceId>
-        <DeviceId Condition="'$(Platform)'=='Android64'">AC4TJK5718C00517</DeviceId>
+        <DeviceId Condition="'$(Platform)'=='Android'">0123456789ABCDEF</DeviceId>
+        <DeviceId Condition="'$(Platform)'=='Android64'"/>
         <DeviceId Condition="'$(Platform)'=='iOSDevice64'"/>
         <DeviceId Condition="'$(Platform)'=='iOSSimARM64'"/>
     </PropertyGroup>
@@ -1163,7 +1163,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="Resources\music\work.mp3" Condition="'$(Config)'=='Release'">
-            <RemoteDir>Project1\</RemoteDir>
+            <RemoteDir>Project1\assets\internal\</RemoteDir>
             <RemoteName>work.mp3</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
@@ -1542,7 +1542,7 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="Android\Release\AndroidManifest.xml" Condition="'$(Config)'=='Release'">
-            <RemoteDir>Project1\assets\internal\</RemoteDir>
+            <RemoteDir>Project1\</RemoteDir>
             <RemoteName>AndroidManifest.xml</RemoteName>
             <DeployClass>ProjectAndroidManifest</DeployClass>
             <Operation>1</Operation>

@@ -156,7 +156,7 @@ type
     FFrameSettings: TFrameSettings;
     procedure CreateFrameLogin;
     procedure StartApp;
-    procedure LoadIsuies;
+    procedure LoadIssuies;
     procedure StopDetector;
     procedure CreateBagFrame;
   end;
@@ -279,7 +279,7 @@ begin
   FreeQueryAndConn(vQuery);
 end;
 
-procedure TMainForm.LoadIsuies;
+procedure TMainForm.LoadIssuies;
 var
   vQuery: TFDQuery;
   vIssueList: TIssueData;
@@ -343,7 +343,13 @@ procedure TMainForm.LoadCritical;
 var
   vQuery: TFDQuery;
   FCriticalItem: TCritical;
+  AFormatSettings: TFormatSettings;
 begin
+  AFormatSettings.DateSeparator := '.';
+  AFormatSettings.TimeSeparator := ':';
+  AFormatSettings.ShortDateFormat := 'DD.MM.YYYY';
+  AFormatSettings.LongTimeFormat := 'hh:nn:ss';
+
   if Assigned(FCritical) then
     FCritical.Clear
   else
@@ -355,8 +361,8 @@ begin
   while Not vQuery.Eof do
   begin
     FCriticalItem.Name := vQuery.FieldByName('name').AsString;
-    FCriticalItem.TimeStart := vQuery.FieldByName('time_start').AsDateTime;
-    FCriticalItem.TimeStop := vQuery.FieldByName('time_stop').AsDateTime;
+    FCriticalItem.DateTimeStart := StrToDateTime(vQuery.FieldByName('datetime_start').AsString, AFormatSettings);
+    FCriticalItem.DateTimeStop := StrToDateTime(vQuery.FieldByName('datetime_stop').AsString, AFormatSettings);
     FCriticalItem.MinuteBeforeStartDamage := vQuery.FieldByName('minute_before_start_damage').AsInteger;
     FCritical.Add(FCriticalItem);
     vQuery.Next;
@@ -446,7 +452,7 @@ begin
   FreeQueryAndConn(FDQuery);
 
   LoadArtefacts;
-  LoadIsuies;
+  LoadIssuies;
   LoadPlaces;
   LoadCritical;
 
@@ -931,7 +937,7 @@ begin
 
         if vAnswer.Status = 'success' then
           begin
-            ExeExec('delete from life_log where action_date_time <> (select max(action_date_time) from life_log); delete from notifications where is_owner = true;', exExecute, vQuery);
+            ExeExec('delete from life_log where action_date_time <> (select max(l.action_date_time) from life_log l where l.action_type_id = life_log.action_type_id); delete from notifications where is_owner = true;', exExecute, vQuery);
           end;
 
           vData := TJSON.JsonToObject<TData>(vAnswer.Json);
@@ -945,6 +951,8 @@ begin
           end;
 
           ReloadNotificationData;
+          ReloadIssuies;
+
       finally
         FreeAndNil(vAnswer);
         FreeAndNil(vData);

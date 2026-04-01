@@ -52,8 +52,8 @@ type
 
   TCritical = record
     Name: string;
-    TimeStart: TDateTime;
-    TimeStop: TDateTime;
+    DateTimeStart: TDateTime;
+    DateTimeStop: TDateTime;
     MinuteBeforeStartDamage: integer; // ћинуты от начала выброса до начала урона
   end;
 
@@ -345,7 +345,6 @@ begin
   ExeExec('update issuies_block set status_id = 2 where status_id = 0;', exExecute, vQuery);
 
   ReloadIssuies;
-  MainForm.FFrameMap.UpdateIssue;
 end;
 
 procedure TPerson.SetCash(const Value: integer);
@@ -874,7 +873,8 @@ end;
 
 procedure ReloadIssuies;
 begin
-  MainForm.LoadIsuies;
+  MainForm.LoadIssuies;
+  MainForm.FFrameMap.UpdateIssuies;
 end;
 
 procedure ReloadBag;

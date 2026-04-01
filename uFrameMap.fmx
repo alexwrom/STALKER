@@ -5624,6 +5624,13 @@ object FrameMap: TFrameMap
       Visible = False
       WrapMode = Stretch
     end
+    object TimerUpdateAnomalies: TTimer
+      Enabled = False
+      Interval = 60000
+      OnTimer = TimerUpdateAnomaliesTimer
+      Left = 568
+      Top = 224
+    end
   end
   object layPersonHealth: TLayout
     Anchors = [akLeft, akBottom]
