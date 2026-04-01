@@ -264,7 +264,7 @@ begin
           procedure
           begin
             try
-              GetData;
+              GetServerData;
             finally
               recLoading.Visible := false;
               StartApp;

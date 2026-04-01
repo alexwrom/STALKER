@@ -4,8 +4,8 @@
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
     <PropertyGroup>
-        <DeviceId Condition="'$(Platform)'=='Android'"/>
-        <DeviceId Condition="'$(Platform)'=='Android64'"/>
+        <DeviceId Condition="'$(Platform)'=='Android'">AC4TJK5718C00517</DeviceId>
+        <DeviceId Condition="'$(Platform)'=='Android64'">AC4TJK5718C00517</DeviceId>
         <DeviceId Condition="'$(Platform)'=='iOSDevice64'"/>
         <DeviceId Condition="'$(Platform)'=='iOSSimARM64'"/>
     </PropertyGroup>
@@ -57,19 +57,19 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="Android64\Debug\styles-v31.xml" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>PDAAdmin\res\values-v31\</RemoteDir>
-            <RemoteName>styles.xml</RemoteName>
-            <DeployClass>AndroidSplashStylesV31</DeployClass>
+        <DeployFile Include="$(ProjectName).Artwork\Android\FM_NotificationIcon_48x48.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>PDAAdmin\res\drawable-xhdpi\</RemoteDir>
+            <RemoteName>ic_notification.png</RemoteName>
+            <DeployClass>Android_NotificationIcon48</DeployClass>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="$(ProjectName).Artwork\Android\FM_NotificationIcon_48x48.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>PDAAdmin\res\drawable-xhdpi\</RemoteDir>
-            <RemoteName>ic_notification.png</RemoteName>
-            <DeployClass>Android_NotificationIcon48</DeployClass>
+        <DeployFile Include="Android64\Debug\styles-v31.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>PDAAdmin\res\values-v31\</RemoteDir>
+            <RemoteName>styles.xml</RemoteName>
+            <DeployClass>AndroidSplashStylesV31</DeployClass>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
@@ -165,15 +165,6 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="network_security_config.xml" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>PDAAdmin\res\xml\</RemoteDir>
-            <RemoteName>network_security_config.xml</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
         <DeployFile Include="$(ProjectName).Artwork\Android\FM_AdaptiveIcon_Background.xml" Condition="'$(Config)'=='Debug'">
             <RemoteDir>PDAAdmin\res\drawable\</RemoteDir>
             <RemoteName>ic_launcher_background.xml</RemoteName>
@@ -188,6 +179,15 @@
             <RemoteName>splash_vector.xml</RemoteName>
             <DeployClass>Android_VectorizedSplash</DeployClass>
             <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="network_security_config.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>PDAAdmin\res\xml\</RemoteDir>
+            <RemoteName>network_security_config.xml</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -465,20 +465,20 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="$(ProjectName).Artwork\Android\FM_VectorizedSplashV31.xml" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>PDAAdmin\res\drawable-anydpi-v31\</RemoteDir>
-            <RemoteName>splash_vector.xml</RemoteName>
-            <DeployClass>Android_VectorizedSplashV31</DeployClass>
-            <Operation>1</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
         <DeployFile Include="..\Resources\font\montblancctt.ttf" Condition="'$(Config)'=='Debug'">
             <RemoteDir>PDAAdmin\assets\internal\</RemoteDir>
             <RemoteName>montblancctt.ttf</RemoteName>
             <DeployClass>ProjectFile</DeployClass>
             <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(ProjectName).Artwork\Android\FM_VectorizedSplashV31.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>PDAAdmin\res\drawable-anydpi-v31\</RemoteDir>
+            <RemoteName>splash_vector.xml</RemoteName>
+            <DeployClass>Android_VectorizedSplashV31</DeployClass>
+            <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -510,19 +510,19 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="Android\Debug\styles-v21.xml" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>PDAAdmin\res\values-v21\</RemoteDir>
-            <RemoteName>styles.xml</RemoteName>
-            <DeployClass>AndroidSplashStylesV21</DeployClass>
+        <DeployFile Include="$(ProjectName).Artwork\Android\FM_VectorizedSplashV31Dark.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>PDAAdmin\res\drawable-night-anydpi-v31\</RemoteDir>
+            <RemoteName>splash_vector.xml</RemoteName>
+            <DeployClass>Android_VectorizedSplashV31Dark</DeployClass>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="$(ProjectName).Artwork\Android\FM_VectorizedSplashV31Dark.xml" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>PDAAdmin\res\drawable-night-anydpi-v31\</RemoteDir>
-            <RemoteName>splash_vector.xml</RemoteName>
-            <DeployClass>Android_VectorizedSplashV31Dark</DeployClass>
+        <DeployFile Include="Android\Debug\styles-v21.xml" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>PDAAdmin\res\values-v21\</RemoteDir>
+            <RemoteName>styles.xml</RemoteName>
+            <DeployClass>AndroidSplashStylesV21</DeployClass>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>

@@ -114,6 +114,12 @@ type
     imgFog: TImage;
     imgFogDefault: TImage;
     Rectangle5: TRectangle;
+    layArmorPSIReload: TLayout;
+    Rectangle9: TRectangle;
+    labReloadTimerArmorPSI: TLabel;
+    InnerGlowEffect10: TInnerGlowEffect;
+    TimerArmorPSIReload: TTimer;
+    Image4: TImage;
     procedure MapImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure btnZoomInClick(Sender: TObject);
     procedure btnZoomOutClick(Sender: TObject);
@@ -135,6 +141,7 @@ type
     procedure btnSendMarkerClick(Sender: TObject);
     procedure LayClientClick(Sender: TObject);
     procedure btnCloseQRClick(Sender: TObject);
+    procedure TimerArmorPSIReloadTimer(Sender: TObject);
   private
     FMapLoaded: Boolean;
 
@@ -170,7 +177,7 @@ type
     procedure ScanAnomalies;
     procedure ScanIssuies;
     procedure UpdateBaseSafeDead;
-    procedure ScanBaseSafeDead;
+
     procedure LoadAnomalies;
     procedure ScanInnerCritical;
     procedure SetArrows(AArrow: TImage; ATarget: TControl);
@@ -187,6 +194,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    function ScanBaseSafeDead: boolean;
     procedure ResetLocationMarkers;
     procedure LoadMarkers;
 {$IFDEF ANDROID}
@@ -566,11 +574,12 @@ begin
   end;
 end;
 
-procedure TFrameMap.ScanBaseSafeDead;
+function TFrameMap.ScanBaseSafeDead: boolean;
 var
   I: integer;
   vDistance: Double;
 begin
+  Result := false;
 
   for I := 0 to FPlacesList.Count - 1 do
   begin
@@ -579,6 +588,7 @@ begin
     if vDistance <= FPlacesList[I].Radius then
     begin
       Person.Health := Person.Health + 0.11;
+      Result := true;
     end;
   end;
 end;
@@ -619,6 +629,9 @@ begin
     MediaPlayerDamage.Stop;
     MediaPlayerDamage.CurrentTime := 0;
   end;
+
+  if Person.Health > 0 then
+    FKillType := ktLive;
 end;
 
 destructor TFrameMap.Destroy;
@@ -839,7 +852,7 @@ begin
             begin
               vBlockDamage := Person.RadiationArmor;
               FKillType := ktRadiation;
-              FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'radiation.mp3');
+              FileName := System.IOUtils.TPath.Combine(GetUserAppPath, 'zvuk-radiacii.mp3');
             end;
           atChimishe:
           begin
@@ -885,6 +898,9 @@ begin
         while (MediaPlayerAnomaly.State = TMediaState.Playing)  do
           continue;
       end);
+
+  if Person.Health > 0 then
+    FKillType := ktLive;
 end;
 
 procedure TFrameMap.ScanAnomaliesNextTo; // Приближение к аномалии
@@ -1434,16 +1450,18 @@ begin
 end;
 
 procedure TFrameMap.CreateMarker(AMarker: TMarkerData);
-  procedure CreateBackground;
+   procedure CreateBackground(AWidth: Single);
   begin
     with TCircle.Create(AMarker.Marker) do
     begin
       Parent := AMarker.Marker;
-      Align := TAlignLayout.Client;
+      Align := TAlignLayout.Center;
       fill.Kind := TBrushKind.Solid;
       fill.Color := TAlphaColors.Alpha;
       Stroke.Kind := TBrushKind.Solid;
       Stroke.Color := TAlphaColors.White;
+      Width := AWidth;
+      Height := AWidth;
       HitTest := False;
       Opacity := 0.5;
     end;
@@ -1459,14 +1477,18 @@ procedure TFrameMap.CreateMarker(AMarker: TMarkerData);
       Bitmap.Assign(ABitmap);
       Width := AWidth;
       Height := Width;
-      HitTest := False;
+      HitTest := false;
+      BringToFront;
     end;
   end;
+
+var
+  vWidth: Single;
 
 begin
   AMarker.Marker := TImage.Create(MapLayout);
   AMarker.Marker.Parent := MapLayout;
-  AMarker.Marker.Width := 40;
+  AMarker.Marker.Width := 50;
   AMarker.Marker.Height := AMarker.Marker.Width;
   AMarker.Marker.OnClick := OnMarkerClick;
 
@@ -1516,40 +1538,33 @@ begin
       end;
     mtBase:
       begin
-        AMarker.Marker.Width := FOriginalMapWidth / FMapRealWidth * FPlacesList[AMarker.Index].Radius * 2 * FCurrentScale;
-        AMarker.Marker.Height := AMarker.Marker.Width;
-        AMarker.Marker.Tag := Round(AMarker.Marker.Width / FCurrentScale);
+        vWidth := FOriginalMapWidth / FMapRealWidth * FPlacesList[AMarker.Index].Radius * 2 * FCurrentScale;
+        AMarker.Marker.Tag := Round(vWidth / FCurrentScale);
 
-        CreateBackground;
-        CreateIcon(ImageList.Source[6].MultiResBitmap[0].Bitmap, 60);
-
+        CreateBackground(vWidth);
+        CreateIcon(ImageList.Source[6].MultiResBitmap[0].Bitmap, 50);
       end;
     mtSafe:
       begin
-        AMarker.Marker.Width := FOriginalMapWidth / FMapRealWidth * FPlacesList[AMarker.Index].Radius * 2 * FCurrentScale;
-        AMarker.Marker.Height := AMarker.Marker.Width;
-        AMarker.Marker.Tag := Round(AMarker.Marker.Width / FCurrentScale);
+        vWidth := FOriginalMapWidth / FMapRealWidth * FPlacesList[AMarker.Index].Radius * 2 * FCurrentScale;
+        AMarker.Marker.Tag := Round(vWidth / FCurrentScale);
 
-        CreateBackground;
-        CreateIcon(ImageList.Source[5].MultiResBitmap[0].Bitmap, 50);
+        CreateBackground(vWidth);
+        CreateIcon(ImageList.Source[5].MultiResBitmap[0].Bitmap);
       end;
     mtRadiation:
       begin
-        AMarker.Marker.Width := FOriginalMapWidth / FMapRealWidth * FAnomalyList[AMarker.Index].Radius * 2 * FCurrentScale;
-        AMarker.Marker.Height := AMarker.Marker.Width;
-        AMarker.Marker.Tag := Round(AMarker.Marker.Width / FCurrentScale);
+        vWidth := FOriginalMapWidth / FMapRealWidth * FAnomalyList[AMarker.Index].Radius * 2 * FCurrentScale;
+        AMarker.Marker.Tag := Round(vWidth / FCurrentScale);
         AMarker.LabelText := 'Радиация';
-        CreateBackground;
+        CreateBackground(vWidth);
         CreateIcon(ImageList.Source[9].MultiResBitmap[0].Bitmap);
-        AMarker.Marker.Visible := False;
       end;
     mtAnomaly:
       begin
-        AMarker.Marker.Width := FOriginalMapWidth / FMapRealWidth * FAnomalyList[AMarker.Index].Radius * 2 * FCurrentScale;
-        AMarker.Marker.Tag := Round(AMarker.Marker.Width / FCurrentScale);
-        AMarker.Marker.Height := AMarker.Marker.Width;
-        AMarker.Marker.Visible := False;
-        CreateBackground;
+        vWidth := FOriginalMapWidth / FMapRealWidth * FAnomalyList[AMarker.Index].Radius * 2 * FCurrentScale;
+        AMarker.Marker.Tag := Round(vWidth / FCurrentScale);
+        CreateBackground(vWidth);
 
         case FAnomalyList[AMarker.Index].AnomalyType of
           atElectro:
@@ -1578,6 +1593,7 @@ begin
               AMarker.LabelText := 'ПСИ-излучение';
             end;
         end;
+
       end;
   end;
 
@@ -1597,14 +1613,24 @@ TTask.Run(
 procedure
 var
   I: integer;
+
+  function GetBackground: TCircle;
+  var
+    K: integer;
+  begin
+    for K := 0 to FMarkerList[I].Marker.ChildrenCount - 1 do
+      if FMarkerList[I].Marker.Children[K] is TCircle then
+        Result := (FMarkerList[I].Marker.Children[K] as TCircle)
+  end;
+
 begin
    for I := 0 to FMarkerList.Count - 1 do
    begin
 
      if (FMarkerList[I].MarkerType in [mtAnomaly, mtRadiation, mtBase, mtSafe]) then
      begin
-       FMarkerList[I].Marker.Width := FMarkerList[I].Marker.Tag * FCurrentScale;
-       FMarkerList[I].Marker.Height := FMarkerList[I].Marker.Width;
+       GetBackground.Width := FMarkerList[I].Marker.Tag * FCurrentScale;
+       GetBackground.Height := GetBackground.Width;
      end;
 
      SetMarker(FMarkerList[I].Marker, FMarkerList[I].Coords.Latitude, FMarkerList[I].Coords.Longitude);
@@ -1659,6 +1685,44 @@ begin
       MapLayout.Height := FOriginalMapHeight * FCurrentScale;
 
       UpdateZoomControls;
+    end;
+  end;
+end;
+
+procedure TFrameMap.TimerArmorPSIReloadTimer(Sender: TObject);
+var
+  TimeParts: TArray<string>;
+  Minutes, Seconds: Integer;
+  TotalSeconds: Integer;
+begin
+  if labReloadTimerArmorPSI.Text = '00:00' then
+  begin
+    TimerArmorPSIReload.Enabled := false;
+    layArmorPSIReload.Visible := false;
+    ReloadPercs;
+  end
+  else
+  begin
+    // Разбиваем текущее время из Label на часы, минуты, секунды
+    TimeParts := labReloadTimerArmorPSI.Text.Split([':']);
+
+    if Length(TimeParts) = 2 then
+    begin
+      Minutes := StrToIntDef(TimeParts[0], 0);
+      Seconds := StrToIntDef(TimeParts[1], 0);
+
+      // Переводим всё в секунды и уменьшаем на 1
+      TotalSeconds :=  Minutes * 60 + Seconds - 1;
+
+      // Проверяем, не истекло ли время
+      if TotalSeconds >= 0 then
+      begin
+        // Преобразуем обратно в минуты, секунды
+        Minutes := (TotalSeconds mod 3600) div 60;
+        Seconds := TotalSeconds mod 60;
+
+        labReloadTimerArmorPSI.Text := Format('%.2d:%.2d', [ Minutes, Seconds]);
+      end;
     end;
   end;
 end;

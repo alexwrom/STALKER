@@ -24,7 +24,7 @@ uses
   FMX.Platform.Android,
 {$ENDIF}
   uScanerWiFi, FMX.Ani, FMX.Effects, IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer, IdTCPConnection, IdTCPClient, FMX.Edit, FMX.Media,
-  uFrameLogin, Classes.answer, OAuth2, Classes.Data, uGenericBaseData, Classes.userdata, uFrameSettings, classes.tehnicdata;
+  uFrameLogin, Classes.answer, OAuth2, Classes.Data, uGenericBaseData, Classes.userdata, uFrameSettings, classes.tehnicdata, System.DateUtils;
 
 type
 
@@ -142,8 +142,7 @@ type
     procedure LoadPlaces;
     procedure LoadBag;
     procedure LoadCritical;
-
-    procedure SynhronizeServer;
+    procedure CheckExistsArmorPSI;
 
   public
     { Public declarations }
@@ -178,24 +177,27 @@ begin
 end;
 
 procedure TMainForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-var
-  vBitmapFog: TBitmap;
 begin
-  TThread.Synchronize(nil, procedure
-  begin
-    FFrameMap.ScrollBox.ViewportPosition := TPointF.Create(FFrameMap.MapLayout.Width, FFrameMap.MapLayout.Height);
 
-    if FileExists(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'fog.png')) then
-      DeleteFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'fog.png'));
+   TThread.Synchronize(nil, procedure
+     var
+       vBitmapFog: TBitmap;
+     begin
+       FFrameMap.ScrollBox.ViewportPosition := TPointF.Create(FFrameMap.MapLayout.Width, FFrameMap.MapLayout.Height);
 
-      vBitmapFog:= TBitmap.Create;
-      try
-        vBitmapFog.Assign(FSurfaceFog);
-        vBitmapFog.SaveToFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'fog.png')) ;
-      finally
-        vBitmapFog.Free;
-      end;
-  end);
+       if FileExists(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'fog.png')) then
+         DeleteFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'fog.png'));
+
+         vBitmapFog:= TBitmap.Create;
+         try
+           vBitmapFog.Assign(FSurfaceFog);
+           vBitmapFog.SaveToFile(System.IOUtils.TPath.Combine(TPath.GetDocumentsPath, 'fog.png')) ;
+         finally
+           vBitmapFog.Free;
+         end;
+     end);
+
+     Sleep(1000);
 end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
@@ -216,9 +218,13 @@ end;
 procedure TMainForm.FormDeactivate(Sender: TObject);
 var
   vQuery: TFDQuery;
+  vDistance : integer;
 begin
   if FKillType = ktLive then
-    ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [9, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
+  begin
+    if not FFrameMap.ScanBaseSafeDead then
+      ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [9, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
+  end;
 end;
 
 procedure TMainForm.LoadBag;
@@ -416,17 +422,6 @@ begin
   end;
 end;
 
-procedure TMainForm.SynhronizeServer;
-var
-  AAnswer: TAnswer;
-begin
-  try
-    AAnswer := TJSON.JsonToObject<TAnswer>(GetDataServer('api/upload_user_data'));
-  finally
-    FreeAndNil(AAnswer);
-  end;
-end;
-
 procedure TMainForm.CreateFrameLogin;
 begin
   if not Assigned(FFrameLogin) then
@@ -502,7 +497,7 @@ begin
   FFrameQRScanner := TFrameQRScanner.Create(TabQRScanner);
   FFrameQRScanner.Parent := TabQRScanner;
 
-  
+  CheckExistsArmorPSI;
 
   {$IFDEF ANDROID}
   PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.CHANGE_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.NEARBY_WIFI_DEVICES', 'android.permission.CHANGE_WIFI_MULTICAST_STATE'],
@@ -857,10 +852,10 @@ end;
 procedure TMainForm.TimerTehnicReloadTimer(Sender: TObject);
 var
   TimeParts: TArray<string>;
-  Hours, Minutes, Seconds: Integer;
+  Minutes, Seconds: Integer;
   TotalSeconds: Integer;
 begin
-  if labReloadTimerTehnic.Text = '00:00:00' then
+  if labReloadTimerTehnic.Text = '00:00' then
   begin
     MediaPlayerWorking.CurrentTime := 0;
     MediaPlayerWorking.Stop;
@@ -868,7 +863,10 @@ begin
     layTehnicReload.Visible := false;
     SetMediaVolume(FVolume);
 
-    FFramePercs.ShowQRTehnic;
+    if FFramePercs.FIsMyRestore then
+      FFramePercs.FinishMyRestore
+    else
+      FFramePercs.ShowQRTehnic;
   end
   else
   begin
@@ -886,24 +884,23 @@ begin
     // Разбиваем текущее время из Label на часы, минуты, секунды
     TimeParts := labReloadTimerTehnic.Text.Split([':']);
 
-    if Length(TimeParts) = 3 then
+    if Length(TimeParts) = 2 then
     begin
-      Hours := StrToIntDef(TimeParts[0], 0);
-      Minutes := StrToIntDef(TimeParts[1], 0);
-      Seconds := StrToIntDef(TimeParts[2], 0);
+      Minutes := StrToIntDef(TimeParts[0], 0);
+      Seconds := StrToIntDef(TimeParts[1], 0);
 
       // Переводим всё в секунды и уменьшаем на 1
-      TotalSeconds := Hours * 3600 + Minutes * 60 + Seconds - 1;
+      TotalSeconds := Minutes * 60 + Seconds - 1;
 
       // Проверяем, не истекло ли время
       if TotalSeconds >= 0 then
       begin
         // Преобразуем обратно в часы, минуты, секунды
-        Hours := TotalSeconds div 3600;
+
         Minutes := (TotalSeconds mod 3600) div 60;
         Seconds := TotalSeconds mod 60;
 
-        labReloadTimerTehnic.Text := Format('%.2d:%.2d:%.2d', [Hours, Minutes, Seconds]);
+        labReloadTimerTehnic.Text := Format('%.2d:%.2d', [Minutes, Seconds]);
       end;
     end;
   end;
@@ -958,10 +955,10 @@ end;
 procedure TMainForm.TimerZombiTimer(Sender: TObject);
 var
   TimeParts: TArray<string>;
-  Hours, Minutes, Seconds: Integer;
+  Minutes, Seconds: Integer;
   TotalSeconds: Integer;
 begin
-  if labZombTimer.Text = '00:00:00' then
+  if labZombTimer.Text = '00:00' then
   begin
     MediaPlayerZombi.CurrentTime := 0;
     MediaPlayerZombi.Stop;
@@ -980,27 +977,58 @@ begin
     // Разбиваем текущее время из Label на часы, минуты, секунды
     TimeParts := labZombTimer.Text.Split([':']);
 
-    if Length(TimeParts) = 3 then
+    if Length(TimeParts) = 2 then
     begin
-      Hours := StrToIntDef(TimeParts[0], 0);
-      Minutes := StrToIntDef(TimeParts[1], 0);
-      Seconds := StrToIntDef(TimeParts[2], 0);
+      Minutes := StrToIntDef(TimeParts[0], 0);
+      Seconds := StrToIntDef(TimeParts[1], 0);
 
       // Переводим всё в секунды и уменьшаем на 1
-      TotalSeconds := Hours * 3600 + Minutes * 60 + Seconds - 1;
+      TotalSeconds := Minutes * 60 + Seconds - 1;
 
       // Проверяем, не истекло ли время
       if TotalSeconds >= 0 then
       begin
         // Преобразуем обратно в часы, минуты, секунды
-        Hours := TotalSeconds div 3600;
         Minutes := (TotalSeconds mod 3600) div 60;
         Seconds := TotalSeconds mod 60;
 
-        labZombTimer.Text := Format('%.2d:%.2d:%.2d', [Hours, Minutes, Seconds]);
+        labZombTimer.Text := Format('%.2d:%.2d', [Minutes, Seconds]);
       end;
     end;
   end;
+end;
+
+procedure TMainForm.CheckExistsArmorPSI;
+var
+  AFormatSettings: TFormatSettings;
+  vQuery: TFDQuery;
+  vLastActionDateTime: TDateTime;
+  vActionTypeID : integer;
+  Minutes: integer;
+  Seconds: integer;
+begin
+  AFormatSettings.DateSeparator := '.';
+  AFormatSettings.TimeSeparator := ':';
+  AFormatSettings.ShortDateFormat := 'DD.MM.YYYY';
+  AFormatSettings.LongTimeFormat := 'hh:nn:ss';
+
+  ExeExec('select * from life_log where action_date_time = (select max(action_date_time) from life_log where action_type_id = 12);', exActive, vQuery);
+   try
+     if vQuery.RecordCount > 0 then
+     begin
+       vLastActionDateTime := StrToDateTime(vQuery.FieldByName('action_date_time').AsString, AFormatSettings);
+
+       if (SecondsBetween(NOW(), vLastActionDateTime) < 3600) then
+         begin
+           Minutes := (3600 - SecondsBetween(NOW(), vLastActionDateTime) mod 3600) div 60;
+           Seconds := 3600 - SecondsBetween(NOW(), vLastActionDateTime) mod 60;
+           StartArmorPSI(Format('%.2d:%.2d', [Minutes, Seconds]));
+         end;
+     end;
+   finally
+     FreeQueryAndConn(vQuery);
+   end;
+
 end;
 
 end.

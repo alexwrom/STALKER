@@ -230,6 +230,7 @@ procedure OpenMap;
 procedure OpenPercs;
 procedure OpenScanQR;
 procedure StartWork;
+procedure StartArmorPSI(ATimerText: string);
 
 var
   Person: TPerson;
@@ -433,7 +434,6 @@ var
   AFormatSettings: TFormatSettings;
   vIntKillType: integer;
   vLastActionDateTime: TDateTime;
-  Hours: integer;
   Minutes: integer;
   Seconds: integer;
   TotalSeconds: Int64;
@@ -573,15 +573,14 @@ begin
                     TotalSeconds := 1 * 60 * 60 - SecondsBetween(NOW(), vLastActionDateTime);
 
                     // Создаем TTimeSpan
-                    TimeSpan := TTimeSpan.FromSeconds(TotalSeconds);
+                    TimeSpan := TTimeSpan.FromSeconds(TotalSeconds - 1);
 
                     // Получаем компоненты времени
-                    Hours := TimeSpan.Hours;
                     Minutes := TimeSpan.Minutes;
                     Seconds := TimeSpan.Seconds;
 
                     if (Seconds >= 0) then
-                      MainForm.labZombTimer.Text := Format('%.2d:%.2d:%.2d', [Hours, Minutes, Seconds]);
+                      MainForm.labZombTimer.Text := Format('%.2d:%.2d', [Minutes, Seconds]);
 
                     MainForm.layZombTimer.Visible := true;
                     MainForm.TimerZombi.Enabled := true;
@@ -602,15 +601,14 @@ begin
                         TotalSeconds := 30 * 60;
 
                       // Создаем TTimeSpan
-                      TimeSpan := TTimeSpan.FromSeconds(TotalSeconds);
+                      TimeSpan := TTimeSpan.FromSeconds(TotalSeconds - 1);
 
                       // Получаем компоненты времени
-                      Hours := TimeSpan.Hours;
                       Minutes := TimeSpan.Minutes;
                       Seconds := TimeSpan.Seconds;
 
                       if (Seconds >= 0) then
-                        MainForm.labZombTimer.Text := Format('%.2d:%.2d:%.2d', [Hours, Minutes, Seconds]);
+                        MainForm.labZombTimer.Text := Format('%.2d:%.2d', [Minutes, Seconds]);
 
                       MainForm.layZombTimer.Visible := true;
                       MainForm.TimerZombi.Enabled := true;
@@ -636,14 +634,14 @@ begin
             ktCritical:
               begin
                 MainForm.layZombTimer.Visible := true;
-                MainForm.labZombTimer.Text := '01:00:00';
+                MainForm.labZombTimer.Text := '59:59';
                 MainForm.TimerZombi.Enabled := true;
                 vIntKillType := 2;
               end;
             ktPSI:
               begin
                 MainForm.layZombTimer.Visible := true;
-                MainForm.labZombTimer.Text := '00:30:00';
+                MainForm.labZombTimer.Text := '30:00';
                 MainForm.TimerZombi.Enabled := true;
                 vIntKillType := 5;
               end;
@@ -988,9 +986,16 @@ end;
 
 procedure StartWork;
 begin
-  MainForm.labReloadTimerTehnic.Text := '00:05:00';
+  MainForm.labReloadTimerTehnic.Text := '05:00';
   MainForm.layTehnicReload.Visible := true;
   MainForm.TimerTehnicReload.Enabled := true;
+end;
+
+procedure StartArmorPSI(ATimerText: string);
+begin
+  MainForm.FFrameMap.labReloadTimerArmorPSI.Text := ATimerText;
+  MainForm.FFrameMap.layArmorPSIReload.Visible := true;
+  MainForm.FFrameMap.TimerArmorPSIReload.Enabled := true;
 end;
 
 end.

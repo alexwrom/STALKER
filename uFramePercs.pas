@@ -282,10 +282,12 @@ type
     procedure ReloadArmor;
     function GetTimeDec(ASeconds: integer): string;
     function IsClosedApp: boolean;
-
+   
 
   public
+    FIsMyRestore : boolean;
     FActiveAction: TAction;
+    procedure FinishMyRestore;
     procedure ShowQRTehnic;
     procedure StartTimerTehnicPercReload(ALastActionDateTime: TDateTime);
     procedure StartTimerMedicPercReload(ALastActionDateTime: TDateTime);
@@ -577,21 +579,19 @@ function TFramePercs.GetTimeDec(ASeconds: integer): string;
 var
   TotalSeconds: Int64;
   TimeSpan: TTimeSpan;
-  Hours: integer;
   Minutes: integer;
   Seconds: integer;
 begin
    TotalSeconds := ASeconds;
 
    // Создаем TTimeSpan
-   TimeSpan := TTimeSpan.FromSeconds(TotalSeconds);
+   TimeSpan := TTimeSpan.FromSeconds(TotalSeconds - 1);
 
    // Получаем компоненты времени
-   Hours := TimeSpan.Hours;
    Minutes := TimeSpan.Minutes;
    Seconds := TimeSpan.Seconds;
 
-   Result := Format('%.2d:%.2d:%.2d', [Hours, Minutes, Seconds]);
+   Result := Format('%.2d:%.2d', [Minutes, Seconds]);
 end;
 
 procedure TFramePercs.btnOpenPercsClick(Sender: TObject);
@@ -622,7 +622,7 @@ begin
 
         if  SecondsBetween(NOW(), vLastActionDateTime) > 30 * 60 then
           begin
-            labReloadTimerMedic.Text := '00:00:00';
+            labReloadTimerMedic.Text := '00:00';
             layMedicReload.Visible := false;
             TimerPercReload.Enabled := false;
           end
@@ -653,7 +653,7 @@ begin
 
         if  SecondsBetween(NOW(), vLastActionDateTime) > 60 * 60 then
           begin
-            labReloadTimerTehnic.Text := '00:00:00';
+            labReloadTimerTehnic.Text := '00:00';
             layTehnicReload.Visible := false;
             TimerPercReload.Enabled := TimerPercReload.Enabled;
           end
@@ -684,20 +684,12 @@ var
   vQuery: TFDQuery;
 begin
   BtnClickMedia;
+  FIsMyRestore := true;
 
-  if layInfo.Tag = 0 then     // Броня
+   if layInfo.Tag = 0 then     // Броня
   begin
    if (Person.LevelTehnic = 3) and (not layTehnicReload.Visible) then
-     begin
-       ExeExec('update users set armor_health = 100;', exExecute, vQuery);
-       Person.ArmorHealth := 100;
-
-       ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [11, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]),
-              exExecute, vQuery);
-
-        StartTimerTehnicPercReload(NOW());
-        ShowMessage('Ремонт выполнен успешно');
-     end
+       StartWork
    else
      begin
        Person.IsRestoreWeapon := false;
@@ -707,15 +699,7 @@ begin
   else                    // Оружие
   begin
     if (Person.WeaponLevel <= Person.LevelTehnic)  and (not layTehnicReload.Visible) then
-     begin
-       Person.WeaponHealth := 100;
-       ExeExec('update users set weapon_health = 100;', exExecute, vQuery);
-       ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [11, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]),
-              exExecute, vQuery);
-
-       StartTimerTehnicPercReload(NOW());
-       ShowMessage('Ремонт выполнен успешно');
-     end
+      StartWork
     else
      begin
        Person.IsRestoreWeapon := true;
@@ -723,8 +707,28 @@ begin
      end;
   end;
 
-  ReloadPercs;
   layInfo.Visible := false;
+end;
+
+procedure TFramePercs.FinishMyRestore;
+var
+  vQuery: TFDQuery;
+begin
+  if layInfo.Tag = 0 then     // Броня
+    begin
+      ExeExec('update users set armor_health = 100;', exExecute, vQuery);
+      Person.ArmorHealth := 100;
+    end
+  else                    // Оружие
+    begin
+      Person.WeaponHealth := 100;
+      ExeExec('update users set weapon_health = 100;', exExecute, vQuery);
+    end;
+
+  ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [11, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
+  StartTimerTehnicPercReload(NOW());
+  ShowMessage('Ремонт завершен');
+  ReloadPercs;
 end;
 
 procedure TFramePercs.ShowQRTehnic;
@@ -770,6 +774,7 @@ var
   vTehnic: TTehnicData;
 begin
   BtnClickMedia;
+  FIsMyRestore := false;
   layRestoreCost.Tag := (Sender as TCornerButton).Tag;  // Если на кнопке TAG = 0 значит кнопка бесплатно
   StartWork;
 end;
@@ -858,11 +863,6 @@ var
   AFormatSettings: TFormatSettings;
   vQuery: TFDQuery;
   vLastActionDateTime: TDateTime;
-  Hours: integer;
-  Minutes: integer;
-  Seconds: integer;
-  TotalSeconds: Int64;
-  TimeSpan: TTimeSpan;
   vActionTypeID : integer;
 begin
   Result := false;
@@ -1012,7 +1012,7 @@ end;
 procedure TFramePercs.TimerPercReloadTimer(Sender: TObject);
 var
   TimeParts: TArray<string>;
-  Hours, Minutes, Seconds: Integer;
+  Minutes, Seconds: Integer;
   TotalSeconds: Integer;
 
   function GetTimeDec(ATimeStr: string): string;
@@ -1020,35 +1020,33 @@ var
     // Разбиваем текущее время из Label на часы, минуты, секунды
     TimeParts := ATimeStr.Split([':']);
 
-    if Length(TimeParts) = 3 then
+    if Length(TimeParts) = 2 then
     begin
-      Hours := StrToIntDef(TimeParts[0], 0);
-      Minutes := StrToIntDef(TimeParts[1], 0);
-      Seconds := StrToIntDef(TimeParts[2], 0);
+      Minutes := StrToIntDef(TimeParts[0], 0);
+      Seconds := StrToIntDef(TimeParts[1], 0);
 
       // Переводим всё в секунды и уменьшаем на 1
-      TotalSeconds := Hours * 3600 + Minutes * 60 + Seconds - 1;
+      TotalSeconds := Minutes * 60 + Seconds - 1;
 
       // Проверяем, не истекло ли время
       if TotalSeconds >= 0 then
       begin
         // Преобразуем обратно в часы, минуты, секунды
-        Hours := TotalSeconds div 3600;
         Minutes := (TotalSeconds mod 3600) div 60;
         Seconds := TotalSeconds mod 60;
 
-        Result := Format('%.2d:%.2d:%.2d', [Hours, Minutes, Seconds]);
+        Result := Format('%.2d:%.2d', [Minutes, Seconds]);
       end;
     end;
   end;
 begin
 
-  if labReloadTimerMedic.Text = '00:00:00' then
+  if labReloadTimerMedic.Text = '00:00' then
     layMedicReload.Visible := false
   else
     labReloadTimerMedic.Text := GetTimeDec(labReloadTimerMedic.Text);
 
-  if labReloadTimerTehnic.Text = '00:00:00' then
+  if labReloadTimerTehnic.Text = '00:00' then
     layTehnicReload.Visible := false
   else
     labReloadTimerTehnic.Text := GetTimeDec(labReloadTimerTehnic.Text);

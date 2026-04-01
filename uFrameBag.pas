@@ -613,7 +613,15 @@ begin
   case FBagList[vIndex].BagType of
     btMedical:
       begin
-        Person.Health := Person.Health + FBagList[vIndex].HealthRestore;
+        // ПСИ защита
+        if FBagList[vIndex].RowID = 4 then
+          begin
+            ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [12, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
+            StartArmorPSI('59:59');
+          end
+        else
+          Person.Health := Person.Health + FBagList[vIndex].HealthRestore;
+
         ExeExec('delete from bag where rowid = (select rowid from bag where table_name = ''medical'' and row_id = ' + FBagList[vIndex].RowID.ToString + ' limit 1);', exExecute, vQuery);
       end;
   end;
