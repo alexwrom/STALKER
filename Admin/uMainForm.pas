@@ -14,7 +14,6 @@ uses
 
 type
   TMainForm = class(TForm)
-    IdTCPServer: TIdTCPServer;
     ProgressBar: TProgressBar;
     labStatusLoadData: TLabel;
     OpenDialog: TOpenDialog;
@@ -159,7 +158,6 @@ type
     btnCreateCardsMedical: TCornerButton;
     Layout14: TLayout;
     btnCreateCardsWeapons: TCornerButton;
-    procedure IdTCPServerExecute(AContext: TIdContext);
     procedure FormShow(Sender: TObject);
     procedure btnSaveWeaponClick(Sender: TObject);
     procedure btnLoadIconWeaponClick(Sender: TObject);
@@ -350,7 +348,7 @@ end;
 
 procedure TMainForm.btnCreateQRClick(Sender: TObject);
 begin
-  CreateCards(imgIconArt.Bitmap, eNameArt.Text, '01', FSelID);
+  CreateCards(imgIconArt.Bitmap, eNameArt.Text, '02', FSelID);
 end;
 
 procedure TMainForm.OnDeleteClick(Sender: TObject);
@@ -495,7 +493,7 @@ end;
 
 procedure TMainForm.CornerButton2Click(Sender: TObject);
 begin
-  CreateCards(imgIconArmor.Bitmap, eNameArmor.Text, '02', FSelID);
+  CreateCards(imgIconArmor.Bitmap, eNameArmor.Text, '01', FSelID);
 end;
 
 procedure TMainForm.CornerButton3Click(Sender: TObject);
@@ -916,91 +914,6 @@ begin
   vCost := vCost + sbPhisic.Value / 100 * 30000;
   vCost := vCost + sbRadiation.Value / 100 * 30000;
   eCostArmor.Text := Round(vCost).ToString;
-end;
-
-procedure TMainForm.IdTCPServerExecute(AContext: TIdContext);
-begin
-  TTask.Run(
-    procedure
-    var
-      vContext: string;
-      vPerson: TPerson;
-      vAnswer: TAction;
-      FDQuery: TFDQuery;
-      vStrData: UnicodeString;
-      vAction: TAction;
-      vStringData: TList<UnicodeString>;
-      vStr, vString: UnicodeString;
-      I: Integer;
-    begin
-      vContext := AContext.Connection.Socket.ReadLn(IndyUTF8Encoding(true));
-      try
-        if vContext = 'PDA ADMIN' then
-        begin
-          vAnswer := TAction.Create;
-          vAnswer.SendType := stUpdateData;
-          vAnswer.PageCount := FPageCountAdmin;
-          vStrData := FStrDataForAdmin;
-        end
-        else if Copy(vContext, 1, 7) = 'INSERT:' then
-        begin
-          try
-            ExeExec('delete from arts_to_map; delete from anomalies; delete from places;', exExecute, FDQuery);
-
-            vAction := TJson.JsonToObject<TAction>(Copy(vContext, 8));
-
-            vStringData := TList<UnicodeString>.Create;
-
-            if vAction.PageCount > 0 then
-            begin
-
-              for I := 1 to vAction.PageCount do
-              begin
-                vStr := AContext.Connection.Socket.ReadLn(#13#10, IndyUTF8Encoding(true));
-                vStringData.Add(vStr);
-              end;
-            end;
-
-            case vAction.SendType of
-              stUpdateData:
-                begin
-                  For I := 0 to vStringData.Count - 1 do
-                    vString := vString + vStringData[I];
-
-                  ExeExec(vString, exExecute, FDQuery);
-                end;
-            end;
-
-            vAnswer := TAction.Create;
-            vAnswer.SendType := stUpdateData;
-            vAnswer.PageCount := 0;
-            vStrData := '';
-          except
-            vAnswer := TAction.Create;
-            vAnswer.SendType := stCancel;
-            vAnswer.PageCount := 0;
-            vStrData := '';
-          end;
-
-        end
-        else
-        begin
-          vPerson := TPerson.Create;
-          vPerson := TJson.JsonToObject<TPerson>(vContext);
-          try
-
-          finally
-            vPerson.Free;
-          end;
-        end;
-
-        AContext.Connection.Socket.WriteLn(TJson.ObjectToJsonString(vAnswer) + #13#10 + vStrData, IndyUTF8Encoding(true));
-
-      finally
-        AContext.Connection.Disconnect;
-      end;
-    end)
-
 end;
 
 end.
