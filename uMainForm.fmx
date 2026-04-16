@@ -11,7 +11,6 @@ object MainForm: TMainForm
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop, iPhone, iPad]
-  OnActivate = FormActivate
   OnCreate = FormCreate
   OnCloseQuery = FormCloseQuery
   OnDeactivate = FormDeactivate
@@ -6196,7 +6195,7 @@ object MainForm: TMainForm
     Size.Width = 814.000000000000000000
     Size.Height = 533.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 64
+    TabOrder = 69
     object layMenu: TLayout
       Align = Right
       Position.X = 766.000000000000000000
@@ -11674,9 +11673,9 @@ object MainForm: TMainForm
     object layPersonHealth: TLayout
       Anchors = [akLeft, akBottom]
       Position.X = -2.000000000000000000
-      Position.Y = 324.000000000000000000
+      Position.Y = 330.000000000000000000
       Size.Width = 22.000000000000000000
-      Size.Height = 209.000000000000000000
+      Size.Height = 204.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 6
       object recBack: TRectangle
@@ -11685,22 +11684,22 @@ object MainForm: TMainForm
         Margins.Left = 2.000000000000000000
         Margins.Right = 2.000000000000000000
         Size.Width = 18.000000000000000000
-        Size.Height = 56.000000000000000000
+        Size.Height = 43.000000000000000000
         Size.PlatformDefault = False
         Stroke.Kind = None
       end
       object HealthProgress: TRectangle
-        Tag = 203
+        Tag = 200
         Align = Bottom
         Corners = [TopRight, BottomRight]
         Fill.Color = xFF067501
         Margins.Left = 2.000000000000000000
         Margins.Right = 2.000000000000000000
-        Margins.Bottom = 3.000000000000000000
+        Margins.Bottom = 1.000000000000000000
         Position.X = 2.000000000000000000
-        Position.Y = 56.000000000000000000
+        Position.Y = 43.000000000000000000
         Size.Width = 18.000000000000000000
-        Size.Height = 150.000000000000000000
+        Size.Height = 160.000000000000000000
         Size.PlatformDefault = False
         Stroke.Kind = None
       end
@@ -11724,7 +11723,7 @@ object MainForm: TMainForm
           end>
         Align = Contents
         Size.Width = 22.000000000000000000
-        Size.Height = 209.000000000000000000
+        Size.Height = 204.000000000000000000
         Size.PlatformDefault = False
       end
     end
@@ -11736,7 +11735,7 @@ object MainForm: TMainForm
     Size.Height = 521.000000000000000000
     Size.PlatformDefault = False
     Visible = False
-    TabOrder = 13
+    TabOrder = 18
     object Rectangle8: TRectangle
       Align = Contents
       Fill.Color = xFF111611
@@ -18950,7 +18949,7 @@ object MainForm: TMainForm
     Size.Height = 521.000000000000000000
     Size.PlatformDefault = False
     Visible = False
-    TabOrder = 17
+    TabOrder = 22
     object Image4: TImage
       MultiResBitmap.Height = 500
       MultiResBitmap = <

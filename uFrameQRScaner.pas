@@ -37,6 +37,7 @@ type
     btnChangeCamera: TSpeedButton;
     procedure btnYesClick(Sender: TObject);
     procedure btnChangeCameraClick(Sender: TObject);
+    procedure imgCameraTap(Sender: TObject; const Point: TPointF);
   private
     fScanInProgress: Boolean;
     fFrameTake: Integer;
@@ -152,6 +153,12 @@ begin
   inherited Destroy;
 end;
 
+procedure TFrameQRScanner.imgCameraTap(Sender: TObject; const Point: TPointF);
+begin
+  if Camera.Kind = TCameraKind.BackCamera then
+    Camera.FocusMode := TFocusMode.ContinuousAutoFocus;
+end;
+
 procedure TFrameQRScanner.ParseImage();
 begin
   TThread.CreateAnonymousThread(
@@ -199,6 +206,10 @@ begin
                 if (vSend.Code <> '') and (not Person.IsDead) then
                 begin
                   case Length(vSend.Code) of
+                    1: // Туман войны: 0 - выкл, 1 - вкл      {"code":"1"}
+                      begin
+                        ShowFog(vSend.Code = '1');
+                      end;
                     2: // Детектор      {"code":"01"}
                       begin
                         SetDetector(vSend.Code.ToInteger());
@@ -248,13 +259,27 @@ begin
                         {if vTableName = 'arts' then                     // Сделать удаление арта с карты при его нахождении
                           ExeExec(Format('update art_to_map set active = false where art_id = %d;', [vRowID]), exExecute, FDQuery);  }
                       end;
+                    6: // Лечение      {"code":"000001"}
+                      begin
+                          Person.Health := Person.Health + vSend.Code.ToInteger;
+                      end;
                     7: // Деньги      {"code":"0050000"}
                       begin
-                        Person.Cash := Person.Cash + vSend.Code.ToInteger;
+                        if Person.Cash + vSend.Code.ToInteger < 0 then
+                          Person.Cash := 0
+                        else
+                          Person.Cash := Person.Cash + vSend.Code.ToInteger;
+
                         ExeExec(Format('update users set cash = %d;', [Round(Person.Cash)]), exExecute, FDQuery);
                       end;
                   end;
                 end
+                else
+                  // Воскрешение      {"code":"000000"}
+                  if (Length(vSend.Code) = 6) and (vSend.Code.ToInteger() = 0) then
+                   begin
+                     Person.Health := 20;
+                   end
                 else
                 if Assigned(vSend.Marker) and (not Person.IsDead) then
                   begin

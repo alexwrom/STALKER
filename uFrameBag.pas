@@ -227,6 +227,9 @@ type
     btnSellForMoney: TCornerButton;
     Label5: TLabel;
     labSumma: TLabel;
+    layGetOut: TLayout;
+    Image3: TImage;
+    btnGetOut: TCornerButton;
     procedure SwitchStyleSwitch(Sender: TObject);
     procedure btnCloseInfoClick(Sender: TObject);
     procedure btnAddArmorClick(Sender: TObject);
@@ -238,6 +241,7 @@ type
     procedure btnCloseQRClick(Sender: TObject);
     procedure btnSellFreeClick(Sender: TObject);
     procedure btnCloseSellCostClick(Sender: TObject);
+    procedure btnGetOutClick(Sender: TObject);
   private
     FArtsList: TList<TPerc>;
 
@@ -397,6 +401,7 @@ end;
 
 procedure TFrameBag.bntSellsClick(Sender: TObject);
 begin
+  StartScanWiFi;
   BtnClickMedia;
   labSumma.Text := FBagList[layInfo.Tag].Cost.ToString;
   laySellCost.Visible := true;
@@ -643,6 +648,24 @@ begin
   laySellCost.Visible := false;
 end;
 
+procedure TFrameBag.btnGetOutClick(Sender: TObject);
+var
+  vQuery: TFDQuery;
+  vIndex: integer;
+begin
+   MessageDlg('Выбросить хабар?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
+    procedure(const AResult: TModalResult)
+    begin
+      if (AResult = mrYes) then
+      begin
+        vIndex := layInfo.Tag;
+        ExeExec(Format('delete from bag where rowid = (select rowid from bag where row_id = %d and table_name = %s and health = %s limit 1);',[FBagList[vIndex].RowID, QuotedStr(FBagList[vIndex].TableName), FBagList[vIndex].Health.ToString]), exExecute, vQuery);
+        ReloadPercs;
+        ReloadBag;
+      end;
+    end);
+end;
+
 procedure TFrameBag.btnSellFreeClick(Sender: TObject);
 var
   vSend: TSend;
@@ -868,7 +891,7 @@ begin
         layUse.Visible := true;
         layAddArt.Visible := False;
         layAddArmor.Visible := False;
-        layPanel.Height := layUse.Height + laySells.Height + imgBottom.Height + imgTop.Height;
+        layPanel.Height := layUse.Height + laySells.Height + imgBottom.Height + imgTop.Height + layGetOut.Height;
         layInfo.Visible := true;
       end;
 
@@ -992,7 +1015,7 @@ begin
         layAddArmor.Visible := true;
         layAddArt.Visible := False;
         layUse.Visible := False;
-        layPanel.Height := layAddArmor.Height + laySells.Height + imgBottom.Height + imgTop.Height;
+        layPanel.Height := layAddArmor.Height + laySells.Height + imgBottom.Height + imgTop.Height + layGetOut.Height;
         layInfo.Visible := true;
       end;
   end;

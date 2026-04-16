@@ -231,6 +231,9 @@ procedure OpenPercs;
 procedure OpenScanQR;
 procedure StartWork;
 procedure StartArmorPSI(ATimerText: string);
+procedure ShowFog(AShow: boolean);
+procedure StartScanWiFi;
+procedure StopScanWiFi;
 
 var
   Person: TPerson;
@@ -444,15 +447,30 @@ begin
   AFormatSettings.ShortDateFormat := 'DD.MM.YYYY';
   AFormatSettings.LongTimeFormat := 'hh:nn:ss';
 
+  ExeExec('select * from last_action_life;', exActive, vQuery);
+  try
+    if vQuery.RecordCount > 0 then
+    begin
+      vLastActionDateTime := StrToDateTime(vQuery.FieldByName('action_date_time').AsString, AFormatSettings);
+      vActionTypeID := vQuery.FieldByName('action_type_id').AsInteger;
+     end;
+  finally
+    FreeQueryAndConn(vQuery);
+  end;
+
   if NOT MainForm.TimerZombi.Enabled then // Если режим зомби, то нас ничего не лечит
     if (RoundTo(FHealth, -2) <> RoundTo(Value, -2)) then
     begin
-      if  Person.IsDead then
-        if ((Value > 20) and (RoundTo(FHealth, -2) < RoundTo(Value, -2))) then
+      Person.IsDead := vActionTypeID in [1..5, 7];
+
+      if Person.IsDead then
+        if ((Value >= 20) and (RoundTo(FHealth, -2) < RoundTo(Value, -2))) then
         begin
           MainForm.layDeadGlow.Visible := false;
           Person.IsDead := false;
           FKillType := ktLive;
+
+          ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [6, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
         end
         else
         begin
@@ -465,9 +483,7 @@ begin
       if MainForm.TabControl.ActiveTab <> MainForm.TabPercs then
         MainForm.layPersonHealth.Visible := true;
 
-      if RoundTo(FHealth, -2) = 0 then
-        ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [6, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]),
-          exExecute, vQuery);
+      
 
       if Value < 0 then
       begin
@@ -490,21 +506,12 @@ begin
 {$IF Defined(ANDROID)}
         Vibration(500);
 {$ENDIF}
-        ArmorHealth := ArmorHealth - vDiff * 0.2;
-
-        if ArmorHealth < 0 then
-          ArmorHealth := 0;
-
-        WeaponHealth := WeaponHealth - vDiff * 0.5;
-
-        if WeaponHealth < 0 then
-          WeaponHealth := 0;
-
+        ArmorHealth := Max(0, ArmorHealth - vDiff * 0.2);
+        WeaponHealth := Max(0, WeaponHealth - vDiff * 0.5);
         ExeExec(Format('update users set health = %s;', [StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
-
       end
       else
-        ExeExec('update users set health = ' + StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]) + ';', exExecute, vQuery);
+        ExeExec('update users set health = ' + StringReplace(FHealth.ToString, ',', '.', [rfReplaceAll]) + ';', exExecute, vQuery);  // Если хп увеличивается
 
       SetHealthProgress(MainForm.HealthProgress, FHealth);
 
@@ -554,13 +561,6 @@ begin
 
         if FKillType = ktLive then
         begin
-          ExeExec('select * from last_action_life;', exActive, vQuery);
-          try
-            if vQuery.RecordCount > 0 then
-            begin
-              vLastActionDateTime := StrToDateTime(vQuery.FieldByName('action_date_time').AsString, AFormatSettings);
-              vActionTypeID := vQuery.FieldByName('action_type_id').AsInteger;
-
               case vActionTypeID of
                 1:
                   FKillType := ktWeapon;
@@ -613,11 +613,6 @@ begin
                       MainForm.TimerZombi.Enabled := true;
                   end;
               end;
-
-            end;
-          finally
-            FreeQueryAndConn(vQuery);
-          end;
         end
         else
         begin
@@ -996,6 +991,21 @@ begin
   MainForm.FFrameMap.labReloadTimerArmorPSI.Text := ATimerText;
   MainForm.FFrameMap.layArmorPSIReload.Visible := true;
   MainForm.FFrameMap.TimerArmorPSIReload.Enabled := true;
+end;
+
+procedure ShowFog(AShow: boolean);
+begin
+  MainForm.FFrameMap.imgFog.Visible := AShow;
+end;
+
+procedure StartScanWiFi;
+begin
+  MainForm.timerScannerWifiMerchant.Enabled := true;
+end;
+
+procedure StopScanWiFi;
+begin
+  MainForm.timerScannerWifiMerchant.Enabled := false;
 end;
 
 end.

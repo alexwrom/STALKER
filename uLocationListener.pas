@@ -27,7 +27,6 @@ type
 var
   locationListener: TLocationListener;
   FLocationManager: JLocationManager;
-  FServiceLocation: TLocationCoord2D;
 {$ENDIF}
 
 implementation
@@ -49,7 +48,8 @@ end;
 
 procedure TLocationListener.onLocationChanged(locations: JList);
 begin
-
+  if Assigned(MainForm.FFrameMap) then
+    MainForm.FFrameMap.LocationisChanged(locations);
 end;
 
 procedure TLocationListener.onProviderDisabled(provider: JString);

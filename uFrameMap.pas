@@ -159,7 +159,6 @@ type
     locationListener: TLocationListener;
     FLocationManager: JLocationManager;
 {$ENDIF}
-    FServiceLocation: TLocationCoord2D;
     FLoad: Boolean;
     procedure LoadMap;
     procedure SetLocationMarker(Lat, Lon: Double);
@@ -201,7 +200,8 @@ type
     procedure LoadMarkers;
 {$IFDEF ANDROID}
     procedure LocationServiceChanged;
-    procedure LocationisChanged(Location: JLocation);
+    procedure LocationisChanged(Location: JLocation); overload;
+    procedure LocationisChanged(Locations: JList); overload;
 {$ENDIF}
     // Масштабирование
     procedure ZoomToPoint(APoint: TPointF; AScale: Double);
@@ -605,10 +605,15 @@ begin
 
     if vDistance <= FPlacesList[I].Radius then
     begin
-      Person.Health := Person.Health + 0.11;
+      Person.Health := Person.Health + 0.056;
       Result := true;
     end;
   end;
+
+  if Result then
+    StartScanWiFi
+  else
+    StopScanWiFi;
 end;
 
 procedure TFrameMap.ScanInnerCritical;
@@ -646,6 +651,10 @@ begin
   begin
     MediaPlayerDamage.Stop;
     MediaPlayerDamage.CurrentTime := 0;
+    MediaPlayerStartCritical.Stop;
+    MediaPlayerStartCritical.CurrentTime := 0;
+    MediaPlayerNotificationCritical.Stop;
+    MediaPlayerNotificationCritical.CurrentTime := 0;
   end;
 
   if Person.Health > 0 then
@@ -776,35 +785,30 @@ var
   Criteria: JCriteria;
 begin
   try
-     if not Assigned(FLocationManager) then
-     begin
-       LocationManagerService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.LOCATION_SERVICE);
-       FLocationManager := TJLocationManager.Wrap((LocationManagerService as ILocalObject).GetObjectID);
+    locationListener := TLocationListener.Create();
+    LocationManagerService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.LOCATION_SERVICE);
 
-       if not Assigned(locationListener) then
-         locationListener := TLocationListener.Create();
-     end;
+    if LocationManagerService <> nil then
+      FLocationManager := TJLocationManager.Wrap((LocationManagerService as ILocalObject).GetObjectID);
+    if FLocationManager <> nil then
 
-     if  TOSVersion.Check(12) then
-     begin
-      Criteria := TJCriteria.JavaClass.init;
-      Criteria.setAccuracy(TJCriteria.JavaClass.ACCURACY_FINE);     // Высокая точность
-      Criteria.setPowerRequirement(TJCriteria.JavaClass.POWER_HIGH); // Можно использовать GPS
-      Criteria.setBearingRequired(False);
-      Criteria.setSpeedRequired(False);
-      Criteria.setAltitudeRequired(False);
-      ProviderName := FLocationManager.getBestProvider(Criteria, True);
-     end
-     else
-        ProviderName := TJLocationManager.JavaClass.GPS_PROVIDER;
+    if FLocationManager <> nil then
+      if FlocationManager.isProviderEnabled(TJLocationManager.JavaClass.GPS_PROVIDER) then
+          ProviderName := TJLocationManager.JavaClass.GPS_PROVIDER
+        else
+        begin
+          criteria := TJCriteria.JavaClass.init;
+          criteria.setSpeedAccuracy(TJCriteria.JavaClass.ACCURACY_HIGH);
+          criteria.setAccuracy(TJCriteria.JavaClass.ACCURACY_FINE);
+          criteria.setAltitudeRequired(true);
+          criteria.setBearingRequired(true);
+          criteria.setSpeedRequired(true);
+          ProviderName := FLocationManager.getBestProvider(criteria, true);
+        end;
 
-     try
-       FLocationManager.requestLocationUpdates(ProviderName, 0, 0, locationListener, TJLooper.JavaClass.getMainLooper);
-
-       Location := FLocationManager.getLastKnownLocation(ProviderName);
-       LocationisChanged(Location);
-     finally
-     end;
+     FLocationManager.requestLocationUpdates(ProviderName, 0, 0, locationListener, TJLooper.JavaClass.getMainLooper);
+     Location := FLocationManager.getLastKnownLocation(ProviderName);
+     LocationisChanged(Location);
   finally
   end;
 end;
@@ -813,8 +817,31 @@ procedure TFrameMap.LocationisChanged(Location: JLocation);
 begin
   if Assigned(Location) then
   begin
-    FServiceLocation := TLocationCoord2D.Create(Location.getLatitude, Location.getLongitude);
-    FLocation := TLocationCoord2D.Create(FServiceLocation.Latitude, FServiceLocation.Longitude);
+    FLocation.Latitude := Location.getLatitude;
+    FLocation.Longitude := Location.getLongitude;
+    SetLocation;
+  end;
+end;
+
+procedure TFrameMap.LocationisChanged(Locations: JList);
+var
+  I: Integer;
+  Location: JLocation;
+begin
+  // Проверяем, что список не пустой
+  if (Locations = nil) or (Locations.size = 0) then
+    Exit;
+
+  // Получаем последнее (самое свежее) местоположение из списка
+  Location := TJLocation.Wrap(JObject(Locations.get(Locations.size - 1)));
+
+  if Assigned(Location) then
+  begin
+    // Обновляем основную локацию
+    FLocation.Latitude := Location.getLatitude;
+    FLocation.Longitude := Location.getLongitude;
+
+    // Вызываем метод обновления позиции на карте
     SetLocation;
   end;
 end;
@@ -1185,75 +1212,7 @@ var
     vOldViewportPositionY: Single;
 begin
   BtnClickMedia;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  LocationMarker.Visible := false;
   LayDetailMarker.Visible := false;
   layDetailIssue.Visible := false;
   vOldViewportPositionX := ScrollBox.ViewportPosition.X / FCurrentScale * (FCurrentScale + FZoomStep);
@@ -1268,9 +1227,9 @@ begin
     TThread.Synchronize(nil,
     procedure
     begin
+      ScrollBox.ViewportPosition := TPointF.Create(vOldViewportPositionX, vOldViewportPositionY);
       ResetLocationMarkers;
       MapLayout.Visible := true;
-      ScrollBox.ViewportPosition := TPointF.Create(vOldViewportPositionX, vOldViewportPositionY);
     end)
   end)
 end;
@@ -1281,6 +1240,7 @@ procedure TFrameMap.btnZoomOutClick(Sender: TObject);
     vOldViewportPositionY: Single;
  begin
   BtnClickMedia;
+  LocationMarker.Visible := false;
   LayDetailMarker.Visible := false;
   layDetailIssue.Visible := false;
   vOldViewportPositionX := ScrollBox.ViewportPosition.X / FCurrentScale * (FCurrentScale - FZoomStep);
@@ -1292,13 +1252,12 @@ procedure TFrameMap.btnZoomOutClick(Sender: TObject);
     MapLayout.Visible := false;
     ZoomOut;
 
-
     TThread.Synchronize(nil,
     procedure
     begin
+      ScrollBox.ViewportPosition := TPointF.Create(vOldViewportPositionX, vOldViewportPositionY);
       ResetLocationMarkers;
       MapLayout.Visible := true;
-      ScrollBox.ViewportPosition := TPointF.Create(vOldViewportPositionX, vOldViewportPositionY);
     end)
   end)
 end;
@@ -1885,20 +1844,15 @@ end;
 
 procedure TFrameMap.TimerSensorTimer(Sender: TObject);
 begin
+  if Assigned(Person) then
+    if Person.Health < 100 then
+      ScanBaseSafeDead;
 
-   {$IFDEF ANDROID}
-     LocationServiceChanged;
-   {$ENDIF}
-
-    if Assigned(Person) then
-      if Person.Health < 100 then
-        ScanBaseSafeDead;
-
-   if Not Person.IsDead then
-    begin
-      ScanAnomalies;
-      ScanIssuies;
-    end;
+  if Not Person.IsDead then
+   begin
+     ScanAnomalies;
+     ScanIssuies;
+   end;
 end;
 
 procedure TFrameMap.TimerSystemTimer(Sender: TObject);

@@ -127,7 +127,6 @@ type
     procedure btnToIssuiesClick(Sender: TObject);
     procedure IdTCPServerExecute(AContext: TIdContext);
     procedure timerScannerWifiMerchantTimer(Sender: TObject);
-    procedure FormActivate(Sender: TObject);
     procedure TimerUpdateDataTimer(Sender: TObject);
     procedure btnKillClick(Sender: TObject);
     procedure TimerZombiTimer(Sender: TObject);
@@ -170,11 +169,6 @@ implementation
 
 uses
   System.Permissions;
-
-procedure TMainForm.FormActivate(Sender: TObject);
-begin
-  timerScannerWifiMerchant.Enabled := true;
-end;
 
 procedure TMainForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
@@ -506,12 +500,22 @@ begin
   CheckExistsArmorPSI;
 
   {$IFDEF ANDROID}
-  PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE', 'android.permission.CHANGE_WIFI_STATE', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.NEARBY_WIFI_DEVICES', 'android.permission.CHANGE_WIFI_MULTICAST_STATE'],
+  PermissionsService.RequestPermissions(['android.permission.ACCESS_WIFI_STATE',
+                                         'android.permission.CHANGE_WIFI_STATE',
+                                         'android.permission.ACCESS_FINE_LOCATION',
+                                         'android.permission.NEARBY_WIFI_DEVICES',
+                                         'android.permission.CHANGE_WIFI_MULTICAST_STATE',
+                                         'android.permission.ACCESS_BACKGROUND_LOCATION',
+                                         'android.permission.FOREGROUND_SERVICE',
+                                         'android.permission.ACCESS_COARSE_LOCATION'],
     procedure(const Permissions: TClassicStringDynArray; const GrantResults: TClassicPermissionStatusDynArray)
     begin
       if (Length(GrantResults) > 0) and (GrantResults[0] = TPermissionStatus.Granted) then
         begin
-           FFrameMap.TimerSensor.Enabled := true;
+          {$IFDEF ANDROID}
+            FFrameMap.LocationServiceChanged;
+          {$ENDIF}
+          FFrameMap.TimerSensor.Enabled := true;
         end
       else
         begin
@@ -684,6 +688,7 @@ begin
   recSelect.Parent := ImgSettings;
   StopDetector;
   layPersonHealth.Visible := false;
+  StopScanWiFi;
 end;
 
 procedure TMainForm.btnStopWorkingClick(Sender: TObject);
@@ -712,7 +717,7 @@ begin
   FFrameQRScanner.StopScan;
   StopDetector;
   layPersonHealth.Visible := false;
-
+  StopScanWiFi;
   CreateBagFrame;
 end;
 
@@ -768,6 +773,7 @@ begin
   Person.GroupId := Person.GroupId;
   animNotification.Enabled := false;
   recNotification.Opacity := 0;
+  StopScanWiFi;
 end;
 
 procedure TMainForm.btnToMapClick(Sender: TObject);
@@ -780,11 +786,24 @@ begin
   FFrameQRScanner.StopScan;
   StopDetector;
   layPersonHealth.Visible := true;
+  StopScanWiFi;
 end;
 
 procedure TMainForm.btnToPercsClick(Sender: TObject);
 begin
   BtnClickMedia;
+
+  if Self.Width <= 680 then
+  begin
+    FFramePercs.layLeftBlock.Scale.X := 0.9;
+    FFramePercs.layLeftBlock.Scale.Y := 0.9;
+  end
+  else if Self.Width <= 500 then
+  begin
+    FFramePercs.layLeftBlock.Scale.X := 0.8;
+    FFramePercs.layLeftBlock.Scale.Y := 0.8;
+  end;
+
   SetHealthProgress(FFramePercs.HealthProgress, Person.Health);
   TabControl.ActiveTab := TabPercs;
   recSelect.Parent := ImgBtnPercs;
@@ -796,11 +815,13 @@ begin
   Person.WeaponHealth := Person.WeaponHealth;
   FFramePercs.layPercsUp.Visible := false;
   FFramePercs.laySelection.Visible := false;
+  StopScanWiFi;
 end;
 
 procedure TMainForm.btnToQRScannerClick(Sender: TObject);
 begin
   BtnClickMedia;
+  StartScanWiFi;
   TabControl.ActiveTab := TabQRScanner;
   recSelect.Parent := imgBtnQRScanner;
   FFrameQRScanner.StartScan;
@@ -842,9 +863,6 @@ begin
               FFrameLogin.layBtn.Visible := FIsMerchantZone;
               FFrameLogin.labNotConnect.Visible := NOT FIsMerchantZone;
             end;
-
-            if Assigned(FFrameBag) then
-              FFrameBag.laySells.Visible := FIsMerchantZone;
 
             if Assigned(Person) and (Person.UserId <> -1) then
               TimerUpdateData.Enabled := FIsMerchantZone;

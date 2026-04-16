@@ -2496,6 +2496,7 @@ object FrameQRScanner: TFrameQRScanner
     end
   end
   object imgCamera: TImage
+    OnTap = imgCameraTap
     MultiResBitmap = <
       item
       end>

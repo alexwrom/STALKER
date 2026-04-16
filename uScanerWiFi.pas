@@ -28,8 +28,11 @@ var
 {$ENDIF}
 
 const
-  MERCHANT_WIFI = 'Merchant';
-  MERCHANT_PASS = '12345678';
+  //MERCHANT_WIFI = 'Merchant';
+  //MERCHANT_PASS = '12345678';
+
+  MERCHANT_WIFI = '52_5G';
+  MERCHANT_PASS = '12091988';
 
 implementation
 

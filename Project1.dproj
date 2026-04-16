@@ -4,8 +4,8 @@
         <ProjectVersion>20.3</ProjectVersion>
         <FrameworkType>FMX</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
-        <Platform Condition="'$(Platform)'==''">Android</Platform>
+        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Platform Condition="'$(Platform)'==''">Android64</Platform>
         <TargetedPlatforms>693267</TargetedPlatforms>
         <AppType>Application</AppType>
         <MainSource>Project1.dpr</MainSource>
@@ -396,6 +396,7 @@
         <IncludeAndroid_VectorizedNotificationIcon>true</IncludeAndroid_VectorizedNotificationIcon>
         <AUP_CHANGE_WIFI_STATE>true</AUP_CHANGE_WIFI_STATE>
         <VerInfo_Keys>package=com.samasiuk.STALKER;label=STALKER;versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=auto;largeHeap=auto;theme=TitleBar;hardwareAccelerated=true;apiKey=;minSdkVersion=23;targetSdkVersion=36</VerInfo_Keys>
+        <AUP_FOREGROUND_SERVICE>true</AUP_FOREGROUND_SERVICE>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Android64)'!=''">
         <PF_AliasKey>alexwrom</PF_AliasKey>

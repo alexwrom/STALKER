@@ -8,7 +8,8 @@ uses
   System.Net.HttpClient;
 
 const
-  API_url = 'http://192.168.4.60:2026/';
+  API_url = 'http://192.168.2.84:2026/';
+  // API_url = 'http://192.168.4.60:2026/';
 
 function GetDataServer(aCommand: string; JSON: string = ''): string;
 function PostDataServer(aCommand: string; JSON: string = ''): string;

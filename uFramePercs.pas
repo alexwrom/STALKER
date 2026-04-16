@@ -412,6 +412,7 @@ var
   AMedic : TMedicData;
 begin
   BtnClickMedia;
+  StartScanWiFi;
   layInfo.Visible := False;
   layQR.Visible := true;
 
@@ -520,6 +521,7 @@ var
 begin
   BtnClickMedia;
   layInfo.Visible := False;
+  StartScanWiFi;
   layQR.Visible := true;
 
   if not Assigned(FActiveAction) then
@@ -742,6 +744,7 @@ begin
   BtnClickMedia;
 
   //После таймера
+  StartScanWiFi;
   layQR.Visible := true;
 
   if not Assigned(FActiveAction) then
@@ -825,18 +828,6 @@ end;
 constructor TFramePercs.Create(AObject: TFmxObject);
 begin
   inherited Create(AObject);
-
-  if Self.Width <= 680 then
-  begin
-    layLeftBlock.Scale.X := 0.9;
-    layLeftBlock.Scale.Y := 0.9;
-  end
-  else if Self.Width <= 500 then
-  begin
-    layLeftBlock.Scale.X := 0.8;
-    layLeftBlock.Scale.Y := 0.8;
-  end;
-
   FArtsList := TList<TPerc>.Create;
 
   labRadiationArmor.TextSettings.Font.Family := 'lcd';
