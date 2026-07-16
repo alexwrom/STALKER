@@ -97,7 +97,7 @@ begin
                     vColValue := vColValue + IfThen(i = 0, '', ',') + StringReplace(FDQuery.FieldByName(vColumns[i].Name).AsString, ',', '.', [rfReplaceAll]);
                 end
                 else if (vColumns[i].TypeCol = 'VARCHAR') or (vColumns[i].TypeCol = 'DATETIME') or (vColumns[i].TypeCol = 'TIME') then
-                  vColValue := vColValue + IfThen(i = 0, '', ',') + QuotedStr(FDQuery.FieldByName(vColumns[i].Name).AsString);
+                   vColValue := vColValue + IfThen(i = 0, '', ',') + QuotedStr(FDQuery.FieldByName(vColumns[i].Name).AsString);
         end;
 
         AStrData.Add('insert into notifications (' + vColName + ') values (' + vColValue + ');');
@@ -152,7 +152,7 @@ begin
       FreeQueryAndConn(FDQueryCol);
     end;
 
-    //AStrData.Add('delete from ' + ATable + ';');
+    AStrData.Add('delete from ' + ATable + ';');
 
     ExeExec('select * from ' + ATable + IfThen(vUserIDExists, ' where user_id = ' + AUserID.ToString, '') + ';', exActive, FDQuery);
     try
@@ -174,7 +174,7 @@ begin
               vColValue := vColValue + IfThen(i = 0, '', ',') + StringReplace(FDQuery.FieldByName(vColumns[i].Name).AsString, ',', '.', [rfReplaceAll]);
           end
           else if (vColumns[i].TypeCol = 'VARCHAR') or (vColumns[i].TypeCol = 'DATETIME') or (vColumns[i].TypeCol = 'TIME') then
-            vColValue := vColValue + IfThen(i = 0, '', ',') + QuotedStr(FDQuery.FieldByName(vColumns[i].Name).AsString)
+               vColValue := vColValue + IfThen(i = 0, '', ',') + QuotedStr(FDQuery.FieldByName(vColumns[i].Name).AsString)
 
           else if vColumns[i].TypeCol = 'BLOB' then
           begin
@@ -247,7 +247,6 @@ begin
     GenerateTableInsert('issuies_block', Result);
     GenerateTableInsert('issuies', Result);
     GenerateTableInsert('medical', Result);
-    // GenerateTableInsert('notifications', Result);
 
     GenerateTableInsert('weapons', Result);
     GenerateTableInsert('bag', Result, AUserID);
@@ -262,10 +261,12 @@ function GoGenericDataFromUser(AUserID: integer): TList<UnicodeString>;
 begin
   // Порядок важен
   Result := TList<UnicodeString>.Create;
-  //GenerateTableInsert('arts_to_map', Result);
+  GenerateTableInsert('arts_to_map', Result);
 
-  //GenerateTableInsert('issuies_block', Result, AUserID);
-  //GenerateTableInsert('issuies', Result, AUserID);
+  GenerateTableInsert('issuies_block', Result, AUserID);
+  GenerateTableInsert('issuies', Result, AUserID);
+  GenerateTableInsert('critical_issuies', Result, AUserID);
+  GenerateTableInsert('anomalies', Result);
   GenerateNotifications(Result, AUserID);
 end;
 
