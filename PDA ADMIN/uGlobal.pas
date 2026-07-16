@@ -59,6 +59,7 @@ type
     MarkerType: TMarkerType;
     Radius: integer;
     ID: integer;
+    Fractions: string;
   end;
 
   TArtefactData = record
@@ -235,6 +236,17 @@ begin
           mtSafe:
             MainForm.cbPlaceType.ItemIndex := 1;
         end;
+
+        MainForm.cbBand8.IsChecked :=  Pos(',8,', ',' + FPlacesList[AMarker.Tag].Fractions + ',') > 0;
+        MainForm.cbMonolit5.IsChecked  := Pos(',5,', ',' + FPlacesList[AMarker.Tag].Fractions + ',') > 0;
+        MainForm.cbDolg3.IsChecked  := Pos(',3,', ',' + FPlacesList[AMarker.Tag].Fractions + ',') > 0;
+        MainForm.cbStalker1.IsChecked := Pos(',1,', ',' + FPlacesList[AMarker.Tag].Fractions + ',') > 0;
+        MainForm.cbArmy4.IsChecked := Pos(',4,', ',' + FPlacesList[AMarker.Tag].Fractions + ',') > 0;
+        MainForm.cbNaem6.IsChecked := Pos(',6,', ',' + FPlacesList[AMarker.Tag].Fractions + ',') > 0;
+        MainForm.cbNebo7.IsChecked := Pos(',7,', ',' + FPlacesList[AMarker.Tag].Fractions + ',') > 0;
+        MainForm.cbUchenie9.IsChecked := Pos(',9,', ',' + FPlacesList[AMarker.Tag].Fractions + ',') > 0;
+        MainForm.cbTorg10.IsChecked := Pos(',10,', ',' + FPlacesList[AMarker.Tag].Fractions + ',') > 0;
+        MainForm.cbSvoboda2.IsChecked := Pos(',2,', ',' + FPlacesList[AMarker.Tag].Fractions + ',') > 0;
 
         MainForm.sbRadiusPlace.Value := FPlacesList[AMarker.Tag].Radius;
         MainForm.ePlaceName.Text := FPlacesList[AMarker.Tag].Name;

@@ -219,7 +219,9 @@ begin
                       begin
                         Person.GroupId := vSend.Code.ToInteger;
                         ExeExec(Format('update users set group_id = %d;', [vSend.Code.ToInteger()]), exExecute, FDQuery);
+                        ReloadPlaces;
                       end;
+
                     4: // Смена специальности  {"code":"0101"}
                       begin
                         vLevelPerc := Copy(vSend.Code, 3, 2).ToInteger;

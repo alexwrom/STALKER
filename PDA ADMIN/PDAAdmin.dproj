@@ -1175,7 +1175,7 @@
                     <Platform Name="Android64">
                         <RemoteDir>.\assets\internal\</RemoteDir>
                         <RemoteName>base.db</RemoteName>
-                        <Overwrite>true</Overwrite>
+                        <Overwrite>false</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="base.db" Configuration="Release" Class="File">

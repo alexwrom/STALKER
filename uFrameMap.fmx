@@ -33,6 +33,7 @@ object FrameMap: TFrameMap
         OnGesture = MapImageGesture
         MultiResBitmap.Height = 1048
         MultiResBitmap.Width = 2812
+        MultiResBitmap.LoadSize = 2
         MultiResBitmap = <
           item
           end>

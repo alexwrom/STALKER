@@ -159,6 +159,21 @@ type
     Layout1: TLayout;
     teTimeHide: TTimeEdit;
     deDateHide: TDateEdit;
+    Label11: TLabel;
+    GridPanelLayout2: TGridPanelLayout;
+    Layout5: TLayout;
+    Layout6: TLayout;
+    cbBand8: TCheckBox;
+    cbMonolit5: TCheckBox;
+    cbDolg3: TCheckBox;
+    cbStalker1: TCheckBox;
+    cbArmy4: TCheckBox;
+    cbNaem6: TCheckBox;
+    cbNebo7: TCheckBox;
+    cbUchenie9: TCheckBox;
+    cbTorg10: TCheckBox;
+    cbSvoboda2: TCheckBox;
+    VertScrollBox1: TVertScrollBox;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnConfirmNameClick(Sender: TObject);
@@ -427,17 +442,60 @@ end;
 procedure TMainForm.btnAddPlacesSaveClick(Sender: TObject);
 var
   vQuery: TFDQuery;
+
+  function GetFractions: string;
+  begin
+    if cbBand8.IsChecked then
+      Result := '8';
+
+    if cbMonolit5.IsChecked then
+      Result := Result + IfThen(Result = '','',',') + '5';
+
+    if cbDolg3.IsChecked then
+      Result := Result + IfThen(Result = '','',',') + '3';
+
+    if cbStalker1.IsChecked then
+      Result := Result + IfThen(Result = '','',',') + '1';
+
+    if cbArmy4.IsChecked then
+      Result := Result + IfThen(Result = '','',',') + '4';
+
+    if cbNaem6.IsChecked then
+      Result := Result + IfThen(Result = '','',',') + '6';
+
+    if cbNebo7.IsChecked then
+      Result := Result + IfThen(Result = '','',',') + '7';
+
+    if cbUchenie9.IsChecked then
+      Result := Result + IfThen(Result = '','',',') + '9';
+
+    if cbTorg10.IsChecked then
+      Result := Result + IfThen(Result = '','',',') + '10';
+
+    if cbSvoboda2.IsChecked then
+      Result := Result + IfThen(Result = '','',',') + '2';
+  end;
 begin
   if layAddPlace.Tag <> 0 then // Update
-    ExeExec(Format('update places set radius = %d, name = %s, type = %s  where place_id = %d;', [Round(sbRadiusPlace.Value), QuotedStr(ePlaceName.Text), QuotedStr(IfThen(cbPlaceType.Selected.Tag = 0, 'mtBase', 'mtSafe')), layAddPlace.Tag]),
+    ExeExec(Format('update places set radius = %d, name = %s, type = %s, fractions = %s  where place_id = %d;', [Round(sbRadiusPlace.Value), QuotedStr(ePlaceName.Text), QuotedStr(IfThen(cbPlaceType.Selected.Tag = 0, 'mtBase', 'mtSafe')), QuotedStr(GetFractions),  layAddPlace.Tag]),
       exExecute, vQuery)
   else
-    ExeExec(Format('insert into places (radius, name, type, lat, lon) values (%d, %s, %s, %s, %s);', [Round(sbRadiusPlace.Value), QuotedStr(ePlaceName.Text), QuotedStr(IfThen(cbPlaceType.Selected.Tag = 0, 'mtBase', 'mtSafe')),
-      StringReplace(FCoords.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FCoords.Longitude.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
+    ExeExec(Format('insert into places (radius, name, type, lat, lon, fractions) values (%d, %s, %s, %s, %s, %s);', [Round(sbRadiusPlace.Value), QuotedStr(ePlaceName.Text), QuotedStr(IfThen(cbPlaceType.Selected.Tag = 0, 'mtBase', 'mtSafe')),
+      StringReplace(FCoords.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FCoords.Longitude.ToString, ',', '.', [rfReplaceAll]), QuotedStr(GetFractions)]), exExecute, vQuery);
 
   layAddPlace.Tag := 0;
   FFrameMap.LoadPlaces;
   FFrameMap.UpdateBaseSafeDead;
+  cbBand8.IsChecked := false;
+  cbMonolit5.IsChecked  := false;
+  cbDolg3.IsChecked  := false;
+  cbStalker1.IsChecked := false;
+  cbArmy4.IsChecked := false;
+  cbNaem6.IsChecked := false;
+  cbNebo7.IsChecked := false;
+  cbUchenie9.IsChecked := false;
+  cbTorg10.IsChecked := false;
+  cbSvoboda2.IsChecked := false;
   layAddPlace.Visible := false;
 end;
 
@@ -454,7 +512,7 @@ var
     AFormatSettings.ShortDateFormat := 'YYYY-MM-DD';
     AFormatSettings.LongTimeFormat := 'hh:nn:ss';
 
-    Result := 'NULL';
+    Result := '1899-01-01 00:00:00';
 
     if ckHideInDatetime.IsChecked then
       Result := DateToStr(deDateHide.Date, AFormatSettings) + ' ' + TimeToStr(teTimeHide.Time, AFormatSettings);
@@ -552,7 +610,7 @@ var
   FDQuery: TFDQuery;
 begin
   ExeExec('select count(1) as cnt from game_data;', exActive, FDQuery);
-  vMapExists := FDQuery.FieldByName('cnt').AsInteger = 1;
+  vMapExists := FDQuery.FieldByName('cnt').AsInteger > 0;
   FreeQueryAndConn(FDQuery);
 
   if vMapExists then

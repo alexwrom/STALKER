@@ -177,7 +177,7 @@ type
     function GetNumberMarker(AMarker: TImage): integer;
     procedure ScanAnomalies;
     procedure ScanIssuies;
-    procedure UpdateBaseSafeDead;
+    
 
     procedure LoadAnomalies;
     procedure ScanInnerCritical;
@@ -210,7 +210,8 @@ type
     property MapLoaded: Boolean read FMapLoaded;
     property CurrentScale: Double read FCurrentScale;
     procedure UpdateIssuies;
-    procedure NewMarkerToMap(ACoords: TLocationCoord2D; AText: String; AMarkerType: TMarkerType; AIsOwner: boolean = true);
+    procedure NewMarkerToMap(ACoords: TLocationCoord2D; AText: String; AMarkerType: TMarkerType; AIsOwner: boolean = true); 
+    procedure UpdateBaseSafeDead;
   end;
 
 implementation
@@ -426,17 +427,25 @@ var
   AMarker: TMarkerData;
   I: integer;
 begin
+  for I := FMarkerList.Count - 1 downto 0 do
+    if FMarkerList[I].MarkerType in [mtBase, mtSafe] then
+      begin
+        FMarkerList[I].Marker.Parent := nil;
+        FMarkerList[I].Marker.Visible := False;
+        FMarkerList.Delete(I);
+      end;
+      
   for I := 0 to FPlacesList.Count - 1 do
-  begin
-    FCoords := FPlacesList[I].Coords;
-    AMarker.Coords := FCoords;
-    AMarker.MarkerType := FPlacesList[I].MarkerType;
-    AMarker.Index := I;
-    AMarker.Radius := FPlacesList[I].Radius;
-    AMarker.LabelText := FPlacesList[I].Name;
+      begin
+        FCoords := FPlacesList[I].Coords;
+        AMarker.Coords := FCoords;
+        AMarker.MarkerType := FPlacesList[I].MarkerType;
+        AMarker.Index := I;
+        AMarker.Radius := FPlacesList[I].Radius;
+        AMarker.LabelText := FPlacesList[I].Name;
 
-    CreateMarker(AMarker);
-  end;
+        CreateMarker(AMarker);
+      end;
 end;
 
 procedure TFrameMap.UpdateAnomalies;

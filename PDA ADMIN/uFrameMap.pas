@@ -129,7 +129,8 @@ type
     procedure UpdateBaseSafeDead;
 {$IFDEF ANDROID}
     procedure LocationServiceChanged;
-    procedure LocationisChanged(Location: JLocation);
+    procedure LocationisChanged(Location: JLocation); overload;
+    procedure LocationisChanged(Locations: JList);  overload;
 {$ENDIF}
     // Масштабирование
     procedure ZoomToPoint(APoint: TPointF; AScale: Double);
@@ -516,6 +517,29 @@ begin
     SetLocation;
   end;
 end;
+
+procedure TFrameMap.LocationisChanged(Locations: JList);
+var
+  I: Integer;
+  Location: JLocation;
+begin
+  // Проверяем, что список не пустой
+  if (Locations = nil) or (Locations.size = 0) then
+    Exit;
+
+  // Получаем последнее (самое свежее) местоположение из списка
+  Location := TJLocation.Wrap(JObject(Locations.get(Locations.size - 1)));
+
+  if Assigned(Location) then
+  begin
+    // Обновляем основную локацию
+    FLocation.Latitude := Location.getLatitude;
+    FLocation.Longitude := Location.getLongitude;
+
+    // Вызываем метод обновления позиции на карте
+    SetLocation;
+  end;
+end;
 {$ENDIF}
 
 procedure TFrameMap.SetLocation;
@@ -875,6 +899,7 @@ begin
       vPlaceData.Name := vQuery.FieldByName('name').AsString;
       vPlaceData.Radius := vQuery.FieldByName('radius').AsInteger;
       vPlaceData.ID := vQuery.FieldByName('place_id').AsInteger;
+      vPlaceData.Fractions := vQuery.FieldByName('fractions').AsString;
 
       if vQuery.FieldByName('type').AsString = 'mtBase' then
         vPlaceData.MarkerType := mtBase

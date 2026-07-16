@@ -92,6 +92,7 @@ type
     Coords: TLocationCoord2D;
     MarkerType: TMarkerType;
     Radius: integer;
+    Fractions: string;
   end;
 
   TNotificationData = record
@@ -234,6 +235,7 @@ procedure StartArmorPSI(ATimerText: string);
 procedure ShowFog(AShow: boolean);
 procedure StartScanWiFi;
 procedure StopScanWiFi;
+procedure ReloadPlaces;
 
 var
   Person: TPerson;
@@ -1006,6 +1008,12 @@ end;
 procedure StopScanWiFi;
 begin
   MainForm.timerScannerWifiMerchant.Enabled := false;
+end;
+
+procedure ReloadPlaces;
+begin
+  MainForm.LoadPlaces;
+  MainForm.FFrameMap.UpdateBaseSafeDead;
 end;
 
 end.

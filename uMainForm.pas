@@ -135,10 +135,11 @@ type
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure btnStopWorkingClick(Sender: TObject);
     procedure TimerTehnicReloadTimer(Sender: TObject);
+    procedure FormActivate(Sender: TObject);
   private
 
     procedure LoadArtefacts;
-    procedure LoadPlaces;
+
     procedure LoadBag;
     procedure LoadCritical;
     procedure CheckExistsArmorPSI;
@@ -158,6 +159,7 @@ type
     procedure LoadIssuies;
     procedure StopDetector;
     procedure CreateBagFrame;
+    procedure LoadPlaces;
   end;
 
 var
@@ -169,6 +171,11 @@ implementation
 
 uses
   System.Permissions;
+
+procedure TMainForm.FormActivate(Sender: TObject);
+begin
+  StartScanWiFi;
+end;
 
 procedure TMainForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
@@ -375,7 +382,7 @@ begin
   else
     FPlacesList := TList<TPlaceData>.Create;
 
-  ExeExec('select * from places;', exActive, vQuery);
+  ExeExec('select * from places where '','' || fractions ||'','' like ''%,'' || ''' + Person.GroupId.ToString +''' ||'',%'';', exActive, vQuery);
   try
     vQuery.First;
 
@@ -385,6 +392,7 @@ begin
       vPlaceData.Coords.Longitude := vQuery.FieldByName('lon').AsFloat;
       vPlaceData.Name := vQuery.FieldByName('name').AsString;
       vPlaceData.Radius := vQuery.FieldByName('radius').AsInteger;
+      vPlaceData.Fractions := vQuery.FieldByName('fractions').AsString;
 
       if vQuery.FieldByName('type').AsString = 'mtBase' then
         vPlaceData.MarkerType := mtBase
