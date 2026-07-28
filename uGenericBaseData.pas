@@ -44,7 +44,13 @@ begin
      if (ATable <> 'life_log') and (ATable <> 'notifications') then
      AStrData.Add('delete from ' + ATable + ' where user_id = ' + Person.UserId.ToString + ';');
 
-    ExeExec('select * from ' + ATable + ';', exActive, FDQuery);
+     if (ATable = 'life_log') then
+       ExeExec('select strftime(''%Y-%m-%d %H:%M:%S'', action_date_time) as action_date_time, action_type_id, lat, lon from life_log;', exActive, FDQuery)
+     else
+       if (ATable = 'notifications') then
+         ExeExec('select strftime(''%Y-%m-%d %H:%M:%S'', create_date) as create_date, name, detail, group_id, data from notifications;', exActive, FDQuery)
+     else
+       ExeExec('select * from ' + ATable + ';', exActive, FDQuery);
 
     try
       FDQuery.First;
@@ -65,7 +71,7 @@ begin
             else
               vColValue := vColValue + IfThen(i = 0, '', ',') + StringReplace(FDQuery.FieldByName(vColumns[i].Name).AsString, ',', '.', [rfReplaceAll]);
           end
-          else if (vColumns[i].TypeCol = 'VARCHAR') or (vColumns[i].TypeCol = 'DATETIME') or (vColumns[i].TypeCol = 'TIME') then
+          else if (vColumns[i].TypeCol = 'VARCHAR') or (vColumns[i].TypeCol = 'TIME') or (vColumns[i].TypeCol = 'DATETIME') then
             vColValue := vColValue + IfThen(i = 0, '', ',') + QuotedStr(FDQuery.FieldByName(vColumns[i].Name).AsString);
         end;
 

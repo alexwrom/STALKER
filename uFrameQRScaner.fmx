@@ -2505,13 +2505,18 @@ object FrameQRScanner: TFrameQRScanner
     Size.Height = 482.000000000000000000
     Size.PlatformDefault = False
     object btnChangeCamera: TSpeedButton
-      Position.X = 16.000000000000000000
-      Position.Y = 32.000000000000000000
+      Position.X = 8.000000000000000000
+      Position.Y = 8.000000000000000000
       Size.Width = 65.000000000000000000
       Size.Height = 57.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = 'cameratoolbutton'
       OnClick = btnChangeCameraClick
+      object InnerGlowEffect4: TInnerGlowEffect
+        Softness = 1.000000000000000000
+        GlowColor = claGold
+        Opacity = 1.000000000000000000
+      end
     end
   end
   object Camera: TCameraComponent

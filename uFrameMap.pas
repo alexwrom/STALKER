@@ -14,7 +14,7 @@ uses
 {$IFDEF ANDROID}
   Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText,
   Androidapi.JNIBridge, Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNI.Location,
-  Androidapi.JNI.Net,
+  Androidapi.JNI.Net,uScanerWiFi,
 {$ENDIF}
   uLocationListener, uGenericBaseData, classes.send, classes.marker, REST.Json, FMX.Surfaces, System.DateUtils;
 
@@ -121,6 +121,10 @@ type
     TimerArmorPSIReload: TTimer;
     Image4: TImage;
     TimerUpdateAnomalies: TTimer;
+    labSattelites: TLabel;
+    GlowEffect2: TGlowEffect;
+    imgMaster: TImage;
+    ShadowEffect2: TShadowEffect;
     procedure MapImageMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
     procedure btnZoomInClick(Sender: TObject);
     procedure btnZoomOutClick(Sender: TObject);
@@ -146,7 +150,7 @@ type
     procedure TimerUpdateAnomaliesTimer(Sender: TObject);
   private
     FMapLoaded: Boolean;
-
+    FIsSafeZone : Boolean;
     FMinScale: Double;
     FMaxScale: Double;
     FZoomStep: Double;
@@ -193,6 +197,7 @@ type
 {$ENDIF}
 
   public
+    FDataUpdated: Boolean;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     function ScanBaseSafeDead: boolean;
@@ -498,6 +503,7 @@ begin
 
           ExeExec('update issuies set status_id = 0 where prev_issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
           ReloadIssuies;
+          SetNotificationsIssuies;
         end;
 
       if (vDistance > FIssueList[I].RadiusOUT) and (FIssueList[I].RadiusOUT > 0) then
@@ -509,11 +515,13 @@ begin
           FreeQueryAndConn(vQuery);
           ExeExec('update issuies set status_id = 0 where prev_issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
           ReloadIssuies;
+          SetNotificationsIssuies;
         end
         else
         begin // Провалено при выходе из зоны
           ExeExec('update issuies set status_id = 2 where issue_id = ' + FIssueList[I].ID.ToString + ';', exExecute, vQuery);
           ReloadIssuies;
+          SetNotificationsIssuies;
         end
     finally
 
@@ -614,15 +622,25 @@ begin
 
     if vDistance <= FPlacesList[I].Radius then
     begin
-      Person.Health := Person.Health + 0.056;
+      if Person.Health < 20 then
+        Person.Health := Person.Health + 0.022
+      else
+        if Person.Health < 100 then
+          Person.Health := Person.Health + 0.053;
+
       Result := true;
-    end;
+      FLocation := FPlacesList[I].Coords;
+      SetLocation;
+      Break;
+    end
   end;
 
-  if Result then
+  if Result and not FDataUpdated then
     StartScanWiFi
   else
-    StopScanWiFi;
+   begin
+     StopScanWiFi;
+   end;
 end;
 
 procedure TFrameMap.ScanInnerCritical;
@@ -793,43 +811,44 @@ var
   ProviderName: JString;
   Criteria: JCriteria;
 begin
-  try
-    locationListener := TLocationListener.Create();
-    LocationManagerService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.LOCATION_SERVICE);
+    try
+      locationListener := TLocationListener.Create();
+      LocationManagerService := TAndroidHelper.Context.getSystemService(TJContext.JavaClass.LOCATION_SERVICE);
 
-    if LocationManagerService <> nil then
-      FLocationManager := TJLocationManager.Wrap((LocationManagerService as ILocalObject).GetObjectID);
-    if FLocationManager <> nil then
+      if LocationManagerService <> nil then
+        FLocationManager := TJLocationManager.Wrap((LocationManagerService as ILocalObject).GetObjectID);
+      if FLocationManager <> nil then
 
-    if FLocationManager <> nil then
-      if FlocationManager.isProviderEnabled(TJLocationManager.JavaClass.GPS_PROVIDER) then
-          ProviderName := TJLocationManager.JavaClass.GPS_PROVIDER
-        else
-        begin
-          criteria := TJCriteria.JavaClass.init;
-          criteria.setSpeedAccuracy(TJCriteria.JavaClass.ACCURACY_HIGH);
-          criteria.setAccuracy(TJCriteria.JavaClass.ACCURACY_FINE);
-          criteria.setAltitudeRequired(true);
-          criteria.setBearingRequired(true);
-          criteria.setSpeedRequired(true);
-          ProviderName := FLocationManager.getBestProvider(criteria, true);
-        end;
+      if FLocationManager <> nil then
+        if FlocationManager.isProviderEnabled(TJLocationManager.JavaClass.GPS_PROVIDER) then
+          begin
+            ProviderName := TJLocationManager.JavaClass.GPS_PROVIDER;
+            FLocationManager.requestLocationUpdates(ProviderName, 0, 0, locationListener, TJLooper.JavaClass.getMainLooper);
 
-     FLocationManager.requestLocationUpdates(ProviderName, 0, 0, locationListener, TJLooper.JavaClass.getMainLooper);
-     Location := FLocationManager.getLastKnownLocation(ProviderName);
-     LocationisChanged(Location);
-  finally
-  end;
+            Location := FLocationManager.getLastKnownLocation(ProviderName);
+            LocationisChanged(Location);
+          end
+          else
+          begin
+            StartCheckWiFiGPS;
+          end;
+    finally
+    end;
 end;
 
 procedure TFrameMap.LocationisChanged(Location: JLocation);
 begin
-  if Assigned(Location) then
-  begin
-    FLocation.Latitude := Location.getLatitude;
-    FLocation.Longitude := Location.getLongitude;
-    SetLocation;
-  end;
+    if Assigned(Location) then
+    begin
+      FLocation.Latitude := Location.getLatitude;
+      FLocation.Longitude := Location.getLongitude;
+
+      if not ScanBaseSafeDead then
+        begin
+          SetLocation;
+          FDataUpdated := true;
+        end;
+    end;
 end;
 
 procedure TFrameMap.LocationisChanged(Locations: JList);
@@ -837,38 +856,48 @@ var
   I: Integer;
   Location: JLocation;
 begin
-  // Проверяем, что список не пустой
-  if (Locations = nil) or (Locations.size = 0) then
-    Exit;
+     begin
+      // Проверяем, что список не пустой
+      if (Locations = nil) or (Locations.size = 0) then
+        Exit;
 
-  // Получаем последнее (самое свежее) местоположение из списка
-  Location := TJLocation.Wrap(JObject(Locations.get(Locations.size - 1)));
+      // Получаем последнее (самое свежее) местоположение из списка
+      Location := TJLocation.Wrap(JObject(Locations.get(Locations.size - 1)));
 
-  if Assigned(Location) then
-  begin
-    // Обновляем основную локацию
-    FLocation.Latitude := Location.getLatitude;
-    FLocation.Longitude := Location.getLongitude;
+      if Assigned(Location) then
+      begin
+        // Обновляем основную локацию
+        FLocation.Latitude := Location.getLatitude;
+        FLocation.Longitude := Location.getLongitude;
 
-    // Вызываем метод обновления позиции на карте
-    SetLocation;
-  end;
+        // Вызываем метод обновления позиции на карте
+        if not ScanBaseSafeDead then
+        begin
+          SetLocation;
+          FDataUpdated := true;
+        end;
+      end;
+   end;
 end;
 
 procedure TFrameMap.SetLocation;
-var
- Point: TPointF;
 begin
-  LocationMarker.Visible := true;
-  SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
+  TTask.Run(procedure
+   var
+    Point: TPointF;
+  begin
+    LocationMarker.Visible := true;
+    SetLocationMarker(FLocation.Latitude, FLocation.Longitude);
 
-  Point := CoordinatesToPixels(FLocation.Latitude, FLocation.Longitude);
+    Point := CoordinatesToPixels(FLocation.Latitude, FLocation.Longitude);
 
-  if (Point.X <> 0) and FMapLoaded then
-    EraseCircleFromImage(ImgFog, Point.X, Point.Y , 50 / FMapRealWidth * FOriginalMapWidth);
+    if (Point.X <> 0) and FMapLoaded then
+      EraseCircleFromImage(ImgFog, Point.X, Point.Y , 25 / FMapRealWidth * FOriginalMapWidth);
 
-  OrientationMarker.RotationAngle := 135 + CalculateBearing(FOldLocation, FLocation);
-  FOldLocation := FLocation;
+    OrientationMarker.RotationAngle := 135 + CalculateBearing(FOldLocation, FLocation);
+    FOldLocation := FLocation;
+  end);
+
 end;
 {$ENDIF}
 
@@ -974,7 +1003,7 @@ begin
   timerScanAnomaliesNextTo.Interval := 1000;
 
   for I := 0 to FAnomalyList.Count - 1 do
-    if NOT((Person.GroupId = 5) and (FAnomalyList[I].AnomalyType = atPSI)) then // 5- Монолит. ПСИ не действует на монлоит
+    if NOT((Person.GroupId = 5) and (FAnomalyList[I].AnomalyType = atPSI)) then // 5- Монолит. ПСИ не действует на монолит
     begin
       vDistance := CalculateFastDistance(FLocation.Latitude, FLocation.Longitude, FAnomalyList[I].Coords.Latitude, FAnomalyList[I].Coords.Longitude);
 
@@ -1281,7 +1310,7 @@ end;
 procedure TFrameMap.btnExitClick(Sender: TObject);
 begin
   BtnClickMedia;
-  MessageDlg('Выйдя из сети твой профиль будет удален. Ты хочешь покинуть сталкерскую сеть?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
+  MessageDlg('Ты хочешь покинуть сталкерскую сеть?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
     procedure(const AResult: TModalResult)
     var
       vQuery: TFDQuery;
@@ -1854,13 +1883,21 @@ end;
 procedure TFrameMap.TimerSensorTimer(Sender: TObject);
 begin
   if Assigned(Person) then
-    if Person.Health < 100 then
-      ScanBaseSafeDead;
-
-  if Not Person.IsDead then
    begin
-     ScanAnomalies;
-     ScanIssuies;
+    if Assigned(FLocationManager) then
+      if not FlocationManager.isProviderEnabled(TJLocationManager.JavaClass.GPS_PROVIDER) and not Person.IsDead then
+        begin
+          StartCheckWiFiGPS;
+          exit;
+        end;
+
+    ScanBaseSafeDead;
+
+    if Not Person.IsDead then
+     begin
+       ScanAnomalies;
+       ScanIssuies;
+     end;
    end;
 end;
 

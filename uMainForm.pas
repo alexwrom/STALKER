@@ -24,7 +24,7 @@ uses
   FMX.Platform.Android,
 {$ENDIF}
   uScanerWiFi, FMX.Ani, FMX.Effects, IdContext, IdBaseComponent, IdComponent, IdCustomTCPServer, IdTCPServer, IdTCPConnection, IdTCPClient, FMX.Edit, FMX.Media,
-  uFrameLogin, Classes.answer, OAuth2, Classes.Data, uGenericBaseData, Classes.userdata, uFrameSettings, classes.tehnicdata, System.DateUtils;
+  uFrameLogin, Classes.answer, OAuth2, Classes.Data, uGenericBaseData, Classes.userdata, uFrameSettings, classes.tehnicdata, System.DateUtils, FMX.Platform;
 
 type
 
@@ -118,6 +118,17 @@ type
     Image3: TImage;
     btnStopWorking: TCornerButton;
     TimerTehnicReload: TTimer;
+    layCheckWiFiGPS: TLayout;
+    Rectangle1: TRectangle;
+    labCheckWifiGPSSeconds: TLabel;
+    TimerCheckWiFiGPS: TTimer;
+    Layout5: TLayout;
+    Layout6: TLayout;
+    Layout7: TLayout;
+    Image23: TImage;
+    btnCheckWiFiGPS: TCornerButton;
+    Label1: TLabel;
+    Label2: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure btnToMapClick(Sender: TObject);
     procedure btnToPercsClick(Sender: TObject);
@@ -135,7 +146,8 @@ type
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure btnStopWorkingClick(Sender: TObject);
     procedure TimerTehnicReloadTimer(Sender: TObject);
-    procedure FormActivate(Sender: TObject);
+    procedure TimerCheckWiFiGPSTimer(Sender: TObject);
+    procedure btnCheckWiFiGPSClick(Sender: TObject);
   private
 
     procedure LoadArtefacts;
@@ -143,6 +155,7 @@ type
     procedure LoadBag;
     procedure LoadCritical;
     procedure CheckExistsArmorPSI;
+    function HandleAppEvent(AAppEvent: TApplicationEvent; AContext: TObject): Boolean;
 
   public
     { Public declarations }
@@ -172,11 +185,6 @@ implementation
 uses
   System.Permissions;
 
-procedure TMainForm.FormActivate(Sender: TObject);
-begin
-  StartScanWiFi;
-end;
-
 procedure TMainForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
 
@@ -201,8 +209,25 @@ begin
      Sleep(1000);
 end;
 
-procedure TMainForm.FormCreate(Sender: TObject);
+function TMainForm.HandleAppEvent(AAppEvent: TApplicationEvent; AContext: TObject): Boolean;
 begin
+  if AAppEvent = TApplicationEvent.EnteredBackground then
+  begin
+    Close;
+  end;
+  Result := True;
+end;
+
+procedure TMainForm.FormCreate(Sender: TObject);
+var
+  AppEventService: IFMXApplicationEventService;
+begin
+  if TPlatformServices.Current.SupportsPlatformService(IFMXApplicationEventService,
+     IInterface(AppEventService)) then
+  begin
+    AppEventService.SetApplicationEventHandler(HandleAppEvent);
+  end;
+
   labZombTimer.TextSettings.Font.Family := 'montblancctt';
 
 {$IF Defined(ANDROID) or Defined(IOS)}
@@ -221,9 +246,9 @@ var
   vQuery: TFDQuery;
   vDistance : integer;
 begin
-  if FKillType = ktLive then
+  if (FKillType = ktLive) and (not Person.Master) then
   begin
-    if not FFrameMap.ScanBaseSafeDead then
+    if not FFrameMap.ScanBaseSafeDead and not layCheckWiFiGPS.Visible then
       ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [9, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]), exExecute, vQuery);
   end;
 end;
@@ -233,10 +258,10 @@ var
   vQuery: TFDQuery;
   vBagData: TBagData;
 begin
-  if NOT Assigned(FBagList) then
-    FBagList := TList<TBagData>.Create
+  if Assigned(FBagList) then
+    FBagList.Clear
   else
-    FBagList.Clear;
+    FBagList := TList<TBagData>.Create;
 
   ExeExec('select * from my_bag order by sor;', exActive, vQuery);
   if vQuery.RecordCount > 0 then
@@ -285,8 +310,11 @@ var
   vQuery: TFDQuery;
   vIssueList: TIssueData;
 begin
+
   if Assigned(FIssueList) then
-    FIssueList.Clear
+    begin
+      FIssueList.Clear;
+    end
   else
     FIssueList := TList<TIssueData>.Create;
 
@@ -412,6 +440,7 @@ var
   vUserExists: boolean;
   FDQuery: TFDQuery;
 begin
+  StartScanWiFi;
   Person := TPerson.Create;
   ExeExec('select Count(1) as cnt from users;', exActive, FDQuery);
   vUserExists := FDQuery.FieldByName('cnt').AsInteger > 0;
@@ -423,6 +452,7 @@ begin
   end
   else
   begin
+
     Person.UserId := -1;
     Person.GroupId := 1;
     Person.CountContener := -1;
@@ -472,6 +502,7 @@ begin
     FFrameMap := TFrameMap.Create(TabMap);
     FFrameMap.Parent := TabMap;
     FFrameMap.timerCheckCritical.Enabled := true;
+    FFrameMap.FDataUpdated := true;
   end);
 
   if Assigned(FFrameSettings) then
@@ -504,6 +535,8 @@ begin
 
   FFrameQRScanner := TFrameQRScanner.Create(TabQRScanner);
   FFrameQRScanner.Parent := TabQRScanner;
+
+  TimerUpdateData.Enabled := true;
 
   CheckExistsArmorPSI;
 
@@ -670,6 +703,13 @@ begin
     end;
 end;
 
+procedure TMainForm.btnCheckWiFiGPSClick(Sender: TObject);
+begin
+  FFrameMap.TimerSensor.Enabled := true;
+  layCheckWiFiGPS.Visible := false;
+  TimerCheckWiFiGPS.Enabled := false;
+end;
+
 procedure TMainForm.btnKillClick(Sender: TObject);
 begin
   MessageDlg('Ты умер в бою?', TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0,
@@ -696,7 +736,6 @@ begin
   recSelect.Parent := ImgSettings;
   StopDetector;
   layPersonHealth.Visible := false;
-  StopScanWiFi;
 end;
 
 procedure TMainForm.btnStopWorkingClick(Sender: TObject);
@@ -725,7 +764,6 @@ begin
   FFrameQRScanner.StopScan;
   StopDetector;
   layPersonHealth.Visible := false;
-  StopScanWiFi;
   CreateBagFrame;
 end;
 
@@ -733,6 +771,9 @@ procedure TMainForm.CreateBagFrame;
 begin
   TTask.Run(procedure
   begin
+    TabBag.Visible := false;
+
+    try
     while Assigned(FFrameBag) do
       begin
         FFrameBag.Parent := nil;
@@ -761,6 +802,9 @@ begin
       begin
         TabControl.ActiveTab := TabBag;
       end);
+    finally
+      TabBag.Visible := true;
+    end;
 
   end);
 
@@ -781,7 +825,6 @@ begin
   Person.GroupId := Person.GroupId;
   animNotification.Enabled := false;
   recNotification.Opacity := 0;
-  StopScanWiFi;
 end;
 
 procedure TMainForm.btnToMapClick(Sender: TObject);
@@ -794,7 +837,6 @@ begin
   FFrameQRScanner.StopScan;
   StopDetector;
   layPersonHealth.Visible := true;
-  StopScanWiFi;
 end;
 
 procedure TMainForm.btnToPercsClick(Sender: TObject);
@@ -823,13 +865,11 @@ begin
   Person.WeaponHealth := Person.WeaponHealth;
   FFramePercs.layPercsUp.Visible := false;
   FFramePercs.laySelection.Visible := false;
-  StopScanWiFi;
 end;
 
 procedure TMainForm.btnToQRScannerClick(Sender: TObject);
 begin
   BtnClickMedia;
-  StartScanWiFi;
   TabControl.ActiveTab := TabQRScanner;
   recSelect.Parent := imgBtnQRScanner;
   FFrameQRScanner.StartScan;
@@ -852,6 +892,35 @@ begin
       end;
 end;
 
+procedure TMainForm.TimerCheckWiFiGPSTimer(Sender: TObject);
+var
+  Seconds: Integer;
+  TotalSeconds: Integer;
+begin
+  if labCheckWifiGPSSeconds.Text = '00' then
+  begin
+    TimerCheckWiFiGPS.Enabled := false;
+    layCheckWiFiGPS.Visible := false;
+    SetMediaVolume(FVolume);
+
+    FKillType := ktPSI;
+    Person.Health := 0;
+  end
+  else
+  begin
+    Seconds := labCheckWifiGPSSeconds.Text.ToInteger;
+
+    // уменьшаем на 1
+    TotalSeconds := Seconds - 1;
+
+    // Проверяем, не истекло ли время
+    if TotalSeconds >= 0 then
+    begin
+      labCheckWifiGPSSeconds.Text := Format('%.2d', [TotalSeconds]);
+    end;
+  end;
+end;
+
 procedure TMainForm.timerScannerWifiMerchantTimer(Sender: TObject);
 begin
 {$IFDEF ANDROID}
@@ -865,15 +934,11 @@ begin
         TThread.Synchronize(TThread.CurrentThread,
           procedure
           begin
-
            if Assigned(FFrameLogin) then
             begin
               FFrameLogin.layBtn.Visible := FIsMerchantZone;
               FFrameLogin.labNotConnect.Visible := NOT FIsMerchantZone;
             end;
-
-            if Assigned(Person) and (Person.UserId <> -1) then
-              TimerUpdateData.Enabled := FIsMerchantZone;
           end);
       end;
     end);
@@ -887,6 +952,7 @@ var
   Minutes, Seconds: Integer;
   TotalSeconds: Integer;
 begin
+
   if labReloadTimerTehnic.Text = '00:00' then
   begin
     MediaPlayerWorking.CurrentTime := 0;
@@ -940,50 +1006,66 @@ end;
 
 procedure TMainForm.TimerUpdateDataTimer(Sender: TObject);
 begin
-  TTask.Run(
-    procedure
-    var
-      vAnswer: TAnswer;
-      vData: TData;
-      vUserdata: TUserdata;
-      vSQL: Unicodestring;
-      vQuery: TFDQuery;
-      I: integer;
+  if FFrameMap.FDataUpdated and FFrameMap.ScanBaseSafeDead then
     begin
-      try
-        vData := TData.Create;
-        vData.SQL := TList<Unicodestring>.Create;
-        vData.SQL := GoGenericBaseData();
+      FFrameMap.FDataUpdated := false;
+      StartScanWiFi;
 
-        vUserdata := TUserdata.Create;
-        vUserdata.UserId := Person.UserId;
-        vUserdata.Data := vData;
+    TTask.Run(
+      procedure
+      var
+        vAnswer: TAnswer;
+        vData: TData;
+        vUserdata: TUserdata;
+        vSQL: Unicodestring;
+        vQuery: TFDQuery;
+        I: integer;
+      begin
+        try
+          vData := TData.Create;
+          vData.SQL := TList<Unicodestring>.Create;
+          vData.SQL := GoGenericBaseData();
 
-        vAnswer := TJSON.JsonToObject<TAnswer>(PostDataServer('api/update_data', TJSON.ObjectToJsonString(vUserdata)));
+          vUserdata := TUserdata.Create;
+          vUserdata.UserId := Person.UserId;
+          vUserdata.Data := vData;
 
-        if vAnswer.Status = 'success' then
+          vAnswer := TJSON.JsonToObject<TAnswer>(PostDataServer('api/update_data', TJSON.ObjectToJsonString(vUserdata)));
+
+          if Assigned(vAnswer) then
           begin
-            ExeExec('delete from life_log where action_date_time <> (select max(l.action_date_time) from life_log l where l.action_type_id = life_log.action_type_id); delete from notifications where is_owner = true;', exExecute, vQuery);
-          end;
+            try
+              if vAnswer.Status = 'success' then
+                begin
+                  ExeExec('delete from life_log where action_date_time <> (select max(l.action_date_time) from life_log l where l.action_type_id = life_log.action_type_id); delete from notifications where is_owner = true;', exExecute, vQuery);
+                end;
 
-          vData := TJSON.JsonToObject<TData>(vAnswer.Json);
+                vData := TJSON.JsonToObject<TData>(vAnswer.Json);
 
-          if vData.SQL.Count > 0 then
-          begin
-            for I := 0 to vData.SQL.Count - 1 do
-              vSQL := vSQL + vData.SQL[I];
+                if vData.SQL.Count > 0 then
+                begin
+                  for I := 0 to vData.SQL.Count - 1 do
+                    vSQL := vSQL + vData.SQL[I];
 
-              ExeExec(vSQL, exExecute, vQuery);
-          end;
+                    ExeExec(vSQL, exExecute, vQuery);
+                end;
 
-          ReloadNotificationData;
-          ReloadIssuies;
+                ReloadNotificationData;
+                ReloadIssuies;
+              finally
+                FreeAndNil(vAnswer);
+              end;
+            end;
+        finally
+          FFrameMap.FDataUpdated := true;
+          FreeAndNil(vData);
+          FreeAndNil(vUserdata);
 
-      finally
-        FreeAndNil(vAnswer);
-        FreeAndNil(vData);
-      end;
-    end);
+          if (TabControl.ActiveTab <> TabBag) and (TabControl.ActiveTab <> TabQRScanner) then
+            DisconnectNetworks;
+        end;
+      end);
+    end;
 end;
 
 procedure TMainForm.TimerZombiTimer(Sender: TObject);
@@ -1046,7 +1128,7 @@ begin
   AFormatSettings.ShortDateFormat := 'DD.MM.YYYY';
   AFormatSettings.LongTimeFormat := 'hh:nn:ss';
 
-  ExeExec('select * from life_log where action_date_time = (select max(action_date_time) from life_log where action_type_id = 12);', exActive, vQuery);
+  ExeExec('select strftime(''%d.%m.%Y %H:%M:%S'',action_date_time) as action_date_time from life_log where action_date_time = (select max(action_date_time) from life_log where action_type_id = 12);', exActive, vQuery);
    try
      if vQuery.RecordCount > 0 then
      begin

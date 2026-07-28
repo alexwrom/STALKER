@@ -35,6 +35,7 @@ type
     recSkin1: TRectangle;
     InnerGlowEffect3: TInnerGlowEffect;
     btnChangeCamera: TSpeedButton;
+    InnerGlowEffect4: TInnerGlowEffect;
     procedure btnYesClick(Sender: TObject);
     procedure btnChangeCameraClick(Sender: TObject);
     procedure imgCameraTap(Sender: TObject; const Point: TPointF);
@@ -111,8 +112,11 @@ end;
 
 procedure TFrameQRScanner.StopScan;
 begin
-  Camera.Active := false;
-  layInfo.Visible := True;
+  if Camera.Active then
+  begin
+    Camera.Active := false;
+    layInfo.Visible := True;
+  end;
 end;
 
 procedure TFrameQRScanner.CameraSampleBufferReady(Sender: TObject; const ATime: TMediaTime);
@@ -203,12 +207,12 @@ begin
               try
                 vSend := TJson.JsonToObject<TSend>(ReadResult.Text);
 
-                if (vSend.Code <> '') and (not Person.IsDead) then
+                if (vSend.Code <> '') and (not Person.IsDead) then  // Живой с кодом
                 begin
                   case Length(vSend.Code) of
-                    1: // Туман войны: 0 - выкл, 1 - вкл      {"code":"1"}
+                    1: // Туман войны: 1 - вкл/выкл      {"code":"1"}
                       begin
-                        ShowFog(vSend.Code = '1');
+                        ShowFog;
                       end;
                     2: // Детектор      {"code":"01"}
                       begin
@@ -263,27 +267,43 @@ begin
                       end;
                     6: // Лечение      {"code":"000001"}
                       begin
-                          Person.Health := Person.Health + vSend.Code.ToInteger;
+                        Person.Health := Person.Health + vSend.Code.ToInteger;
                       end;
                     7: // Деньги      {"code":"0050000"}
                       begin
                         if Person.Cash + vSend.Code.ToInteger < 0 then
-                          Person.Cash := 0
+                          begin
+                            Showmessage('Недостаточно средств, бомжара!');
+                          end
                         else
                           Person.Cash := Person.Cash + vSend.Code.ToInteger;
 
                         ExeExec(Format('update users set cash = %d;', [Round(Person.Cash)]), exExecute, FDQuery);
                       end;
+                    8: // Мастер аккаунт      {"code":"00000001"}
+                       if vSend.Code.ToInteger() = 1 then
+                        begin
+                          Person.Master := not Person.Master;
+                          ExeExec(Format('update users set master = %s;', [Person.Master.ToString()]), exExecute, FDQuery);
+                        end;
+                    9:
+                     begin
+                       ExeExec('update issuies set status_id=0 where issue_id=' + vSend.Code + ';', exExecute, FDQuery);
+                       ExeExec('update issuies_block set status_id=0 where issue_block_id= (select issue_block_id from issuies where issue_id=' + vSend.Code + ');', exExecute, FDQuery);
+                       ReloadIssuies;
+                       SetNotificationsIssuies;
+                     end;
                   end;
-                end
+                end   // Мертвый с кодом
                 else
                   // Воскрешение      {"code":"000000"}
                   if (Length(vSend.Code) = 6) and (vSend.Code.ToInteger() = 0) then
                    begin
+                     FKillType := ktLive;
                      Person.Health := 20;
                    end
                 else
-                if Assigned(vSend.Marker) and (not Person.IsDead) then
+                if Assigned(vSend.Marker) and (not Person.IsDead) then // Живой для маркеров
                   begin
                      case vSend.Marker.MarkerType of
                       0:
@@ -299,7 +319,7 @@ begin
                     ExeExec(Format('insert into markers (lat, lon, marker_type_id, is_owner) values (%s, %s, %d, false);',[StringReplace(vSend.Marker.Coords.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(vSend.Marker.Coords.Longitude.ToString, ',', '.', [rfReplaceAll]), vSend.Marker.MarkerType]), exExecute, vQuery);
                   end
                 else
-                begin
+                begin // Живой для торговли, медика, техника
                   if FIsMerchantZone then
                     begin
                       IdTCPClient.Host := vSend.Ip;

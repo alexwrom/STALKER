@@ -2555,15 +2555,15 @@ object FrameMap: TFrameMap
   object ZoomLayout: TLayout
     Align = MostRight
     Position.X = 711.000000000000000000
-    Position.Y = 33.000000000000000000
+    Position.Y = 40.000000000000000000
     Size.Width = 90.000000000000000000
-    Size.Height = 527.000000000000000000
+    Size.Height = 520.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 3
+    TabOrder = 2
     object LayMapControls: TLayout
       Align = Bottom
       Margins.Bottom = 20.000000000000000000
-      Position.Y = 340.000000000000000000
+      Position.Y = 333.000000000000000000
       Size.Width = 90.000000000000000000
       Size.Height = 167.000000000000000000
       Size.PlatformDefault = False
@@ -2645,7 +2645,7 @@ object FrameMap: TFrameMap
     Size.Width = 801.000000000000000000
     Size.Height = 560.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 6
+    TabOrder = 5
     OnClick = LayClientClick
     object timerCheckCritical: TTimer
       Enabled = False
@@ -5639,19 +5639,21 @@ object FrameMap: TFrameMap
     Size.Width = 22.000000000000000000
     Size.Height = 209.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 5
+    TabOrder = 4
   end
   object layTopMenu: TLayout
     Align = MostTop
+    Margins.Top = -10.000000000000000000
+    Position.Y = -10.000000000000000000
     Size.Width = 801.000000000000000000
-    Size.Height = 33.000000000000000000
+    Size.Height = 50.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 21
+    TabOrder = 20
     object layClock: TLayout
       Align = Right
       Position.X = 664.000000000000000000
       Size.Width = 81.000000000000000000
-      Size.Height = 33.000000000000000000
+      Size.Height = 50.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 3
       object labTime: TLabel
@@ -5659,7 +5661,7 @@ object FrameMap: TFrameMap
         AutoSize = True
         StyledSettings = []
         Size.Width = 81.000000000000000000
-        Size.Height = 33.000000000000000000
+        Size.Height = 50.000000000000000000
         Size.PlatformDefault = False
         TextSettings.Font.Family = 'Calibri'
         TextSettings.Font.Size = 16.000000000000000000
@@ -5680,17 +5682,17 @@ object FrameMap: TFrameMap
       Align = Right
       Position.X = 745.000000000000000000
       Size.Width = 56.000000000000000000
-      Size.Height = 33.000000000000000000
+      Size.Height = 50.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 2
       object BatteryProgress: TRectangle
         Tag = 33
         Corners = [TopRight, BottomRight]
         Fill.Color = xFFBFFEBD
-        Position.X = 13.000000000000000000
-        Position.Y = 9.000000000000000000
-        Size.Width = 33.000000000000000000
-        Size.Height = 15.000000000000000000
+        Position.X = 10.000000000000000000
+        Position.Y = 16.000000000000000000
+        Size.Width = 39.000000000000000000
+        Size.Height = 18.000000000000000000
         Size.PlatformDefault = False
         Stroke.Kind = None
       end
@@ -5742,20 +5744,20 @@ object FrameMap: TFrameMap
         Margins.Top = 5.000000000000000000
         Margins.Bottom = 5.000000000000000000
         Size.Width = 56.000000000000000000
-        Size.Height = 23.000000000000000000
+        Size.Height = 40.000000000000000000
         Size.PlatformDefault = False
       end
     end
     object Layout5: TLayout
       Align = Left
       Size.Width = 50.000000000000000000
-      Size.Height = 33.000000000000000000
+      Size.Height = 50.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 1
       object btnExit: TSpeedButton
         Align = Client
         Size.Width = 50.000000000000000000
-        Size.Height = 33.000000000000000000
+        Size.Height = 50.000000000000000000
         Size.PlatformDefault = False
         StyleLookup = 'escapetoolbutton'
         OnClick = btnExitClick
@@ -5769,14 +5771,14 @@ object FrameMap: TFrameMap
     object Layout3: TLayout
       Align = Center
       Size.Width = 50.000000000000000000
-      Size.Height = 33.000000000000000000
+      Size.Height = 50.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 0
       object btnSendMarkers: TSpeedButton
         Align = Client
         RotationAngle = 180.000000000000000000
         Size.Width = 50.000000000000000000
-        Size.Height = 33.000000000000000000
+        Size.Height = 50.000000000000000000
         Size.PlatformDefault = False
         StyleLookup = 'actiontoolbutton'
         OnClick = btnSendMarkersClick
@@ -5787,6 +5789,92 @@ object FrameMap: TFrameMap
         end
       end
     end
+    object imgMaster: TImage
+      MultiResBitmap.Height = 50
+      MultiResBitmap.Width = 50
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 50
+          Height = 50
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000320000003208060000001E3F88
+            B10000000473424954080808087C08648800000697494441546881ED98CF8B5C
+            5915C73FF7BD57D5D59D4CB4FF82815A883032FEA8C588E0AEC085B3522A4886
+            C1953D38E06256D19D823269469CDD047B3104212E2C1846E88530E52A1B17D3
+            22082EB2681415A2602A6D7775BDF7EE8FE3E2DCDBEF55275D4993D446EAC0E5
+            56BD1FE7DDEF3DBFBEE7C25AD6B296B5AC652D6BC12CBB7970A733D8EA85DF6C
+            744DBFC8F49A04F0014280203A40FF7B0117CC5B5F7ED3EE5DA4F39F1F17C3BC
+            E013634000F1FA9E001E080EBC87DA4359435531F1CE5DFFFADB4C97ADB55876
+            33CF6558640A22CF5AB0E32C02590485012340901DE042200E203EEFBD0E17C0
+            5B7002CE4359C1AC82E31398550C9D2D06E026CBD69A2DBBF9A537DDAE0F72DD
+            0476319099F846DCCD20BA0817C039B00E9C6770EFC35EFF42201EAC076BF5F9
+            B985D91C8E2B383A858747F0EF47F08F07F0B7074CFEFAC0BCF5DD9F2E07C1D3
+            2C02F0F9EFF83130FEFB6FF36D303B215AC2C7DD73565D2D0DE7C179B703FCF0
+            49FABCD3CD10A340EA0A4A0B95836A0EB312A6C7F0AF291C1DB9EBB77EBDDCA5
+            922CB5485B82EBEC5A9F16AA0BB2162AABAE302F75AE2C382BA38BF438D48221
+            EAF0D14255ADD6398996F9EF093C2B884B0179F9DBE5A1F51C78AF312131D8AD
+            87DAE9A89CBA980FA6FFBBF78B61FBFD7B1FB07D8644344CC4C43982724E37E2
+            B4D418B98C3C3310D42DC612D4B5040DEE4C9AEC1582EEB066B445ABE4793EBC
+            48AF24FD215A3A8E9501A983DB9318F459A6C3E43A0769000A206246FBEF462B
+            0062CC006254B6937ECA8071F6C975FD0A81BCFA065363CCD86490E7D029A093
+            2BB03C7BAC286DD3E99C59C5C0A245A435478BBA5853D2A6AC0C08EA4E931C28
+            725D7C5128A02C03730E8941DD6BF241AF2FC260A9E2684DE73556C22A81DCBF
+            DBEB77B6EC98E85679AEA3481639CF130CC3FDF77B7D821F9EEDB06B8C416BB1
+            A92EF9738C6125405CE6462FBFCE14913D88608CC6893160B25834D3E204706E
+            24360C424B4F8AA35458C5C4F86A258DCBCAA58084C008FDF04422EF4A3B6D12
+            45699E555E26B25379334A59C8B94851A46590D058E4ECBD4B82B91C106170FF
+            6EAFDFFF961FFBC034B901124135CFE13D940ECACAF4CB8AEDB2D2E2E6D06228
+            D20082A8431AF2C94A5DCB43891B01582B639BA88944D2184148D0425956703C
+            874733389ECB181AA228E16CFD04137584C6C52E89E392053180AD6507C07A33
+            7656C18556910C9182D45679D3F10C1E1DC3D1091380B254961B625CB409B56F
+            5968A5E95729B7E91FDCE90C5E7DC34D429043EF9BBC1F24D20D1FA9C6A9F2A6
+            93121E1EF909288DF169D72318A489AF142B2B05122265AF9D0C015C3063A1F1
+            EFB49B3601A9615EC1BC34E31FDD8E31E25B49A29D1C9E03C4A581781FF3BC4B
+            FFCDD8075D44C4A3EEE7A08A8CD8D6E03C8FF713B2306152CC48335606A476BA
+            B03A7EF4ABDFB307E2E530B48234C4266B1E1B2717A0831D271D45AEF5862CA2
+            48EE15832584569D591590AA86D339CC666D7066CFF926E526B7AAADFEF6C241
+            BBAFC80BC853A39935B16112AE2C2681A5A709CF09643687A399767067D76C31
+            B6B51E16781FBBBE680DEB0161DCD6510059D1AAEAF17A1065052616D795D691
+            93121E9DC07F8E9A6BAFBF531ECE6B0EEA52C1D4B16DB52E365FA158045228AD
+            C9585C6C3A55814586B01220A7251C9FC2C393F3D7CD5E95BA44AB2D704CCB07
+            B73F2A0FCF03C134FD478A2D13AD917A9DE50755CF09C47A4DA7F5B936F4A8B4
+            E3D34A3355722BAFBBFAE4D30F593C1F3B0323CAA6CF93CF170AE4C31FF7FA3E
+            7EB472B270DCF3F62DA6B535E3CAAA557C247E04333EAFC7B9C52E3015545016
+            9D6717B4042F0A481EDCE8CC8FC58CBE7FA3696301E6732655DDEC32460E6F7F
+            6C0F9E042465B52AA6E710A94A27D7F49C3ACF170E64FF5DB633233BDD5C3F60
+            32B6B3BAD8693F535A3BB68EA984337F7FA25BD55EB62BAB675975E46AED56A0
+            DB815E57C1DCF8E6E2662D93A7E2DE7FAF185AC97E15C4BC9282B97620C2F0B5
+            2FE4AF7CED8BDD833FFCD94D7FFF29E5375E337D93E9214366D8BDF727F94B5B
+            D747BBC5CD0C6E2266DBC7B3ADD40DFA56DC246B199F0DBEF2B97CF38FF7C363
+            963D2F4B2DB2FFF3CE00C32779CE20CB60A303BD0DD8EC26F3CBA89BBB4FD3F3
+            1B5D26BD0D786993E9CFEEF885F8B8FB93E2A6116E05317D1B5A7427067A9E69
+            7DE97660B307D7B6E0CA26C35E4F7EF9CE8DE2C2A3A4670282B587C0C40045A6
+            8BDFDA802B9BB0D553409BDDE6C0FA07BFF0E3AB1B4CAF5D91C782BCD33593CC
+            C82191C684B048100DD0C914C8D54DB876153E7B155EDA62B2F119F7548BAC65
+            2D6B59CB5AD6B296FF27F91FC2C33EF730D516160000000049454E44AE426082}
+          FileName = 'E:\Delphi\STALKER PDA\Resources\'#1084#1072#1089#1090#1077#1088'.png'
+        end>
+      Align = Left
+      HitTest = False
+      Margins.Left = 10.000000000000000000
+      Margins.Top = 10.000000000000000000
+      Margins.Right = 10.000000000000000000
+      Margins.Bottom = 10.000000000000000000
+      Position.X = 60.000000000000000000
+      Position.Y = 10.000000000000000000
+      Size.Width = 30.000000000000000000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      WrapMode = Stretch
+      object ShadowEffect2: TShadowEffect
+        Distance = 3.000000000000000000
+        Direction = 45.000000000000000000
+        Softness = 0.300000011920929000
+        Opacity = 0.600000023841857900
+        ShadowColor = claBlack
+      end
+    end
   end
   object TimerSystem: TTimer
     OnTimer = TimerSystemTimer
@@ -5795,11 +5883,11 @@ object FrameMap: TFrameMap
   end
   object laySendQR: TLayout
     Align = Contents
-    Size.Width = 815.000000000000000000
-    Size.Height = 588.000000000000000000
+    Size.Width = 801.000000000000000000
+    Size.Height = 560.000000000000000000
     Size.PlatformDefault = False
     Visible = False
-    TabOrder = 2
+    TabOrder = 1
     object recSkin1: TRectangle
       Align = Client
       Fill.Bitmap.Bitmap.PNG = {
@@ -8282,8 +8370,8 @@ object FrameMap: TFrameMap
         FA48A3E2FF1C9BED6DEB7F017CD9E484923AAE0F0000000049454E44AE426082}
       Fill.Bitmap.WrapMode = Tile
       Fill.Kind = Bitmap
-      Size.Width = 815.000000000000000000
-      Size.Height = 588.000000000000000000
+      Size.Width = 801.000000000000000000
+      Size.Height = 560.000000000000000000
       Size.PlatformDefault = False
       Stroke.Kind = None
       object InnerGlowEffect16: TInnerGlowEffect
@@ -8300,16 +8388,16 @@ object FrameMap: TFrameMap
         Margins.Top = -20.000000000000000000
         Margins.Right = -20.000000000000000000
         Margins.Bottom = -20.000000000000000000
-        Size.Width = 855.000000000000000000
-        Size.Height = 628.000000000000000000
+        Size.Width = 841.000000000000000000
+        Size.Height = 600.000000000000000000
         Size.PlatformDefault = False
         WrapMode = Place
       end
       object Layout9: TLayout
         Align = Right
-        Position.X = 757.000000000000000000
+        Position.X = 743.000000000000000000
         Size.Width = 58.000000000000000000
-        Size.Height = 588.000000000000000000
+        Size.Height = 560.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 2
       end
@@ -8317,8 +8405,8 @@ object FrameMap: TFrameMap
         Align = Contents
         Scale.X = 1.200000047683716000
         Scale.Y = 1.200000047683716000
-        Size.Width = 679.166625976562500000
-        Size.Height = 489.999969482421900000
+        Size.Width = 667.500000000000000000
+        Size.Height = 466.666656494140600000
         Size.PlatformDefault = False
         StyleLookup = 'stoptoolbutton'
         OnClick = btnCloseQRClick
@@ -8328,6 +8416,26 @@ object FrameMap: TFrameMap
           Opacity = 0.899999976158142100
         end
       end
+    end
+  end
+  object labSattelites: TLabel
+    AutoSize = True
+    StyledSettings = []
+    Position.Y = 33.000000000000000000
+    Size.Width = 0.000000000000000000
+    Size.Height = 20.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.Family = 'Calibri'
+    TextSettings.Font.Size = 16.000000000000000000
+    TextSettings.Font.StyleExt = {00070000000000000004000000}
+    TextSettings.FontColor = xFF060606
+    TextSettings.HorzAlign = Center
+    TextSettings.WordWrap = False
+    TabOrder = 3
+    object GlowEffect2: TGlowEffect
+      Softness = 0.400000005960464500
+      GlowColor = claWhite
+      Opacity = 1.000000000000000000
     end
   end
   object GestureManager: TGestureManager

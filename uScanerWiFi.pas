@@ -19,6 +19,7 @@ function CalculateDistanceInMeters(Lat1, Lon1, Lat2, Lon2: double): double;
 function CalculateWifiDistance(rssi: Integer; frequency: Integer = 2412): double;
 procedure ConnectToMerchatZone;
 function GetMyIP: string;
+procedure DisconnectNetworks;
 {$ENDIF}
 
 var
@@ -63,6 +64,8 @@ function GetMyIP: string;
 var
   vInfo: JWifiInfo;
 begin
+  ScanNetworks;
+
   if (WiFiManager <> nil) and WiFiManager.isWifiEnabled and (FNetworks.Count > 0) then
   begin
     vInfo := WiFiManager.getConnectionInfo;
@@ -148,7 +151,7 @@ begin
   end;
 end;
 
-function IsMechantZone: boolean;
+function IsMerchantZone: boolean;
 var
   vInfo: JWifiInfo;
   i: Integer;
@@ -164,8 +167,11 @@ begin
         begin
           vInfo := WiFiManager.getConnectionInfo;
           Result := (JStringToString(vInfo.getSSID) = '"' + MERCHANT_WIFI + '"') and (GetMyIP <> '0.0.0.0');
+          break;
         end;
-    end;
+    end
+    else
+     StartCheckWiFiGPS;
   except
     on E: Exception do
     begin
@@ -187,18 +193,17 @@ var
 begin
   Result := TList<TWiFiNetwork>.Create;
   try
-    if TOSVersion.Check(10) then
-      WiFiManager := TJWifiManager.Wrap((TAndroidHelper.Context.getSystemService(TJContext.JavaClass.WIFI_SERVICE) as ILocalObject).GetObjectID)
-    else
-      WiFiManager := TJWifiManager.Wrap(TAndroidHelper.Context.getSystemService(TJContext.JavaClass.WIFI_SERVICE));
+    if (WiFiManager = nil) then
+      begin
+        if TOSVersion.Check(10) then
+          WiFiManager := TJWifiManager.Wrap((TAndroidHelper.Context.getSystemService(TJContext.JavaClass.WIFI_SERVICE) as ILocalObject).GetObjectID)
+        else
+          WiFiManager := TJWifiManager.Wrap(TAndroidHelper.Context.getSystemService(TJContext.JavaClass.WIFI_SERVICE));
+      end;
 
-    if (WiFiManager <> nil) and WiFiManager.isWifiEnabled then
+    if WiFiManager.isWifiEnabled then
     begin
       // вызов меню WIFI
-
-      // Intent := TJIntent.Create;
-      // Intent.setAction(TJContext.JavaClass..ACTION_WIFI_SETTINGS);
-      // TAndroidHelper.Activity.startActivity(Intent);
 
       WiFiManager.startScan;
 
@@ -222,13 +227,29 @@ begin
 
             Network.SSID := SSID;
             Network.BSSID := BSSID;
-            // Network.Distance := CalculateWifiDistance(rssi, Freq);
             Result.Add(Network);
           end;
         end;
       end;
 
     end;
+  except
+    on E: Exception do
+    begin
+      // В случае ошибки возвращаем пустой список
+    end;
+  end;
+end;
+
+procedure DisconnectNetworks;
+begin
+  try
+    if (WiFiManager <> nil) and WiFiManager.isWifiEnabled then
+    begin
+      // Отключаем от текущей сети
+      WiFiManager.disconnect;
+    end;
+
   except
     on E: Exception do
     begin
@@ -384,9 +405,6 @@ begin
 
               if NetId <> -1 then
               begin
-                // Отключаем от текущей сети
-                WiFiManager.disconnect;
-
                 // Подключаемся к выбранной сети
                 if WiFiManager.enableNetwork(NetId, true) then
                 begin
@@ -406,7 +424,7 @@ end;
 
 procedure ConnectToMerchatZone;
 begin
-  FIsMerchantZone := IsMechantZone;
+  FIsMerchantZone := IsMerchantZone;
 
   if not FIsMerchantZone then
   begin
@@ -414,7 +432,17 @@ begin
       ConnectToNetworkAndroid10Plus
     else
       ConnectToNetwork;
-  end;
+  end
+  else
+    if TOSVersion.Check(10) then
+        ConnectToNetworkAndroid10Plus
+      else
+      begin
+        if (WiFiManager <> nil) and WiFiManager.isWifiEnabled then
+          WiFiManager.reconnect;
+
+        sleep(2000);
+      end;
 end;
 {$ENDIF}
 

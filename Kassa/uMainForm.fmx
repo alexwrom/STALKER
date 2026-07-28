@@ -1,0 +1,414 @@
+object MainForm: TMainForm
+  Left = 0
+  Top = 0
+  Caption = 'Form4'
+  ClientHeight = 675
+  ClientWidth = 429
+  Fill.Color = claSlategray
+  Fill.Kind = Solid
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  DesignerMasterStyle = 0
+  object Image1: TImage
+    MultiResBitmap = <
+      item
+      end>
+    Align = Client
+    Size.Width = 429.000000000000000000
+    Size.Height = 421.000000000000000000
+    Size.PlatformDefault = False
+  end
+  object Layout1: TLayout
+    Align = Bottom
+    Position.Y = 464.000000000000000000
+    Size.Width = 429.000000000000000000
+    Size.Height = 211.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    object GridPanelLayout1: TGridPanelLayout
+      Align = Client
+      Size.Width = 429.000000000000000000
+      Size.Height = 211.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      ColumnCollection = <
+        item
+          Value = 33.333333300000000000
+        end
+        item
+          Value = 33.333333300000000000
+        end
+        item
+          Value = 33.333333300000000000
+        end>
+      ControlCollection = <
+        item
+          Column = 0
+          Control = CornerButton1
+          Row = 0
+        end
+        item
+          Column = 1
+          Control = CornerButton2
+          Row = 0
+        end
+        item
+          Column = 2
+          Control = CornerButton3
+          Row = 0
+        end
+        item
+          Column = 0
+          Control = CornerButton4
+          Row = 1
+        end
+        item
+          Column = 1
+          Control = CornerButton5
+          Row = 1
+        end
+        item
+          Column = 2
+          Control = CornerButton6
+          Row = 1
+        end
+        item
+          Column = 0
+          Control = CornerButton7
+          Row = 2
+        end
+        item
+          Column = 1
+          Control = CornerButton8
+          Row = 2
+        end
+        item
+          Column = 2
+          Control = CornerButton9
+          Row = 2
+        end
+        item
+          Column = 2
+          Control = btnCheck
+          Row = 3
+        end
+        item
+          Column = 0
+          Control = CornerButton11
+          Row = 3
+        end
+        item
+          Column = 1
+          Control = btnComeback
+          Row = 3
+        end>
+      RowCollection = <
+        item
+          Value = 25.000000000000000000
+        end
+        item
+          Value = 25.000000000000000000
+        end
+        item
+          Value = 25.000000000000000000
+        end
+        item
+          Value = 25.000000000000000000
+        end>
+      object CornerButton1: TCornerButton
+        Align = Client
+        StyledSettings = [Family]
+        Margins.Left = 5.000000000000000000
+        Margins.Top = 5.000000000000000000
+        Margins.Right = 5.000000000000000000
+        Margins.Bottom = 5.000000000000000000
+        Sides = [Top, Left, Bottom, Right]
+        Size.Width = 133.000000000000000000
+        Size.Height = 42.750000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 11
+        Text = '7'
+        TextSettings.Font.Size = 30.000000000000000000
+        TextSettings.Font.StyleExt = {00070000000000000004000000}
+        TextSettings.FontColor = claDarkslategray
+        XRadius = 3.000000000000000000
+        YRadius = 3.000000000000000000
+        OnClick = CornerButton11Click
+      end
+      object CornerButton2: TCornerButton
+        Align = Client
+        StyledSettings = [Family]
+        Margins.Left = 5.000000000000000000
+        Margins.Top = 5.000000000000000000
+        Margins.Right = 5.000000000000000000
+        Margins.Bottom = 5.000000000000000000
+        Sides = [Top, Left, Bottom, Right]
+        Size.Width = 133.000000000000000000
+        Size.Height = 42.750000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 10
+        Text = '8'
+        TextSettings.Font.Size = 30.000000000000000000
+        TextSettings.Font.StyleExt = {00070000000000000004000000}
+        TextSettings.FontColor = claDarkslategray
+        XRadius = 3.000000000000000000
+        YRadius = 3.000000000000000000
+        OnClick = CornerButton11Click
+      end
+      object CornerButton3: TCornerButton
+        Align = Client
+        StyledSettings = [Family]
+        Margins.Left = 5.000000000000000000
+        Margins.Top = 5.000000000000000000
+        Margins.Right = 5.000000000000000000
+        Margins.Bottom = 5.000000000000000000
+        Sides = [Top, Left, Bottom, Right]
+        Size.Width = 133.000000000000000000
+        Size.Height = 42.750000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 9
+        Text = '9'
+        TextSettings.Font.Size = 30.000000000000000000
+        TextSettings.Font.StyleExt = {00070000000000000004000000}
+        TextSettings.FontColor = claDarkslategray
+        XRadius = 3.000000000000000000
+        YRadius = 3.000000000000000000
+        OnClick = CornerButton11Click
+      end
+      object CornerButton4: TCornerButton
+        Align = Client
+        StyledSettings = [Family]
+        Margins.Left = 5.000000000000000000
+        Margins.Top = 5.000000000000000000
+        Margins.Right = 5.000000000000000000
+        Margins.Bottom = 5.000000000000000000
+        Sides = [Top, Left, Bottom, Right]
+        Size.Width = 133.000000000000000000
+        Size.Height = 42.750000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 8
+        Text = '4'
+        TextSettings.Font.Size = 30.000000000000000000
+        TextSettings.Font.StyleExt = {00070000000000000004000000}
+        TextSettings.FontColor = claDarkslategray
+        XRadius = 3.000000000000000000
+        YRadius = 3.000000000000000000
+        OnClick = CornerButton11Click
+      end
+      object CornerButton5: TCornerButton
+        Align = Client
+        StyledSettings = [Family]
+        Margins.Left = 5.000000000000000000
+        Margins.Top = 5.000000000000000000
+        Margins.Right = 5.000000000000000000
+        Margins.Bottom = 5.000000000000000000
+        Sides = [Top, Left, Bottom, Right]
+        Size.Width = 133.000000000000000000
+        Size.Height = 42.750000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 7
+        Text = '5'
+        TextSettings.Font.Size = 30.000000000000000000
+        TextSettings.Font.StyleExt = {00070000000000000004000000}
+        TextSettings.FontColor = claDarkslategray
+        XRadius = 3.000000000000000000
+        YRadius = 3.000000000000000000
+        OnClick = CornerButton11Click
+      end
+      object CornerButton6: TCornerButton
+        Align = Client
+        StyledSettings = [Family]
+        Margins.Left = 5.000000000000000000
+        Margins.Top = 5.000000000000000000
+        Margins.Right = 5.000000000000000000
+        Margins.Bottom = 5.000000000000000000
+        Sides = [Top, Left, Bottom, Right]
+        Size.Width = 133.000000000000000000
+        Size.Height = 42.750000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 6
+        Text = '6'
+        TextSettings.Font.Size = 30.000000000000000000
+        TextSettings.Font.StyleExt = {00070000000000000004000000}
+        TextSettings.FontColor = claDarkslategray
+        XRadius = 3.000000000000000000
+        YRadius = 3.000000000000000000
+        OnClick = CornerButton11Click
+      end
+      object CornerButton7: TCornerButton
+        Align = Client
+        StyledSettings = [Family]
+        Margins.Left = 5.000000000000000000
+        Margins.Top = 5.000000000000000000
+        Margins.Right = 5.000000000000000000
+        Margins.Bottom = 5.000000000000000000
+        Sides = [Top, Left, Bottom, Right]
+        Size.Width = 133.000000000000000000
+        Size.Height = 42.750000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 5
+        Text = '1'
+        TextSettings.Font.Size = 30.000000000000000000
+        TextSettings.Font.StyleExt = {00070000000000000004000000}
+        TextSettings.FontColor = claDarkslategray
+        XRadius = 3.000000000000000000
+        YRadius = 3.000000000000000000
+        OnClick = CornerButton11Click
+      end
+      object CornerButton8: TCornerButton
+        Align = Client
+        StyledSettings = [Family]
+        Margins.Left = 5.000000000000000000
+        Margins.Top = 5.000000000000000000
+        Margins.Right = 5.000000000000000000
+        Margins.Bottom = 5.000000000000000000
+        Sides = [Top, Left, Bottom, Right]
+        Size.Width = 133.000000000000000000
+        Size.Height = 42.750000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 4
+        Text = '2'
+        TextSettings.Font.Size = 30.000000000000000000
+        TextSettings.Font.StyleExt = {00070000000000000004000000}
+        TextSettings.FontColor = claDarkslategray
+        XRadius = 3.000000000000000000
+        YRadius = 3.000000000000000000
+        OnClick = CornerButton11Click
+      end
+      object CornerButton9: TCornerButton
+        Align = Client
+        StyledSettings = [Family]
+        Margins.Left = 5.000000000000000000
+        Margins.Top = 5.000000000000000000
+        Margins.Right = 5.000000000000000000
+        Margins.Bottom = 5.000000000000000000
+        Sides = [Top, Left, Bottom, Right]
+        Size.Width = 133.000000000000000000
+        Size.Height = 42.750000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+        Text = '3'
+        TextSettings.Font.Size = 30.000000000000000000
+        TextSettings.Font.StyleExt = {00070000000000000004000000}
+        TextSettings.FontColor = claDarkslategray
+        XRadius = 3.000000000000000000
+        YRadius = 3.000000000000000000
+        OnClick = CornerButton11Click
+      end
+      object btnCheck: TCornerButton
+        Align = Client
+        StyledSettings = [Family]
+        Margins.Left = 5.000000000000000000
+        Margins.Top = 5.000000000000000000
+        Margins.Right = 5.000000000000000000
+        Margins.Bottom = 5.000000000000000000
+        Sides = [Top, Left, Bottom, Right]
+        Size.Width = 133.000000000000000000
+        Size.Height = 42.750000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        Text = #1057#1087#1080#1089#1072#1090#1100
+        TextSettings.Font.Size = 15.000000000000000000
+        TextSettings.Font.StyleExt = {00070000000000000004000000}
+        TextSettings.FontColor = claCrimson
+        XRadius = 3.000000000000000000
+        YRadius = 3.000000000000000000
+        OnClick = btnCheckClick
+      end
+      object CornerButton11: TCornerButton
+        Align = Client
+        StyledSettings = [Family]
+        Margins.Left = 5.000000000000000000
+        Margins.Top = 5.000000000000000000
+        Margins.Right = 5.000000000000000000
+        Margins.Bottom = 5.000000000000000000
+        Sides = [Top, Left, Bottom, Right]
+        Size.Width = 133.000000000000000000
+        Size.Height = 42.750000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        Text = '0'
+        TextSettings.Font.Size = 30.000000000000000000
+        TextSettings.Font.StyleExt = {00070000000000000004000000}
+        TextSettings.FontColor = claDarkslategray
+        XRadius = 3.000000000000000000
+        YRadius = 3.000000000000000000
+        OnClick = CornerButton11Click
+      end
+      object btnComeback: TCornerButton
+        Align = Client
+        StyledSettings = [Family]
+        Margins.Left = 5.000000000000000000
+        Margins.Top = 5.000000000000000000
+        Margins.Right = 5.000000000000000000
+        Margins.Bottom = 5.000000000000000000
+        Sides = [Top, Left, Bottom, Right]
+        Size.Width = 133.000000000000000000
+        Size.Height = 42.750000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        Text = #1047#1072#1095#1080#1089#1083#1080#1090#1100' '#1042#1077#1088#1085#1091#1090#1100
+        TextSettings.Font.Size = 15.000000000000000000
+        TextSettings.Font.StyleExt = {00070000000000000004000000}
+        TextSettings.FontColor = claDarkgreen
+        TextSettings.WordWrap = True
+        XRadius = 3.000000000000000000
+        YRadius = 3.000000000000000000
+        OnClick = btnComebackClick
+      end
+    end
+  end
+  object labSumma: TLabel
+    Align = Bottom
+    StyledSettings = [Family]
+    Position.Y = 421.000000000000000000
+    Size.Width = 429.000000000000000000
+    Size.Height = 43.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.Font.Size = 30.000000000000000000
+    TextSettings.Font.StyleExt = {00070000000000000004000000}
+    TextSettings.FontColor = claDarkslategray
+    TextSettings.HorzAlign = Center
+    Text = '0'
+    TabOrder = 2
+    object btnClear: TCornerButton
+      Align = Right
+      StyledSettings = [Family]
+      Margins.Left = 5.000000000000000000
+      Margins.Top = 5.000000000000000000
+      Margins.Right = 5.000000000000000000
+      Margins.Bottom = 5.000000000000000000
+      Position.X = 368.000000000000000000
+      Position.Y = 5.000000000000000000
+      Sides = [Top, Left, Bottom, Right]
+      Size.Width = 56.000000000000000000
+      Size.Height = 33.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      Text = 'CE'
+      TextSettings.Font.Size = 20.000000000000000000
+      TextSettings.Font.StyleExt = {00070000000000000004000000}
+      TextSettings.FontColor = claDarkslategray
+      XRadius = 3.000000000000000000
+      YRadius = 3.000000000000000000
+      OnClick = btnClearClick
+    end
+    object labOk: TLabel
+      Align = Left
+      StyledSettings = [Family]
+      Margins.Left = 5.000000000000000000
+      Position.X = 5.000000000000000000
+      Size.Width = 76.000000000000000000
+      Size.Height = 43.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.Font.Size = 20.000000000000000000
+      TextSettings.Font.StyleExt = {00070000000000000004000000}
+      TextSettings.FontColor = claYellowgreen
+      TextSettings.HorzAlign = Center
+      Text = 'Ok'
+      Visible = False
+      TabOrder = 4
+    end
+  end
+end

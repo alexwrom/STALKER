@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899.12.30 00:00:00.000.579,=C:\Users\user\Documents\Embarcadero\Studio\Projects\Unit3.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.828,=C:\Users\user\Documents\Embarcadero\Studio\Projects\Unit3.pas</Transaction>
+    <Transaction>2026.07.27 11:43:24.845,=C:\Users\user\Documents\Embarcadero\Studio\Projects\Unit4.pas</Transaction>
+    <Transaction>2026.07.27 11:52:01.508,E:\Delphi\STALKER PDA\Kassa\uMainForm.pas=C:\Users\user\Documents\Embarcadero\Studio\Projects\Unit4.pas</Transaction>
+    <Transaction>2026.07.27 11:52:01.508,E:\Delphi\STALKER PDA\Kassa\uMainForm.fmx=C:\Users\user\Documents\Embarcadero\Studio\Projects\Unit4.fmx</Transaction>
+    <Transaction>2026.07.27 11:52:05.621,E:\Delphi\STALKER PDA\Kassa\Kassa.dproj=C:\Users\user\Documents\Embarcadero\Studio\Projects\Project3.dproj</Transaction>
+    <Transaction>2026.07.27 11:52:29.184,=E:\Delphi\STALKER PDA\uGlobal.pas</Transaction>
+    <Transaction>2026.07.27 11:53:04.491,=E:\Delphi\ZXing.Delphi-3.10.0\DelphiZXingQRCode-master\Source\DelphiZXIngQRCode.pas</Transaction>
+    <Transaction>2026.07.27 11:54:03.128,E:\Delphi\STALKER PDA\uGlobal.pas=</Transaction>
+  </Transactions>  <ActiveMobileDevice>   <NoProfile Android=""/>
+  </ActiveMobileDevice>
+</BorlandProject>

@@ -163,6 +163,8 @@ type
     FWeaponLevel: integer;
     FIsDead: boolean;
     FIsRestoreWeapon: boolean;
+    FMaster: boolean;
+
     procedure SetHealth(const Value: double);
     
     procedure SetCash(const Value: integer);
@@ -172,6 +174,7 @@ type
     procedure SetHealthArmor(AValue: double);
     procedure SetHealthWeapon(AValue: double);
     procedure SetIsDead(const Value: boolean);
+    procedure SetMaster(const Value: boolean);
   public
     constructor Create;
     property UserName: string read FUserName write FUserName;
@@ -197,7 +200,7 @@ type
     property LevelTehnic: integer read FLevelTehnic write FLevelTehnic;
     property IsDead: boolean read FIsDead write SetIsDead;
     property IsRestoreWeapon: boolean read FIsRestoreWeapon  write FIsRestoreWeapon;
-    
+    property Master: boolean read FMaster  write SetMaster;
   end;
 
 function GetUserAppPath: string;
@@ -232,10 +235,13 @@ procedure OpenPercs;
 procedure OpenScanQR;
 procedure StartWork;
 procedure StartArmorPSI(ATimerText: string);
-procedure ShowFog(AShow: boolean);
+procedure ShowFog;
 procedure StartScanWiFi;
 procedure StopScanWiFi;
 procedure ReloadPlaces;
+procedure StartCheckWiFiGPS;
+function IsClosedApp: boolean;  //Если вышел с приложения более чем на 1 минуту, то ты зомби на 30 минут
+procedure SetNotificationsIssuies;
 
 var
   Person: TPerson;
@@ -337,6 +343,12 @@ begin
   MainForm.FFrameMap.btnSendMarkers.Enabled := not FIsDead;
 end;
 
+procedure TPerson.SetMaster(const Value: boolean);
+begin
+  FMaster := Value;
+  MainForm.FFrameMap.imgMaster.Visible := FMaster;
+end;
+
 procedure TPerson.SetUserId(const Value: integer);
 begin
   FUserId := Value;
@@ -426,6 +438,9 @@ begin
 
     SetSkin(MainForm.recSkin);
     SetSkin(MainForm.recSkin1);
+
+    if Assigned(MainForm.FFrameMap) then
+     SetSkin(MainForm.FFrameMap.recSkin1);
   finally
     FreeQueryAndConn(FDQuery);
   end;
@@ -449,7 +464,7 @@ begin
   AFormatSettings.ShortDateFormat := 'DD.MM.YYYY';
   AFormatSettings.LongTimeFormat := 'hh:nn:ss';
 
-  ExeExec('select * from last_action_life;', exActive, vQuery);
+  ExeExec('select action_type_id, strftime(''%d.%m.%Y %H:%M:%S'',action_date_time) as action_date_time from last_action_life;', exActive, vQuery);
   try
     if vQuery.RecordCount > 0 then
     begin
@@ -591,7 +606,7 @@ begin
                 4:
                   FKillType := ktRadiation;
                 5, 9:     //Если вышел с приложения более чем на 1 минуту, то ты зомби на 30 минут
-                  if ((vActionTypeID = 9) and (SecondsBetween(NOW(), vLastActionDateTime) > 60)) or (vActionTypeID = 5) then
+                  if not Person.Master and ((vActionTypeID = 9) and (SecondsBetween(NOW(), vLastActionDateTime) > 30)) or (vActionTypeID = 5) then
                     begin
                       FKillType := ktPSI;
                       MainForm.layDeadGlow.Visible := false;
@@ -961,6 +976,13 @@ begin
   MainForm.FFrameIssuies.animNotification.Enabled := true;
 end;
 
+procedure SetNotificationsIssuies;
+begin
+  MainForm.MediaPlayerNotification.CurrentTime := 0;
+  MainForm.MediaPlayerNotification.Play;
+  MainForm.animNotification.Enabled := true;
+end;
+
 procedure ReloadNotificationData;
 begin
   MainForm.FFrameIssuies.LoadInfoData;
@@ -988,6 +1010,20 @@ begin
   MainForm.TimerTehnicReload.Enabled := true;
 end;
 
+procedure StartCheckWiFiGPS;
+begin
+  if  not MainForm.layCheckWiFiGPS.Visible and not MainForm.layZombTimer.Visible then
+  begin
+  if MainForm.labCheckWifiGPSSeconds.Text.ToInteger - 1 <= 0 then
+      MainForm.labCheckWifiGPSSeconds.Text := '00'
+    else
+      MainForm.labCheckWifiGPSSeconds.Text := Format('%.2d', [MainForm.labCheckWifiGPSSeconds.Text.ToInteger - 1]);
+
+    MainForm.layCheckWiFiGPS.Visible := true;
+    MainForm.TimerCheckWiFiGPS.Enabled := true;
+  end;
+end;
+
 procedure StartArmorPSI(ATimerText: string);
 begin
   MainForm.FFrameMap.labReloadTimerArmorPSI.Text := ATimerText;
@@ -995,9 +1031,9 @@ begin
   MainForm.FFrameMap.TimerArmorPSIReload.Enabled := true;
 end;
 
-procedure ShowFog(AShow: boolean);
+procedure ShowFog;
 begin
-  MainForm.FFrameMap.imgFog.Visible := AShow;
+  MainForm.FFrameMap.imgFog.Visible := not MainForm.FFrameMap.imgFog.Visible;
 end;
 
 procedure StartScanWiFi;
@@ -1014,6 +1050,38 @@ procedure ReloadPlaces;
 begin
   MainForm.LoadPlaces;
   MainForm.FFrameMap.UpdateBaseSafeDead;
+end;
+
+function IsClosedApp: boolean;  //Если вышел с приложения более чем на 1 минуту, то ты зомби на 30 минут
+var
+  AFormatSettings: TFormatSettings;
+  vQuery: TFDQuery;
+  vLastActionDateTime: TDateTime;
+  vActionTypeID : integer;
+begin
+  Result := false;
+  AFormatSettings.DateSeparator := '.';
+  AFormatSettings.TimeSeparator := ':';
+  AFormatSettings.ShortDateFormat := 'DD.MM.YYYY';
+  AFormatSettings.LongTimeFormat := 'hh:nn:ss';
+
+  ExeExec('select action_type_id, strftime(''%d.%m.%Y %H:%M:%S'',action_date_time) as action_date_time from last_action_life;', exActive, vQuery);
+   try
+     if vQuery.RecordCount > 0 then
+     begin
+       vLastActionDateTime := StrToDateTime(vQuery.FieldByName('action_date_time').AsString, AFormatSettings);
+       vActionTypeID := vQuery.FieldByName('action_type_id').AsInteger;
+     end;
+   finally
+     FreeQueryAndConn(vQuery);
+   end;
+
+   if ((vActionTypeID = 9) and (SecondsBetween(NOW(), vLastActionDateTime) > 60)) then
+   begin
+     FKillType := ktPSI;
+     Person.Health := 0;
+     Result := true;
+   end;
 end;
 
 end.

@@ -281,8 +281,7 @@ type
     FArtsList: TList<TPerc>;
     procedure ReloadArmor;
     function GetTimeDec(ASeconds: integer): string;
-    function IsClosedApp: boolean;
-   
+
 
   public
     FIsMyRestore : boolean;
@@ -412,7 +411,6 @@ var
   AMedic : TMedicData;
 begin
   BtnClickMedia;
-  StartScanWiFi;
   layInfo.Visible := False;
   layQR.Visible := true;
 
@@ -521,7 +519,6 @@ var
 begin
   BtnClickMedia;
   layInfo.Visible := False;
-  StartScanWiFi;
   layQR.Visible := true;
 
   if not Assigned(FActiveAction) then
@@ -560,7 +557,7 @@ var
   vQuery: TFDQuery;
 begin
   BtnClickMedia;
-  ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [10, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]),
+  ExeExec(Format('insert into life_log (action_type_id, lat, lon) values (%d, %s, %s);', [8, StringReplace(FLocation.Latitude.ToString, ',', '.', [rfReplaceAll]), StringReplace(FLocation.Longitude.ToString, ',', '.', [rfReplaceAll])]),
       exExecute, vQuery);
 
   case Person.LevelMedic of
@@ -617,7 +614,7 @@ begin
     (Self.FindComponent('layMedic' + Person.LevelMedic.ToString) as TLayout).Opacity := 1;
     layMedicReload.Parent := Self.FindComponent('layMedic' + Person.LevelMedic.ToString) as TLayout;
 
-    ExeExec('select * from life_log where action_type_id = 10 order by action_date_time desc;', exActive, vQuery);
+    ExeExec('select strftime(''%d.%m.%Y %H:%M:%S'',action_date_time) as action_date_time from life_log where action_type_id = 8 order by action_date_time desc;', exActive, vQuery);
 
     if vQuery.RecordCount > 0 then
       begin
@@ -648,7 +645,7 @@ begin
     (Self.FindComponent('layTehnic' + Person.LevelTehnic.ToString) as TLayout).Opacity := 1;
     layTehnicReload.Parent := Self.FindComponent('layTehnic' + Person.LevelTehnic.ToString) as TLayout;
 
-    ExeExec('select * from life_log where action_type_id = 11 order by action_date_time desc;', exActive, vQuery);
+    ExeExec('select strftime(''%d.%m.%Y %H:%M:%S'',action_date_time) as action_date_time from life_log where action_type_id = 11 order by action_date_time desc;', exActive, vQuery);
 
     if vQuery.RecordCount > 0 then
       begin
@@ -744,7 +741,6 @@ begin
   BtnClickMedia;
 
   //После таймера
-  StartScanWiFi;
   layQR.Visible := true;
 
   if not Assigned(FActiveAction) then
@@ -851,47 +847,16 @@ begin
   ReloadPercs;
 end;
 
-function TFramePercs.IsClosedApp: boolean;  //Если вышел с приложения более чем на 1 минуту, то ты зомби на 30 минут
-var
-  AFormatSettings: TFormatSettings;
-  vQuery: TFDQuery;
-  vLastActionDateTime: TDateTime;
-  vActionTypeID : integer;
-begin
-  Result := false;
-  AFormatSettings.DateSeparator := '.';
-  AFormatSettings.TimeSeparator := ':';
-  AFormatSettings.ShortDateFormat := 'DD.MM.YYYY';
-  AFormatSettings.LongTimeFormat := 'hh:nn:ss';
-
-  ExeExec('select * from last_action_life;', exActive, vQuery);
-   try
-     if vQuery.RecordCount > 0 then
-     begin
-       vLastActionDateTime := StrToDateTime(vQuery.FieldByName('action_date_time').AsString, AFormatSettings);
-       vActionTypeID := vQuery.FieldByName('action_type_id').AsInteger;
-     end;
-   finally
-     FreeQueryAndConn(vQuery);
-   end;
-
-   if ((vActionTypeID = 9) and (SecondsBetween(NOW(), vLastActionDateTime) > 60)) then
-   begin
-     FKillType := ktPSI;
-     Person.Health := 0;
-     Result := true;
-   end;
-end;
-
 procedure TFramePercs.ReloadPercs;
 var
   vQuery: TFDQuery;
 begin
   ReloadArmor;
 
-  ExeExec('select nickname, health, armor_health, weapon_health, weapon_icon, detector_id, level, radius, chimishe, electro, fire, phisic, psi, radiation, cash, armor_id, weapon_id, is_classic_bag, weapon_level, level_medic, level_tehnic from user_info;', exActive, vQuery);
+  ExeExec('select nickname, health, armor_health, weapon_health, weapon_icon, detector_id, level, radius, chimishe, electro, fire, phisic, psi, radiation, cash, armor_id, weapon_id, is_classic_bag, weapon_level, level_medic, level_tehnic,master from user_info;', exActive, vQuery);
  try
     Person.UserName := vQuery.FieldByName('nickname').AsString;
+    Person.Master := vQuery.FieldByName('master').AsBoolean;
 
     if NOT IsClosedApp then
       Person.Health := vQuery.FieldByName('health').AsFloat;

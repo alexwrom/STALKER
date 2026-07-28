@@ -401,8 +401,8 @@ end;
 
 procedure TFrameBag.bntSellsClick(Sender: TObject);
 begin
-  StartScanWiFi;
   BtnClickMedia;
+  StartScanWiFi;
   labSumma.Text := FBagList[layInfo.Tag].Cost.ToString;
   laySellCost.Visible := true;
   layInfo.Visible := False;
@@ -689,13 +689,23 @@ begin
   FActiveAction.JSONObject := TJson.ObjectToJsonString(vSell);
 
   vSend := TSend.Create;
-{$IFDEF ANDROID}
-  vSend.Ip := GetMyIP;
-{$ENDIF}
-  vStrSend := TJson.ObjectToJsonString(vSend);
-  vStrSend := StringReplace(vStrSend,'"code":"",','',[]);
-  vStrSend := StringReplace(vStrSend,',"marker":null','',[]);
-  GenerateQRCode(vStrSend, imgQR);
+  try
+  {$IFDEF ANDROID}
+    vSend.Ip := GetMyIP;
+  {$ENDIF}
+
+    if vSend.Ip = '0.0.0.0' then
+      Showmessage('Сталкерская сеть не подключена. Торговля закрыта')
+    else
+    begin
+      vStrSend := TJson.ObjectToJsonString(vSend);
+      vStrSend := StringReplace(vStrSend,'"code":"",','',[]);
+      vStrSend := StringReplace(vStrSend,',"marker":null','',[]);
+      GenerateQRCode(vStrSend, imgQR);
+    end;
+  finally
+    vSend.Free;
+  end;
 end;
 
 procedure TFrameBag.CreateElements(AIsClassicBag: boolean);
