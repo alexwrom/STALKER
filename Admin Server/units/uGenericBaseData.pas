@@ -74,7 +74,7 @@ begin
       FreeQueryAndConn(FDQueryCol);
     end;
 
-    ExeExec('select * from notifications n left join users u on u.group_id = n.group_id where (u.user_id = ' + AUserID.ToString + ' or n.group_id = 10) and n.user_id <> ' + AUserID.ToString + ';', exActive, FDQuery);
+    ExeExec('select * from notifications n left join users u on u.group_id = n.group_id where (u.user_id = ' + AUserID.ToString + ' or n.group_id = -1) and n.user_id <> ' + AUserID.ToString + ';', exActive, FDQuery);
     try
       FDQuery.First;
       while not FDQuery.Eof do
@@ -152,7 +152,10 @@ begin
       FreeQueryAndConn(FDQueryCol);
     end;
 
-    AStrData.Add('delete from ' + ATable + ';');
+    if (ATable = 'issuies') or (ATable = 'issuies_block') then
+      AStrData.Add('delete from ' + ATable + ' where status_id = -1;')
+    else
+      AStrData.Add('delete from ' + ATable + ';');
 
     ExeExec('select * from ' + ATable + IfThen(vUserIDExists, ' where user_id = ' + AUserID.ToString, '') + ';', exActive, FDQuery);
     try

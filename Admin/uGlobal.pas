@@ -108,7 +108,7 @@ begin
   try
     QRCode.Data := AText;
     QRCode.Encoding := TQRCodeEncoding.qrAuto;
-    QRCode.QuietZone := 4;
+    QRCode.QuietZone := 2;
 
     vScale := AImage.Height / QRCode.Rows;
 

@@ -533,15 +533,14 @@ begin
         vBmp.Canvas.BeginScene;
         Scale := Min(vBmp.Width / 2 / AImg.Width, vBmp.Height / AImg.Height);
         DstX := (vBmp.Width / 2 - AImg.Width * Scale) / 2;
-        DstY := (vBmp.Height - AImg.Height * Scale) / 2;
+        DstY := (vBmp.Height - AImg.Height * Scale + 350) / 2;
 
-        vBmp.Canvas.DrawBitmap(AImg, RectF(0, 0, AImg.Width, AImg.Height), RectF(DstX, DstY, DstX + AImg.Width * Scale, DstY + AImg.Height * Scale), 1);
+        vBmp.Canvas.DrawBitmap(AImg, RectF(0, 0, AImg.Width , AImg.Height), RectF(DstX, DstY, DstX + AImg.Width * Scale, DstY + AImg.Height * Scale), 1);
         vBmp.Canvas.Font.Size := 100;
         vBmp.Canvas.Font.Style := [TFontStyle.fsBold];
-        vBmp.Canvas.Fill.Color := TAlphaColors.Black;
-        vBmp.Canvas.FillText(RectF(vBmp.Width / 2, 0, vBmp.Width, vBmp.Height), AName, true, 0.8, [], TTextAlign.Center, TTextAlign.Center);
+        vBmp.Canvas.Fill.Color := TAlphaColors.Crimson;
+        vBmp.Canvas.FillText(RectF(20, 20, vBmp.Width / 2, 350), AName, true, 0.8, [], TTextAlign.Center, TTextAlign.Center);
         vBmp.Canvas.EndScene;
-        vBmp.SaveToFile(System.IOUtils.TPath.Combine(GetUserAppPath + '\' + AFolderName, AName + ' - 1.jpg'));
 
         vImgQR := TImage.Create(nil);
         vImgQR.Width := vBmp.Height;
@@ -549,11 +548,11 @@ begin
         try
           GenerateQRCode('{"code":"' + ACode + AID.ToString.PadLeft(3, '0') + '"}', vImgQR);
 
-          vBmp.LoadFromFile(System.IOUtils.TPath.Combine(GetUserAppPath, 'Card-1.png'));
+          //vBmp.LoadFromFile(System.IOUtils.TPath.Combine(GetUserAppPath, 'Card-1.png'));
           vBmp.Canvas.BeginScene;
-          vBmp.Canvas.DrawBitmap(vImgQR.Bitmap, RectF(0, 0, vBmp.Width, vBmp.Height), RectF(vBmp.Width / 2 - vBmp.Height / 2, 0, vBmp.Width / 2 + vBmp.Height / 2, vBmp.Height), 1);
+          vBmp.Canvas.DrawBitmap(vImgQR.Bitmap, RectF(0, 0, vImgQR.Width, vImgQR.Height), RectF(vBmp.Width / 2, (vBmp.Height - vBmp.Width / 2) / 2, vBmp.Width, vBmp.Height - (vBmp.Height - vBmp.Width / 2) / 2), 1);
           vBmp.Canvas.EndScene;
-          vBmp.SaveToFile(System.IOUtils.TPath.Combine(GetUserAppPath+ '\' + AFolderName, AName + ' - 2.jpg'));
+          vBmp.SaveToFile(System.IOUtils.TPath.Combine(GetUserAppPath+ '\' + AFolderName, AName + '.jpg'));
         finally
           vImgQR.Free;
         end;
